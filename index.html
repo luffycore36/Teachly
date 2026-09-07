@@ -6,73 +6,148 @@
     <title>Teachly — Teach. Learn. Earn.</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-    <div class="background-badges">
-        <span>🏆</span>
-        <span>🎓</span>
-        <span>💡</span>
-        <span>⭐</span>
+<div class="background-badges">
+    <span>🏆</span>
+    <span>🎓</span>
+    <span>💡</span>
+    <span>⭐</span>
+    <span>📚</span>
+    <span>💎</span>
+    <span>👑</span>
+    <span>🥇</span>
+</div>
+
+<header>
+    <div class="logo">
         <span>📚</span>
-        <span>💎</span>
-        <span>👑</span>
-        <span>🥇</span>
+        <h1>Teachly</h1>
     </div>
 
-    <header>
-        <div class="logo">
-            <span>📚</span>
-            <h1>Teachly</h1>
-        </div>
+    <p>Everyone has something to teach. Everyone has something to learn.</p>
+</header>
 
-        <p>Everyone has something to teach. Everyone has something to learn.</p>
-    </header>
+<main>
 
-    <main>
+    <!-- LOGIN -->
+    <section id="loginSection" class="card login-card">
+        <h2>Welcome to Teachly 👋</h2>
 
-        <section id="loginSection" class="card login-card">
-            <h2>Welcome to Teachly 👋</h2>
-            <p>Connect with people, exchange knowledge, and learn something new.</p>
+        <p>
+            Create your local Teachly account and start discovering knowledge.
+        </p>
 
-            <input
-                type="text"
-                id="usernameInput"
-                placeholder="Enter your username"
-                maxlength="20"
-            >
+        <input
+            type="text"
+            id="usernameInput"
+            placeholder="Enter your username"
+            maxlength="20"
+        >
 
-            <button onclick="login()">Enter Teachly 🚀</button>
-        </section>
+        <button onclick="login()">Enter Teachly 🚀</button>
+    </section>
 
-        <section id="appSection" class="hidden">
 
-            <section class="profile-card card">
-                <div class="profile-avatar" id="profileAvatar">👤</div>
+    <!-- APP -->
+    <section id="appSection" class="hidden">
 
-                <div class="profile-info">
-                    <h2 id="profileName">Username</h2>
-                    <p id="roleText">Ready to teach and learn</p>
+        <!-- PROFILE -->
+        <section class="profile-card card">
+
+            <div class="profile-avatar" id="profileAvatar">👤</div>
+
+            <div class="profile-info">
+                <h2 id="profileName">Username</h2>
+                <p id="roleText">Ready to teach and learn</p>
+            </div>
+
+            <div class="stats">
+
+                <div>
+                    <strong id="coinCount">0</strong>
+                    <span>Coins</span>
                 </div>
 
-                <div class="stats">
-                    <div>
-                        <strong id="coinCount">0</strong>
-                        <span>Coins</span>
-                    </div>
+                <div>
+                    <strong id="xpCount">0</strong>
+                    <span>XP</span>
+                </div>
 
-                    <div>
-                        <strong id="sessionCount">0</strong>
-                        <span>Sessions</span>
-                    </div>
+                <div>
+                    <strong id="sessionCount">0</strong>
+                    <span>Sessions</span>
+                </div>
 
-                    <div>
-                        <strong id="streakCount">0</strong>
-                        <span>Streak 🔥</span>
-                    </div>
+                <div>
+                    <strong id="streakCount">0</strong>
+                    <span>Streak 🔥</span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- NAVIGATION -->
+        <section class="card app-navigation">
+
+            <button onclick="showPage('homePage')">
+                🏠 Home
+            </button>
+
+            <button onclick="showPage('mapPage')">
+                🌎 World Map
+            </button>
+
+            <button onclick="showPage('quizPage')">
+                🧠 Quizzes
+            </button>
+
+            <button onclick="showPage('shopPage')">
+                🛍️ Shop
+            </button>
+
+            <button onclick="showPage('achievementPage')">
+                🏆 Achievements
+            </button>
+
+        </section>
+
+
+        <!-- HOME PAGE -->
+        <section id="homePage">
+
+            <section class="card">
+                <h2>Welcome back, <span id="homeUsername">Learner</span>! 👋</h2>
+
+                <p>
+                    Explore the world, discover new countries, learn skills,
+                    complete quizzes and earn XP.
+                </p>
+
+                <div class="home-actions">
+
+                    <button onclick="showPage('mapPage')">
+                        🌎 Explore World
+                    </button>
+
+                    <button onclick="showPage('quizPage')">
+                        🧠 Take a Quiz
+                    </button>
+
+                    <button onclick="openAIMode()">
+                        🤖 AI Study Buddy
+                    </button>
+
                 </div>
             </section>
 
+
+            <!-- AI + ONLINE MODES -->
             <section class="card">
+
                 <h2>Choose Your Mode</h2>
                 <p>How do you want to learn today?</p>
 
@@ -93,6 +168,8 @@
                 </div>
             </section>
 
+
+            <!-- AI -->
             <section id="aiSection" class="card hidden">
 
                 <div class="section-header">
@@ -108,6 +185,7 @@
 
                     <label>
                         Learning Level
+
                         <select id="aiLevel">
                             <option value="Beginner">Beginner</option>
                             <option value="Intermediate">Intermediate</option>
@@ -129,9 +207,10 @@
 
                         <div>
                             <strong>Teachly AI</strong>
+
                             <p>
-                                Hi! I'm your AI tutor. Ask me anything you're curious about,
-                                and I'll help you understand it step by step. 💡
+                                Hi! I'm your AI tutor. Ask me anything you're curious
+                                about and I'll help you understand it step by step. 💡
                             </p>
                         </div>
                     </div>
@@ -139,6 +218,7 @@
                 </div>
 
                 <div class="chat-input">
+
                     <input
                         type="text"
                         id="aiInput"
@@ -147,19 +227,24 @@
                     >
 
                     <button onclick="sendAIMessage()">Send ➤</button>
+
                 </div>
 
             </section>
 
+
+            <!-- ONLINE -->
             <section id="onlineSection" class="card hidden">
 
                 <div class="section-header">
+
                     <div>
                         <h2>🌐 Online Mode</h2>
                         <p>Exchange knowledge with real people</p>
                     </div>
 
                     <button class="small-button" onclick="closeModes()">✕</button>
+
                 </div>
 
                 <div class="role-selection">
@@ -210,15 +295,14 @@
 
                     <div class="match-info">
                         <span>🟢</span>
+
                         <div>
                             <strong id="partnerName">Connected User</strong>
                             <p id="partnerRole">Teacher</p>
                         </div>
                     </div>
 
-                    <div class="chat-box" id="onlineChat">
-
-                    </div>
+                    <div class="chat-box" id="onlineChat"></div>
 
                     <div class="chat-input">
 
@@ -229,18 +313,18 @@
                             onkeydown="if(event.key === 'Enter') sendOnlineMessage()"
                         >
 
-                        <button onclick="sendOnlineMessage()">Send ➤</button>
+                        <button onclick="sendOnlineMessage()">
+                            Send ➤
+                        </button>
 
                     </div>
 
                     <div class="emoji-bar">
-
                         <button onclick="sendEmoji('👍')">👍</button>
                         <button onclick="sendEmoji('😊')">😊</button>
                         <button onclick="sendEmoji('🎉')">🎉</button>
                         <button onclick="sendEmoji('💡')">💡</button>
                         <button onclick="sendEmoji('🔥')">🔥</button>
-
                     </div>
 
                     <button
@@ -254,140 +338,271 @@
 
             </section>
 
-            <section class="card">
 
-                <div class="section-header">
-                    <div>
-                        <h2>🏆 Your Badges</h2>
-                        <p>Complete sessions to automatically earn badges.</p>
-                    </div>
-                </div>
-
-                <div class="badge-grid">
-
-                    <div class="badge">
-                        <span>🥉</span>
-                        <strong>Starter</strong>
-                        <small>5 sessions</small>
-                    </div>
-
-                    <div class="badge">
-                        <span>🥉</span>
-                        <strong>Learner</strong>
-                        <small>15 sessions</small>
-                    </div>
-
-                    <div class="badge">
-                        <span>🥈</span>
-                        <strong>Explorer</strong>
-                        <small>50 sessions</small>
-                    </div>
-
-                    <div class="badge">
-                        <span>🥈</span>
-                        <strong>Knowledge Seeker</strong>
-                        <small>75 sessions</small>
-                    </div>
-
-                    <div class="badge">
-                        <span>🥇</span>
-                        <strong>Skill Builder</strong>
-                        <small>100 sessions</small>
-                    </div>
-
-                    <div class="badge">
-                        <span>🥇</span>
-                        <strong>Mentor</strong>
-                        <small>150 sessions</small>
-                    </div>
-
-                    <div class="badge">
-                        <span>🏆</span>
-                        <strong>Expert</strong>
-                        <small>250 sessions</small>
-                    </div>
-
-                    <div class="badge">
-                        <span>🏆</span>
-                        <strong>Master</strong>
-                        <small>500 sessions</small>
-                    </div>
-
-                    <div class="badge">
-                        <span>💎</span>
-                        <strong>Legend</strong>
-                        <small>750 sessions</small>
-                    </div>
-
-                    <div class="badge">
-                        <span>👑</span>
-                        <strong>Teachly Champion</strong>
-                        <small>1000 sessions</small>
-                    </div>
-
-                </div>
-
-            </section>
-
+            <!-- MYSTERY + STREAK + TRADE -->
             <section class="feature-grid">
 
                 <div class="card feature-card">
                     <span>🕵️</span>
+
                     <h3>Mystery Topic</h3>
-                    <p>Get a random topic and challenge yourself to teach it.</p>
+
+                    <p>
+                        Get a random topic and challenge yourself to teach it.
+                    </p>
+
                     <button onclick="mysteryTopic()">Get Topic</button>
+
                     <div id="mysteryResult"></div>
                 </div>
 
+
                 <div class="card feature-card">
                     <span>🔥</span>
+
                     <h3>Knowledge Streak</h3>
-                    <p>Keep learning and teaching to build your streak.</p>
-                    <strong id="streakMessage">Start your streak today!</strong>
+
+                    <p>
+                        Keep learning and teaching to build your streak.
+                    </p>
+
+                    <strong id="streakMessage">
+                        Start your streak today!
+                    </strong>
                 </div>
+
 
                 <div class="card feature-card">
                     <span>🔄</span>
+
                     <h3>Skill Trading</h3>
-                    <p>Teach someone what you know and learn something they know.</p>
-                    <button onclick="showSkillTrading()">Find a Skill Trade</button>
+
+                    <p>
+                        Teach someone what you know and learn what they know.
+                    </p>
+
+                    <button onclick="showSkillTrading()">
+                        Find a Skill Trade
+                    </button>
+
                     <div id="tradeResult"></div>
                 </div>
 
             </section>
 
+        </section>
+
+
+        <!-- WORLD MAP PAGE -->
+        <section id="mapPage" class="page-section hidden">
+
+            <section class="card map-header">
+
+                <div>
+                    <h2>🌎 World Explorer</h2>
+
+                    <p>
+                        Discover countries and famous places to earn XP.
+                        Countries and places are <strong>not for sale</strong>.
+                    </p>
+                </div>
+
+                <div class="xp-display">
+                    ⭐ <span id="mapXP">0</span> XP
+                </div>
+
+            </section>
+
+
             <section class="card">
 
-                <h2>💰 Teachly Coins</h2>
+                <h2>🗺️ Choose a Country</h2>
 
                 <p>
-                    Earn coins by participating in teaching and learning sessions.
+                    Click a country to learn about it.
                 </p>
 
-                <div class="coin-grid">
+                <div id="countryGrid" class="country-grid"></div>
 
-                    <div>
-                        <span>🎨</span>
-                        <strong>Profile Customization</strong>
-                        <small>Use coins for special profile options.</small>
+            </section>
+
+
+            <section id="countryPanel" class="card hidden">
+
+                <div class="country-hero">
+
+                    <div id="countryFlag" class="country-flag">
+                        🌎
                     </div>
 
                     <div>
-                        <span>✨</span>
-                        <strong>Profile Effects</strong>
-                        <small>Make your profile stand out.</small>
+                        <h2 id="countryName">Country</h2>
+
+                        <p id="countryTagline">
+                            Discover something new.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="country-facts">
+
+                    <div>
+                        <span>🏛️</span>
+                        <strong>Capital</strong>
+                        <p id="countryCapital">-</p>
                     </div>
 
                     <div>
-                        <span>😀</span>
-                        <strong>Special Emojis</strong>
-                        <small>Unlock extra chat reactions.</small>
+                        <span>🗣️</span>
+                        <strong>Language</strong>
+                        <p id="countryLanguage">-</p>
                     </div>
 
                     <div>
-                        <span>🏆</span>
-                        <strong>Badges</strong>
-                        <small>Badges are earned through sessions, not bought.</small>
+                        <span>💰</span>
+                        <strong>Currency</strong>
+                        <p id="countryCurrency">-</p>
+                    </div>
+
+                    <div>
+                        <span>🌍</span>
+                        <strong>Continent</strong>
+                        <p id="countryContinent">-</p>
+                    </div>
+
+                </div>
+
+
+                <div class="famous-section">
+
+                    <h3>⭐ Famous For</h3>
+
+                    <div id="famousPlaces" class="place-grid"></div>
+
+                </div>
+
+            </section>
+
+
+            <!-- PLACE MODAL -->
+            <div id="placeModal" class="place-modal hidden">
+
+                <div class="place-modal-content">
+
+                    <button
+                        class="modal-close"
+                        onclick="closePlaceModal()"
+                    >
+                        ✕
+                    </button>
+
+                    <div id="placeVisual" class="place-visual">
+                        🏛️
+                    </div>
+
+                    <h2 id="placeTitle">Famous Place</h2>
+
+                    <p id="placeDescription">
+                        Description
+                    </p>
+
+                    <div class="place-reward">
+                        ⭐ <strong>+25 XP</strong> for discovering this place
+                    </div>
+
+                    <button
+                        id="discoverPlaceButton"
+                        onclick="discoverCurrentPlace()"
+                    >
+                        🔎 Discover Place
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- QUIZ PAGE -->
+        <section id="quizPage" class="page-section hidden">
+
+            <section class="card">
+
+                <div class="section-header">
+
+                    <div>
+                        <h2>🧠 Teachly Quizzes</h2>
+
+                        <p>
+                            Test what you have learned and earn XP.
+                        </p>
+                    </div>
+
+                    <div class="quiz-score">
+                        ⭐ <span id="quizXP">0</span> XP
+                    </div>
+
+                </div>
+
+                <div id="quizStart">
+
+                    <h3>🌎 World Knowledge Quiz</h3>
+
+                    <p>
+                        Answer questions about countries, geography and famous places.
+                    </p>
+
+                    <button onclick="startQuiz()">
+                        Start Quiz 🚀
+                    </button>
+
+                </div>
+
+
+                <div id="quizArea" class="hidden">
+
+                    <div class="quiz-progress">
+                        Question <span id="quizNumber">1</span> / 5
+                    </div>
+
+                    <h2 id="quizQuestion">
+                        Question
+                    </h2>
+
+                    <div id="quizOptions" class="quiz-options"></div>
+
+                    <div id="quizFeedback"></div>
+
+                    <button
+                        id="nextQuizButton"
+                        class="hidden"
+                        onclick="nextQuizQuestion()"
+                    >
+                        Next Question ➜
+                    </button>
+
+                </div>
+
+
+                <div id="quizFinished" class="hidden">
+
+                    <div class="quiz-finished">
+
+                        <span>🎉</span>
+
+                        <h2>Quiz Complete!</h2>
+
+                        <p id="quizFinalScore">
+                            Score
+                        </p>
+
+                        <button onclick="startQuiz()">
+                            Try Again 🔄
+                        </button>
+
                     </div>
 
                 </div>
@@ -396,13 +611,201 @@
 
         </section>
 
-    </main>
 
-    <footer>
-        <p>Teachly — Teach. Learn. Earn. 🌎</p>
-    </footer>
+        <!-- SHOP -->
+        <section id="shopPage" class="page-section hidden">
 
-    <script src="script.js"></script>
+            <section class="card">
+
+                <div class="section-header">
+
+                    <div>
+                        <h2>🛍️ Teachly Shop</h2>
+
+                        <p>
+                            Spend your Teachly Coins on profile customization.
+                        </p>
+                    </div>
+
+                    <div class="shop-coins">
+                        💰 <span id="shopCoins">0</span>
+                    </div>
+
+                </div>
+
+                <div class="shop-notice">
+                    🔒 Countries and famous places cannot be purchased.
+                    You discover them by learning.
+                </div>
+
+                <div id="shopGrid" class="shop-grid"></div>
+
+            </section>
+
+        </section>
+
+
+        <!-- ACHIEVEMENTS -->
+        <section id="achievementPage" class="page-section hidden">
+
+            <section class="card">
+
+                <h2>🏆 Your Achievements</h2>
+
+                <p>
+                    Keep learning to unlock achievements.
+                </p>
+
+                <div id="achievementGrid" class="achievement-grid"></div>
+
+            </section>
+
+
+            <section class="card">
+
+                <h2>🌎 Your Discoveries</h2>
+
+                <div id="discoveryStats"></div>
+
+                <div id="discoveryList" class="discovery-list"></div>
+
+            </section>
+
+        </section>
+
+
+        <!-- OLD SESSION BADGES -->
+        <section class="card">
+
+            <div class="section-header">
+
+                <div>
+                    <h2>🏆 Session Badges</h2>
+
+                    <p>
+                        Complete teaching sessions to earn badges.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="badge-grid">
+
+                <div class="badge">
+                    <span>🥉</span>
+                    <strong>Starter</strong>
+                    <small>5 sessions</small>
+                </div>
+
+                <div class="badge">
+                    <span>🥉</span>
+                    <strong>Learner</strong>
+                    <small>15 sessions</small>
+                </div>
+
+                <div class="badge">
+                    <span>🥈</span>
+                    <strong>Explorer</strong>
+                    <small>50 sessions</small>
+                </div>
+
+                <div class="badge">
+                    <span>🥈</span>
+                    <strong>Knowledge Seeker</strong>
+                    <small>75 sessions</small>
+                </div>
+
+                <div class="badge">
+                    <span>🥇</span>
+                    <strong>Skill Builder</strong>
+                    <small>100 sessions</small>
+                </div>
+
+                <div class="badge">
+                    <span>🥇</span>
+                    <strong>Mentor</strong>
+                    <small>150 sessions</small>
+                </div>
+
+                <div class="badge">
+                    <span>🏆</span>
+                    <strong>Expert</strong>
+                    <small>250 sessions</small>
+                </div>
+
+                <div class="badge">
+                    <span>🏆</span>
+                    <strong>Master</strong>
+                    <small>500 sessions</small>
+                </div>
+
+                <div class="badge">
+                    <span>💎</span>
+                    <strong>Legend</strong>
+                    <small>750 sessions</small>
+                </div>
+
+                <div class="badge">
+                    <span>👑</span>
+                    <strong>Teachly Champion</strong>
+                    <small>1000 sessions</small>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- COINS -->
+        <section class="card">
+
+            <h2>💰 Teachly Coins</h2>
+
+            <p>
+                Earn coins by participating in teaching and learning sessions.
+            </p>
+
+            <div class="coin-grid">
+
+                <div>
+                    <span>🎨</span>
+                    <strong>Profile Customization</strong>
+                    <small>Use coins for special profile options.</small>
+                </div>
+
+                <div>
+                    <span>✨</span>
+                    <strong>Profile Effects</strong>
+                    <small>Make your profile stand out.</small>
+                </div>
+
+                <div>
+                    <span>😀</span>
+                    <strong>Special Emojis</strong>
+                    <small>Unlock extra chat reactions.</small>
+                </div>
+
+                <div>
+                    <span>🏆</span>
+                    <strong>Badges</strong>
+                    <small>Badges are earned through sessions.</small>
+                </div>
+
+            </div>
+
+        </section>
+
+    </section>
+
+</main>
+
+
+<footer>
+    <p>Teachly — Teach. Learn. Earn. 🌎</p>
+</footer>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>
