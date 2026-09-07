@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teachly — Teach. Learn. Earn.</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="background-badges">
+        <span>🏆</span>
+        <span>🎓</span>
+        <span>💡</span>
+        <span>⭐</span>
+        <span>📚</span>
+        <span>💎</span>
+        <span>👑</span>
+        <span>🥇</span>
+    </div>
+
+    <header>
+        <div class="logo">
+            <span>📚</span>
+            <h1>Teachly</h1>
+        </div>
+
+        <p>Everyone has something to teach. Everyone has something to learn.</p>
+    </header>
+
+    <main>
+
+        <section id="loginSection" class="card login-card">
+            <h2>Welcome to Teachly 👋</h2>
+            <p>Connect with people, exchange knowledge, and learn something new.</p>
+
+            <input
+                type="text"
+                id="usernameInput"
+                placeholder="Enter your username"
+                maxlength="20"
+            >
+
+            <button onclick="login()">Enter Teachly 🚀</button>
+        </section>
+
+        <section id="appSection" class="hidden">
+
+            <section class="profile-card card">
+                <div class="profile-avatar" id="profileAvatar">👤</div>
+
+                <div class="profile-info">
+                    <h2 id="profileName">Username</h2>
+                    <p id="roleText">Ready to teach and learn</p>
+                </div>
+
+                <div class="stats">
+                    <div>
+                        <strong id="coinCount">0</strong>
+                        <span>Coins</span>
+                    </div>
+
+                    <div>
+                        <strong id="sessionCount">0</strong>
+                        <span>Sessions</span>
+                    </div>
+
+                    <div>
+                        <strong id="streakCount">0</strong>
+                        <span>Streak 🔥</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Choose Your Mode</h2>
+                <p>How do you want to learn today?</p>
+
+                <div class="mode-grid">
+
+                    <button class="mode-card ai-mode" onclick="openAIMode()">
+                        <span class="mode-icon">🤖</span>
+                        <strong>AI Mode</strong>
+                        <small>Learn with your personal AI tutor</small>
+                    </button>
+
+                    <button class="mode-card online-mode" onclick="openOnlineMode()">
+                        <span class="mode-icon">🌐</span>
+                        <strong>Online Mode</strong>
+                        <small>Teach and learn with real people</small>
+                    </button>
+
+                </div>
+            </section>
+
+            <section id="aiSection" class="card hidden">
+
+                <div class="section-header">
+                    <div>
+                        <h2>🤖 Teachly AI Tutor</h2>
+                        <p>Your personal learning assistant</p>
+                    </div>
+
+                    <button class="small-button" onclick="closeModes()">✕</button>
+                </div>
+
+                <div class="ai-controls">
+
+                    <label>
+                        Learning Level
+                        <select id="aiLevel">
+                            <option value="Beginner">Beginner</option>
+                            <option value="Intermediate">Intermediate</option>
+                            <option value="Advanced">Advanced</option>
+                        </select>
+                    </label>
+
+                    <button onclick="aiExplain()">Explain Simply</button>
+                    <button onclick="aiExample()">Give Example</button>
+                    <button onclick="aiQuiz()">Quiz Me</button>
+                    <button onclick="aiTeachBack()">Teach Back</button>
+
+                </div>
+
+                <div class="chat-box" id="aiChat">
+
+                    <div class="message ai-message">
+                        <div class="message-avatar">🤖</div>
+
+                        <div>
+                            <strong>Teachly AI</strong>
+                            <p>
+                                Hi! I'm your AI tutor. Ask me anything you're curious about,
+                                and I'll help you understand it step by step. 💡
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="chat-input">
+                    <input
+                        type="text"
+                        id="aiInput"
+                        placeholder="Ask me anything..."
+                        onkeydown="if(event.key === 'Enter') sendAIMessage()"
+                    >
+
+                    <button onclick="sendAIMessage()">Send ➤</button>
+                </div>
+
+            </section>
+
+            <section id="onlineSection" class="card hidden">
+
+                <div class="section-header">
+                    <div>
+                        <h2>🌐 Online Mode</h2>
+                        <p>Exchange knowledge with real people</p>
+                    </div>
+
+                    <button class="small-button" onclick="closeModes()">✕</button>
+                </div>
+
+                <div class="role-selection">
+
+                    <h3>What do you want to do?</h3>
+
+                    <div class="role-buttons">
+
+                        <button
+                            id="teacherRoleButton"
+                            onclick="chooseRole('Teacher')"
+                        >
+                            👨‍🏫 I Want to Teach
+                        </button>
+
+                        <button
+                            id="learnerRoleButton"
+                            onclick="chooseRole('Learner')"
+                        >
+                            🎓 I Want to Learn
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div id="topicArea" class="hidden">
+
+                    <label for="topicInput">
+                        What topic?
+                    </label>
+
+                    <input
+                        type="text"
+                        id="topicInput"
+                        placeholder="Example: Python, Maths, Drawing..."
+                    >
+
+                    <button onclick="findPeople()">
+                        🔍 Find People
+                    </button>
+
+                </div>
+
+                <div id="onlineResult"></div>
+
+                <div id="onlineChatArea" class="hidden">
+
+                    <div class="match-info">
+                        <span>🟢</span>
+                        <div>
+                            <strong id="partnerName">Connected User</strong>
+                            <p id="partnerRole">Teacher</p>
+                        </div>
+                    </div>
+
+                    <div class="chat-box" id="onlineChat">
+
+                    </div>
+
+                    <div class="chat-input">
+
+                        <input
+                            type="text"
+                            id="onlineInput"
+                            placeholder="Type a message..."
+                            onkeydown="if(event.key === 'Enter') sendOnlineMessage()"
+                        >
+
+                        <button onclick="sendOnlineMessage()">Send ➤</button>
+
+                    </div>
+
+                    <div class="emoji-bar">
+
+                        <button onclick="sendEmoji('👍')">👍</button>
+                        <button onclick="sendEmoji('😊')">😊</button>
+                        <button onclick="sendEmoji('🎉')">🎉</button>
+                        <button onclick="sendEmoji('💡')">💡</button>
+                        <button onclick="sendEmoji('🔥')">🔥</button>
+
+                    </div>
+
+                    <button
+                        class="danger-button"
+                        onclick="leaveOnlineSession()"
+                    >
+                        Leave Session
+                    </button>
+
+                </div>
+
+            </section>
+
+            <section class="card">
+
+                <div class="section-header">
+                    <div>
+                        <h2>🏆 Your Badges</h2>
+                        <p>Complete sessions to automatically earn badges.</p>
+                    </div>
+                </div>
+
+                <div class="badge-grid">
+
+                    <div class="badge">
+                        <span>🥉</span>
+                        <strong>Starter</strong>
+                        <small>5 sessions</small>
+                    </div>
+
+                    <div class="badge">
+                        <span>🥉</span>
+                        <strong>Learner</strong>
+                        <small>15 sessions</small>
+                    </div>
+
+                    <div class="badge">
+                        <span>🥈</span>
+                        <strong>Explorer</strong>
+                        <small>50 sessions</small>
+                    </div>
+
+                    <div class="badge">
+                        <span>🥈</span>
+                        <strong>Knowledge Seeker</strong>
+                        <small>75 sessions</small>
+                    </div>
+
+                    <div class="badge">
+                        <span>🥇</span>
+                        <strong>Skill Builder</strong>
+                        <small>100 sessions</small>
+                    </div>
+
+                    <div class="badge">
+                        <span>🥇</span>
+                        <strong>Mentor</strong>
+                        <small>150 sessions</small>
+                    </div>
+
+                    <div class="badge">
+                        <span>🏆</span>
+                        <strong>Expert</strong>
+                        <small>250 sessions</small>
+                    </div>
+
+                    <div class="badge">
+                        <span>🏆</span>
+                        <strong>Master</strong>
+                        <small>500 sessions</small>
+                    </div>
+
+                    <div class="badge">
+                        <span>💎</span>
+                        <strong>Legend</strong>
+                        <small>750 sessions</small>
+                    </div>
+
+                    <div class="badge">
+                        <span>👑</span>
+                        <strong>Teachly Champion</strong>
+                        <small>1000 sessions</small>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section class="feature-grid">
+
+                <div class="card feature-card">
+                    <span>🕵️</span>
+                    <h3>Mystery Topic</h3>
+                    <p>Get a random topic and challenge yourself to teach it.</p>
+                    <button onclick="mysteryTopic()">Get Topic</button>
+                    <div id="mysteryResult"></div>
+                </div>
+
+                <div class="card feature-card">
+                    <span>🔥</span>
+                    <h3>Knowledge Streak</h3>
+                    <p>Keep learning and teaching to build your streak.</p>
+                    <strong id="streakMessage">Start your streak today!</strong>
+                </div>
+
+                <div class="card feature-card">
+                    <span>🔄</span>
+                    <h3>Skill Trading</h3>
+                    <p>Teach someone what you know and learn something they know.</p>
+                    <button onclick="showSkillTrading()">Find a Skill Trade</button>
+                    <div id="tradeResult"></div>
+                </div>
+
+            </section>
+
+            <section class="card">
+
+                <h2>💰 Teachly Coins</h2>
+
+                <p>
+                    Earn coins by participating in teaching and learning sessions.
+                </p>
+
+                <div class="coin-grid">
+
+                    <div>
+                        <span>🎨</span>
+                        <strong>Profile Customization</strong>
+                        <small>Use coins for special profile options.</small>
+                    </div>
+
+                    <div>
+                        <span>✨</span>
+                        <strong>Profile Effects</strong>
+                        <small>Make your profile stand out.</small>
+                    </div>
+
+                    <div>
+                        <span>😀</span>
+                        <strong>Special Emojis</strong>
+                        <small>Unlock extra chat reactions.</small>
+                    </div>
+
+                    <div>
+                        <span>🏆</span>
+                        <strong>Badges</strong>
+                        <small>Badges are earned through sessions, not bought.</small>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </section>
+
+    </main>
+
+    <footer>
+        <p>Teachly — Teach. Learn. Earn. 🌎</p>
+    </footer>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
