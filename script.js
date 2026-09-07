@@ -1,583 +1,430 @@
-let currentUser = null;
-let selectedRole = "";
-let socket = null;
-let onlineConnected = false;
-let currentSession = false;
+let data = JSON.parse(
+  localStorage.getItem("teachly")
+) || {
+  name: "",
+  email: "",
+  role: "",
+  coins: 100,
+  sessions: 0,
+  owned: [],
+  effect: ""
+};
 
-const badges = [
-    { name: "Starter", sessions: 5, icon: "🥉" },
-    { name: "Learner", sessions: 15, icon: "🥉" },
-    { name: "Explorer", sessions: 50, icon: "🥈" },
-    { name: "Knowledge Seeker", sessions: 75, icon: "🥈" },
-    { name: "Skill Builder", sessions: 100, icon: "🥇" },
-    { name: "Mentor", sessions: 150, icon: "🥇" },
-    { name: "Expert", sessions: 250, icon: "🏆" },
-    { name: "Master", sessions: 500, icon: "🏆" },
-    { name: "Legend", sessions: 750, icon: "💎" },
-    { name: "Teachly Champion", sessions: 1000, icon: "👑" }
-];
+function save() {
+  localStorage.setItem(
+    "teachly",
+    JSON.stringify(data)
+  );
 
-const mysteryTopics = [
-    "How do airplanes fly?",
-    "Why is the sky blue?",
-    "How does the internet work?",
-    "Why do we need sleep?",
-    "How do plants make food?",
-    "What is artificial intelligence?",
-    "How do earthquakes happen?",
-    "Why does ice float on water?",
-    "How does a rainbow form?",
-    "What makes a good leader?"
-];
-
-function login() {
-    const input = document.getElementById("usernameInput");
-    const username = input.value.trim();
-
-    if (!username) {
-        alert("Please enter a username.");
-        return;
-    }
-
-    const saved = JSON.parse(localStorage.getItem("teachly_" + username)) || {
-        username,
-        coins: 0,
-        sessions: 0,
-        streak: 0,
-        earnedBadges: []
-    };
-
-    currentUser = saved;
-
-    localStorage.setItem(
-        "teachly_" + username,
-        JSON.stringify(currentUser)
-    );
-
-    document.getElementById("loginSection").classList.add("hidden");
-    document.getElementById("appSection").classList.remove("hidden");
-
-    updateProfile();
+  update();
 }
 
-function updateProfile() {
-    if (!currentUser) return;
+function show(id) {
 
-    document.getElementById("profileName").textContent =
-        currentUser.username;
+  document.querySelectorAll(".screen")
+    .forEach(x => x.classList.remove("active"));
 
-    document.getElementById("coinCount").textContent =
-        currentUser.coins;
+  document.getElementById(id)
+    .classList.add("active");
 
-    document.getElementById("sessionCount").textContent =
-        currentUser.sessions;
-
-    document.getElementById("streakCount").textContent =
-        currentUser.streak;
-
-    document.getElementById("streakMessage").textContent =
-        currentUser.streak > 0
-            ? "🔥 Your current streak is " + currentUser.streak + "!"
-            : "Start your streak today!";
-
-    updateBadges();
+  window.scrollTo(0, 0);
 }
 
-function saveUser() {
-    if (!currentUser) return;
+function update() {
 
-    localStorage.setItem(
-        "teachly_" + currentUser.username,
-        JSON.stringify(currentUser)
-    );
+  document.getElementById("coins")
+    .textContent = "🪙 " + data.coins;
+
+  document.getElementById("username")
+    .textContent = data.name || "User";
+
+  document.getElementById("profileName")
+    .textContent = data.name || "User";
+
+  document.getElementById("role")
+    .textContent =
+    data.role === "teacher"
+      ? "👨‍🏫 Teacher"
+      : "🎓 Learner";
 }
 
-function openAIMode() {
-    document.getElementById("aiSection").classList.remove("hidden");
-    document.getElementById("onlineSection").classList.add("hidden");
+function createAccount() {
 
-    document.getElementById("aiSection").scrollIntoView({
-        behavior: "smooth"
-    });
-}
+  let name =
+    document.getElementById("name").value.trim();
 
-function openOnlineMode() {
-    document.getElementById("onlineSection").classList.remove("hidden");
-    document.getElementById("aiSection").classList.add("hidden");
+  let email =
+    document.getElementById("email").value.trim();
 
-    document.getElementById("onlineSection").scrollIntoView({
-        behavior: "smooth"
-    });
+  if (!name || !email) {
+    alert("Please enter your name and email.");
+    return;
+  }
 
-    connectSocket();
-}
+  data.name = name;
+  data.email = email;
 
-function closeModes() {
-    document.getElementById("aiSection").classList.add("hidden");
-    document.getElementById("onlineSection").classList.add("hidden");
-}
+  save();
 
-function addAIMessage(text) {
-    const chat = document.getElementById("aiChat");
-
-    const message = document.createElement("div");
-    message.className = "message ai-message";
-
-    message.innerHTML = `
-        <div class="message-avatar">🤖</div>
-        <div>
-            <strong>Teachly AI</strong>
-            <p>${formatMessage(text)}</p>
-        </div>
-    `;
-
-    chat.appendChild(message);
-    chat.scrollTop = chat.scrollHeight;
-}
-
-function addUserMessage(text) {
-    const chat = document.getElementById("aiChat");
-
-    const message = document.createElement("div");
-    message.className = "message user-message";
-
-    message.innerHTML = `
-        <div>
-            <strong>${escapeHTML(currentUser.username)}</strong>
-            <p>${formatMessage(text)}</p>
-        </div>
-    `;
-
-    chat.appendChild(message);
-    chat.scrollTop = chat.scrollHeight;
-}
-
-async function sendAIMessage() {
-    const input = document.getElementById("aiInput");
-    const message = input.value.trim();
-
-    if (!message) return;
-
-    addUserMessage(message);
-    input.value = "";
-
-    addAIMessage("Thinking... 🤔");
-
-    const chat = document.getElementById("aiChat");
-    const thinkingMessage = chat.lastElementChild;
-
-    try {
-        const level = document.getElementById("aiLevel").value;
-
-        const response = await fetch("/api/ai", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                username: currentUser.username,
-                level,
-                message
-            })
-        });
-
-        const data = await response.json();
-
-        thinkingMessage.remove();
-
-        if (data.reply) {
-            addAIMessage(data.reply);
-        } else {
-            addAIMessage(
-                "I couldn't get an answer right now. Please try again."
-            );
-        }
-    } catch (error) {
-        thinkingMessage.remove();
-
-        addAIMessage(
-            "AI Mode needs the Teachly server to be running. Start the backend and try again. 🤖"
-        );
-    }
-}
-
-function aiExplain() {
-    const input = document.getElementById("aiInput");
-
-    input.value =
-        "Explain the topic I am currently confused about in a very simple step-by-step way.";
-
-    input.focus();
-}
-
-function aiExample() {
-    const input = document.getElementById("aiInput");
-
-    input.value =
-        "Give me a simple real-life example that helps me understand this topic.";
-
-    input.focus();
-}
-
-function aiQuiz() {
-    const input = document.getElementById("aiInput");
-
-    input.value =
-        "Give me a short quiz about this topic and wait for my answers.";
-
-    input.focus();
-}
-
-function aiTeachBack() {
-    const input = document.getElementById("aiInput");
-
-    input.value =
-        "Give me a Teach Back challenge. Ask me to explain this topic in my own words.";
-
-    input.focus();
+  show("role");
 }
 
 function chooseRole(role) {
-    selectedRole = role;
 
-    const teacherButton =
-        document.getElementById("teacherRoleButton");
+  data.role = role;
 
-    const learnerButton =
-        document.getElementById("learnerRoleButton");
+  save();
 
-    teacherButton.classList.remove("selected");
-    learnerButton.classList.remove("selected");
+  show("dashboard");
+}
 
-    if (role === "Teacher") {
-        teacherButton.classList.add("selected");
-    } else {
-        learnerButton.classList.add("selected");
+function people() {
+
+  let users = [
+
+    {
+      name: "Arun",
+      role: "👨‍🏫 Teacher",
+      subject: "Python"
+    },
+
+    {
+      name: "Maya",
+      role: "👩‍🏫 Teacher",
+      subject: "Maths"
+    },
+
+    {
+      name: "Kavin",
+      role: "🎓 Learner",
+      subject: "Science"
+    },
+
+    {
+      name: "Sara",
+      role: "👩‍🏫 Teacher",
+      subject: "English"
     }
 
-    document.getElementById("roleText").textContent =
-        "You are currently a " + role;
+  ];
 
-    document.getElementById("topicArea").classList.remove("hidden");
+  document.getElementById("peopleList")
+    .innerHTML = users.map(user => `
 
-    document.getElementById("onlineResult").innerHTML = "";
-}
+      <div class="person">
 
-function connectSocket() {
-    if (onlineConnected) return;
-
-    if (typeof io === "undefined") {
-        showOnlineResult(
-            "error",
-            "<strong>Online Mode is not connected.</strong><br><br>Start the Teachly server and make sure Socket.IO is loaded."
-        );
-        return;
-    }
-
-    socket = io();
-
-    socket.on("connect", () => {
-        onlineConnected = true;
-    });
-
-    socket.on("matchFound", data => {
-        handleMatchFound(data);
-    });
-
-    socket.on("noUsersFound", () => {
-        showOnlineResult(
-            "empty",
-            "🔍 <strong>No people found right now.</strong><br><br>Try another topic later or switch to AI Mode."
-        );
-    });
-
-    socket.on("sessionMessage", data => {
-        addOnlineMessage(
-            data.username,
-            data.message,
-            data.username === currentUser.username
-        );
-    });
-
-    socket.on("partnerLeft", () => {
-        addOnlineMessage(
-            "Teachly",
-            "The other person has left the session.",
-            false
-        );
-
-        currentSession = false;
-    });
-
-    socket.on("serverMessage", message => {
-        addOnlineMessage(
-            "Teachly",
-            message,
-            false
-        );
-    });
-
-    socket.on("disconnect", () => {
-        onlineConnected = false;
-    });
-}
-
-function findPeople() {
-    const topic = document
-        .getElementById("topicInput")
-        .value
-        .trim();
-
-    if (!selectedRole) {
-        alert("Choose Teacher or Learner first.");
-        return;
-    }
-
-    if (!topic) {
-        alert("Enter a topic first.");
-        return;
-    }
-
-    if (!socket || !onlineConnected) {
-        connectSocket();
-
-        setTimeout(() => {
-            if (socket && onlineConnected) {
-                startSearch(topic);
-            }
-        }, 500);
-
-        return;
-    }
-
-    startSearch(topic);
-}
-
-function startSearch(topic) {
-    showOnlineResult(
-        "success",
-        "🔎 Looking for a real person who matches your topic..."
-    );
-
-    socket.emit("findUser", {
-        username: currentUser.username,
-        role: selectedRole,
-        topic
-    });
-}
-
-function showOnlineResult(type, message) {
-    const result = document.getElementById("onlineResult");
-
-    result.className =
-        type === "success"
-            ? "success-result"
-            : type === "empty"
-                ? "empty-result"
-                : "error-result";
-
-    result.innerHTML = message;
-}
-
-function handleMatchFound(data) {
-    currentSession = true;
-
-    document.getElementById("onlineResult").innerHTML = "";
-
-    document
-        .getElementById("onlineChatArea")
-        .classList.remove("hidden");
-
-    document.getElementById("partnerName").textContent =
-        data.partner.username;
-
-    document.getElementById("partnerRole").textContent =
-        data.partner.role;
-
-    document.getElementById("onlineChat").innerHTML = "";
-
-    addOnlineMessage(
-        "Teachly",
-        "🎉 You found a real person! Start your knowledge exchange.",
-        false
-    );
-}
-
-function sendOnlineMessage() {
-    const input = document.getElementById("onlineInput");
-    const message = input.value.trim();
-
-    if (!message || !socket || !currentSession) return;
-
-    socket.emit("sessionMessage", {
-        message,
-        username: currentUser.username
-    });
-
-    input.value = "";
-}
-
-function addOnlineMessage(username, message, own) {
-    const chat = document.getElementById("onlineChat");
-
-    const element = document.createElement("div");
-
-    element.className =
-        own
-            ? "message user-message"
-            : "message ai-message";
-
-    element.innerHTML = `
         <div>
-            <strong>${escapeHTML(username)}</strong>
-            <p>${formatMessage(message)}</p>
+          <b>${user.name}</b>
+          <br>
+          <small>
+            ${user.role} • ${user.subject}
+          </small>
         </div>
+
+        <button onclick="request('${user.name}')">
+          Request
+        </button>
+
+      </div>
+
+    `).join("");
+
+  show("people");
+}
+
+function request(name) {
+
+  alert(
+    "Session request sent to " +
+    name +
+    "! 👥"
+  );
+}
+
+const topics = [
+
+  "🌍 Why do we have seasons?",
+  "💧 The water cycle",
+  "✈️ How airplanes fly",
+  "🌱 How plants make food",
+  "🌋 How volcanoes form",
+  "☀️ The Solar System",
+  "⚙️ How gravity works",
+  "🌊 Interesting ocean animals",
+  "💻 Basic coding logic",
+  "🐝 Why bees are important"
+
+];
+
+function mystery() {
+
+  show("mystery");
+
+  document.getElementById("topic")
+    .textContent = "Tap Reveal Topic!";
+}
+
+function randomTopic() {
+
+  let topic =
+    topics[
+      Math.floor(
+        Math.random() * topics.length
+      )
+    ];
+
+  document.getElementById("topic")
+    .textContent = topic;
+}
+
+let shopItems = [
+
+  {
+    name: "Fire",
+    icon: "🔥",
+    price: 73
+  },
+
+  {
+    name: "Void",
+    icon: "🌌",
+    price: 146
+  },
+
+  {
+    name: "Wind",
+    icon: "🌪️",
+    price: 58
+  },
+
+  {
+    name: "Lightning",
+    icon: "⚡",
+    price: 219
+  },
+
+  {
+    name: "Ice",
+    icon: "❄️",
+    price: 91
+  },
+
+  {
+    name: "Galaxy",
+    icon: "✨",
+    price: 175
+  },
+
+  {
+    name: "Nature",
+    icon: "🌿",
+    price: 64
+  },
+
+  {
+    name: "Emoji Pack",
+    icon: "😀",
+    price: 45
+  }
+
+];
+
+function shop() {
+
+  let html = "";
+
+  shopItems.forEach(item => {
+
+    let owned =
+      data.owned.includes(item.name);
+
+    html += `
+
+      <div class="item">
+
+        <div class="itemIcon">
+          ${item.icon}
+        </div>
+
+        <h3>${item.name}</h3>
+
+        <p>
+          🪙 ${item.price}
+        </p>
+
+        <button
+          onclick="buy('${item.name}')">
+
+          ${owned ? "Equip" : "Buy"}
+
+        </button>
+
+      </div>
+
     `;
 
-    chat.appendChild(element);
-    chat.scrollTop = chat.scrollHeight;
+  });
+
+  document.getElementById("shopItems")
+    .innerHTML = html;
+
+  show("shop");
 }
 
-function sendEmoji(emoji) {
-    if (!socket || !currentSession) return;
+function buy(name) {
 
-    socket.emit("sessionMessage", {
-        message: emoji,
-        username: currentUser.username
-    });
-}
+  let item =
+    shopItems.find(x => x.name === name);
 
-function leaveOnlineSession() {
-    if (!currentSession) return;
+  if (data.owned.includes(name)) {
 
-    if (socket) {
-        socket.emit("leaveSession");
-    }
+    data.effect = name;
 
-    currentSession = false;
+    save();
 
-    document
-        .getElementById("onlineChatArea")
-        .classList.add("hidden");
-
-    document.getElementById("onlineChat").innerHTML = "";
-
-    showOnlineResult(
-        "success",
-        "✅ Session ended. Great job exchanging knowledge!"
+    alert(
+      item.icon +
+      " " +
+      name +
+      " equipped!"
     );
 
-    completeSession();
-}
+    return;
+  }
 
-function completeSession() {
-    currentUser.sessions += 1;
-    currentUser.coins += 10;
-    currentUser.streak += 1;
+  if (data.coins < item.price) {
 
-    const newlyEarned = [];
-
-    badges.forEach(badge => {
-        if (
-            currentUser.sessions >= badge.sessions &&
-            !currentUser.earnedBadges.includes(badge.name)
-        ) {
-            currentUser.earnedBadges.push(badge.name);
-            currentUser.coins += 25;
-            newlyEarned.push(badge);
-        }
-    });
-
-    saveUser();
-    updateProfile();
-
-    let message =
-        "🎉 Session completed! +10 Teachly Coins.";
-
-    if (newlyEarned.length > 0) {
-        newlyEarned.forEach(badge => {
-            message +=
-                ` ${badge.icon} You earned the ${badge.name} badge!`;
-        });
-    }
-
-    addOnlineMessage(
-        "Teachly",
-        message,
-        false
+    alert(
+      "You don't have enough coins! 🪙"
     );
+
+    return;
+  }
+
+  data.coins -= item.price;
+
+  data.owned.push(name);
+
+  data.effect = name;
+
+  save();
+
+  alert(
+    item.icon +
+    " " +
+    name +
+    " bought!"
+  );
+
+  shop();
 }
 
-function updateBadges() {
-    const badgeElements =
-        document.querySelectorAll(".badge");
+function profile() {
 
-    badgeElements.forEach((element, index) => {
-        const badge = badges[index];
+  document.getElementById("stats")
+    .textContent =
+    data.sessions +
+    " completed sessions • 🪙 " +
+    data.coins +
+    " coins";
 
-        if (
-            currentUser.earnedBadges &&
-            currentUser.earnedBadges.includes(badge.name)
-        ) {
-            element.style.opacity = "1";
-            element.style.borderColor = "rgba(25, 211, 174, 0.6)";
-        } else {
-            element.style.opacity = "0.45";
-        }
-    });
-}
+  let milestones = [
 
-function mysteryTopic() {
-    const topic =
-        mysteryTopics[
-            Math.floor(Math.random() * mysteryTopics.length)
-        ];
+    [1, "🌱 Starter"],
+    [10, "⭐ Rising Star"],
+    [50, "🥉 Bronze"],
+    [100, "🥈 Silver"],
+    [250, "🥇 Gold"],
+    [500, "💎 Diamond"],
+    [1000, "👑 Master"],
+    [2500, "🔥 Legend"],
+    [5000, "⚡ Elite"],
+    [10000, "🌟 Teachly Titan"]
 
-    document.getElementById("mysteryResult").innerHTML =
-        "🎲 Your mystery topic:<br><br>“" +
-        escapeHTML(topic) +
-        "”";
-}
+  ];
 
-function showSkillTrading() {
-    document.getElementById("tradeResult").innerHTML =
-        "🔄 Teach what you know and learn what someone else knows!";
-}
+  let badges = "";
 
-function formatMessage(text) {
-    return escapeHTML(String(text))
-        .replace(/\n/g, "<br>");
-}
+  milestones.forEach(x => {
 
-function escapeHTML(text) {
-    return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
+    if (data.sessions >= x[0]) {
 
-window.addEventListener("load", () => {
-    const savedUsername =
-        localStorage.getItem("teachlyLastUser");
+      badges +=
+        `<span class="badge">
+          ${x[1]}<br>
+          ${x[0]} sessions
+        </span>`;
 
-    if (savedUsername) {
-        const saved =
-            localStorage.getItem("teachly_" + savedUsername);
-
-        if (saved) {
-            currentUser = JSON.parse(saved);
-
-            document
-                .getElementById("loginSection")
-                .classList.add("hidden");
-
-            document
-                .getElementById("appSection")
-                .classList.remove("hidden");
-
-            updateProfile();
-        }
     }
-});
+
+  });
+
+  if (!badges) {
+
+    badges =
+      "<p>Complete your first session to unlock 🌱 Starter!</p>";
+
+  }
+
+  document.getElementById("badges")
+    .innerHTML = badges;
+
+  let effect =
+    shopItems.find(
+      x => x.name === data.effect
+    );
+
+  document.getElementById("profileEffect")
+    .textContent =
+    effect ? effect.icon : "👤";
+
+  show("profile");
+}
+
+function world() {
+  show("world");
+}
+
+function place(name) {
+
+  let information = {
+
+    "North America":
+      "🏔️ Explore mountains, wildlife and famous places.",
+
+    "South America":
+      "🌳 Explore the Amazon rainforest and amazing wildlife.",
+
+    "Europe":
+      "🏰 Explore history, art and famous landmarks.",
+
+    "Africa":
+      "🦁 Explore wildlife, deserts and different cultures.",
+
+    "Asia":
+      "🏯 Explore history, technology, food and cultures.",
+
+    "Australia":
+      "🦘 Explore unique wildlife, reefs and natural places."
+
+  };
+
+  document.getElementById("placeInfo")
+    .innerHTML = `
+
+      <h3>🌍 ${name}</h3>
+
+      <p>
+        ${information[name]}
+      </p>
+
+      <h4>⭐ Special Things</h4>
+
+      <button onclick="alert('More content coming! 📚')">
+        📚 Learn More
+      </button>
+
+    `;
+}
+
+update();
