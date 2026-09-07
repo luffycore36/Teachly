@@ -1,810 +1,239 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teachly — Teach. Learn. Earn.</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teachly</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div class="background-badges">
-    <span>🏆</span>
-    <span>🎓</span>
-    <span>💡</span>
-    <span>⭐</span>
-    <span>📚</span>
-    <span>💎</span>
-    <span>👑</span>
-    <span>🥇</span>
+<div class="floating">
+  🎓 🧠 🪙 🌍 🔥 🏆 📚 🎲 ✨ 💡
 </div>
 
 <header>
-    <div class="logo">
-        <span>📚</span>
-        <h1>Teachly</h1>
-    </div>
-
-    <p>Everyone has something to teach. Everyone has something to learn.</p>
+  <h2>🎓 Teachly</h2>
+  <div id="coins">🪙 0</div>
 </header>
 
 <main>
 
-    <!-- LOGIN -->
-    <section id="loginSection" class="card login-card">
-        <h2>Welcome to Teachly 👋</h2>
+<!-- WELCOME -->
+<section id="welcome" class="screen active">
+  <div class="card hero">
+    <div class="big">🌟</div>
+    <h1>Learn. Teach. Connect.</h1>
+    <p>Teachly connects real learners with real teachers.</p>
+    <button onclick="show('account')">Get Started 🚀</button>
+  </div>
+</section>
+
+<!-- ACCOUNT -->
+<section id="account" class="screen">
+  <div class="card form">
+    <h2>👤 Create Account</h2>
+
+    <input id="name" placeholder="Your name">
+    <input id="email" placeholder="Email">
+
+    <button onclick="createAccount()">Continue</button>
+
+    <small>Demo version stores your data on this device.</small>
+  </div>
+</section>
 
-        <p>
-            Create your local Teachly account and start discovering knowledge.
-        </p>
+<!-- ROLE -->
+<section id="role" class="screen">
+  <div class="card">
+    <h2>What do you want to do?</h2>
 
-        <input
-            type="text"
-            id="usernameInput"
-            placeholder="Enter your username"
-            maxlength="20"
-        >
+    <div class="roles">
+
+      <button onclick="chooseRole('learner')">
+        🎓
+        <b>Learn</b>
+        <small>Find a real teacher</small>
+      </button>
+
+      <button onclick="chooseRole('teacher')">
+        👨‍🏫
+        <b>Teach</b>
+        <small>Help a real learner</small>
+      </button>
+
+    </div>
+  </div>
+</section>
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="screen">
+
+  <div class="card profileTop">
+    <div>
+      <small>Welcome</small>
+      <h2 id="username">User</h2>
+      <p id="role"></p>
+    </div>
 
-        <button onclick="login()">Enter Teachly 🚀</button>
-    </section>
+    <div class="avatar">👤</div>
+  </div>
 
+  <div class="grid">
 
-    <!-- APP -->
-    <section id="appSection" class="hidden">
+    <button onclick="people()" class="card feature">
+      👥
+      <b>People</b>
+      <small>Find real users</small>
+    </button>
 
-        <!-- PROFILE -->
-        <section class="profile-card card">
+    <button onclick="mystery()" class="card feature">
+      🎲
+      <b>Mystery</b>
+      <small>Random topic</small>
+    </button>
 
-            <div class="profile-avatar" id="profileAvatar">👤</div>
+    <button onclick="shop()" class="card feature">
+      🛒
+      <b>Shop</b>
+      <small>Buy with coins</small>
+    </button>
 
-            <div class="profile-info">
-                <h2 id="profileName">Username</h2>
-                <p id="roleText">Ready to teach and learn</p>
-            </div>
+    <button onclick="profile()" class="card feature">
+      🏅
+      <b>Profile</b>
+      <small>Badges & effects</small>
+    </button>
 
-            <div class="stats">
+    <button onclick="world()" class="card feature">
+      🌍
+      <b>World Explorer</b>
+      <small>Explore the world</small>
+    </button>
 
-                <div>
-                    <strong id="coinCount">0</strong>
-                    <span>Coins</span>
-                </div>
+  </div>
 
-                <div>
-                    <strong id="xpCount">0</strong>
-                    <span>XP</span>
-                </div>
+</section>
 
-                <div>
-                    <strong id="sessionCount">0</strong>
-                    <span>Sessions</span>
-                </div>
+<!-- PEOPLE -->
+<section id="people" class="screen">
+  <div class="card">
 
-                <div>
-                    <strong id="streakCount">0</strong>
-                    <span>Streak 🔥</span>
-                </div>
+    <button class="back" onclick="show('dashboard')">← Back</button>
 
-            </div>
+    <h2>👥 Real People</h2>
+    <p>Find teachers and learners registered on Teachly.</p>
 
-        </section>
+    <div id="peopleList"></div>
 
+  </div>
+</section>
 
-        <!-- NAVIGATION -->
-        <section class="card app-navigation">
+<!-- MYSTERY -->
+<section id="mystery" class="screen">
+  <div class="card center">
 
-            <button onclick="showPage('homePage')">
-                🏠 Home
-            </button>
+    <button class="back" onclick="show('dashboard')">← Back</button>
 
-            <button onclick="showPage('mapPage')">
-                🌎 World Map
-            </button>
+    <div class="mysteryIcon">🎲</div>
 
-            <button onclick="showPage('quizPage')">
-                🧠 Quizzes
-            </button>
+    <h2>Mystery Topic</h2>
 
-            <button onclick="showPage('shopPage')">
-                🛍️ Shop
-            </button>
+    <h3 id="topic">Tap the button!</h3>
 
-            <button onclick="showPage('achievementPage')">
-                🏆 Achievements
-            </button>
+    <button onclick="randomTopic()">Reveal Topic ✨</button>
 
-        </section>
+    <div class="flow">
+      🎲 Mystery
+      →
+      👨‍🏫 Teacher teaches
+      →
+      ❓ Question
+      →
+      🎓 Student answers
+      →
+      ✅
+      →
+      🪙 Coin
+    </div>
 
+  </div>
+</section>
 
-        <!-- HOME PAGE -->
-        <section id="homePage">
+<!-- SHOP -->
+<section id="shop" class="screen">
+  <div class="card">
 
-            <section class="card">
-                <h2>Welcome back, <span id="homeUsername">Learner</span>! 👋</h2>
+    <button class="back" onclick="show('dashboard')">← Back</button>
 
-                <p>
-                    Explore the world, discover new countries, learn skills,
-                    complete quizzes and earn XP.
-                </p>
+    <h2>🛒 Teachly Shop</h2>
+    <p>Everything is bought using Teachly Coins.</p>
 
-                <div class="home-actions">
+    <div id="shopItems" class="shop"></div>
 
-                    <button onclick="showPage('mapPage')">
-                        🌎 Explore World
-                    </button>
+  </div>
+</section>
 
-                    <button onclick="showPage('quizPage')">
-                        🧠 Take a Quiz
-                    </button>
+<!-- PROFILE -->
+<section id="profile" class="screen">
+  <div class="card center">
 
-                    <button onclick="openAIMode()">
-                        🤖 AI Study Buddy
-                    </button>
+    <button class="back" onclick="show('dashboard')">← Back</button>
 
-                </div>
-            </section>
+    <div id="profileEffect" class="profileEffect">👤</div>
 
+    <h2 id="profileName">User</h2>
 
-            <!-- AI + ONLINE MODES -->
-            <section class="card">
+    <p id="stats"></p>
 
-                <h2>Choose Your Mode</h2>
-                <p>How do you want to learn today?</p>
+    <h3>🏅 Badges</h3>
 
-                <div class="mode-grid">
+    <div id="badges"></div>
 
-                    <button class="mode-card ai-mode" onclick="openAIMode()">
-                        <span class="mode-icon">🤖</span>
-                        <strong>AI Mode</strong>
-                        <small>Learn with your personal AI tutor</small>
-                    </button>
+  </div>
+</section>
 
-                    <button class="mode-card online-mode" onclick="openOnlineMode()">
-                        <span class="mode-icon">🌐</span>
-                        <strong>Online Mode</strong>
-                        <small>Teach and learn with real people</small>
-                    </button>
+<!-- WORLD -->
+<section id="world" class="screen">
 
-                </div>
-            </section>
+  <div class="card">
 
+    <button class="back" onclick="show('dashboard')">← Back</button>
 
-            <!-- AI -->
-            <section id="aiSection" class="card hidden">
+    <h2>🌍 World Explorer</h2>
 
-                <div class="section-header">
-                    <div>
-                        <h2>🤖 Teachly AI Tutor</h2>
-                        <p>Your personal learning assistant</p>
-                    </div>
+    <p>Tap a place to explore it.</p>
 
-                    <button class="small-button" onclick="closeModes()">✕</button>
-                </div>
+    <div class="map">
 
-                <div class="ai-controls">
+      <button onclick="place('North America')">🌎</button>
+      <button onclick="place('South America')">🌎</button>
+      <button onclick="place('Europe')">🌍</button>
+      <button onclick="place('Africa')">🌍</button>
+      <button onclick="place('Asia')">🌏</button>
+      <button onclick="place('Australia')">🌏</button>
 
-                    <label>
-                        Learning Level
+    </div>
 
-                        <select id="aiLevel">
-                            <option value="Beginner">Beginner</option>
-                            <option value="Intermediate">Intermediate</option>
-                            <option value="Advanced">Advanced</option>
-                        </select>
-                    </label>
+    <div id="placeInfo" class="place">
+      <h3>🌎 Choose a place</h3>
+      <p>Tap one of the locations on the map.</p>
+    </div>
 
-                    <button onclick="aiExplain()">Explain Simply</button>
-                    <button onclick="aiExample()">Give Example</button>
-                    <button onclick="aiQuiz()">Quiz Me</button>
-                    <button onclick="aiTeachBack()">Teach Back</button>
+  </div>
 
-                </div>
-
-                <div class="chat-box" id="aiChat">
-
-                    <div class="message ai-message">
-                        <div class="message-avatar">🤖</div>
-
-                        <div>
-                            <strong>Teachly AI</strong>
-
-                            <p>
-                                Hi! I'm your AI tutor. Ask me anything you're curious
-                                about and I'll help you understand it step by step. 💡
-                            </p>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="chat-input">
-
-                    <input
-                        type="text"
-                        id="aiInput"
-                        placeholder="Ask me anything..."
-                        onkeydown="if(event.key === 'Enter') sendAIMessage()"
-                    >
-
-                    <button onclick="sendAIMessage()">Send ➤</button>
-
-                </div>
-
-            </section>
-
-
-            <!-- ONLINE -->
-            <section id="onlineSection" class="card hidden">
-
-                <div class="section-header">
-
-                    <div>
-                        <h2>🌐 Online Mode</h2>
-                        <p>Exchange knowledge with real people</p>
-                    </div>
-
-                    <button class="small-button" onclick="closeModes()">✕</button>
-
-                </div>
-
-                <div class="role-selection">
-
-                    <h3>What do you want to do?</h3>
-
-                    <div class="role-buttons">
-
-                        <button
-                            id="teacherRoleButton"
-                            onclick="chooseRole('Teacher')"
-                        >
-                            👨‍🏫 I Want to Teach
-                        </button>
-
-                        <button
-                            id="learnerRoleButton"
-                            onclick="chooseRole('Learner')"
-                        >
-                            🎓 I Want to Learn
-                        </button>
-
-                    </div>
-
-                </div>
-
-                <div id="topicArea" class="hidden">
-
-                    <label for="topicInput">
-                        What topic?
-                    </label>
-
-                    <input
-                        type="text"
-                        id="topicInput"
-                        placeholder="Example: Python, Maths, Drawing..."
-                    >
-
-                    <button onclick="findPeople()">
-                        🔍 Find People
-                    </button>
-
-                </div>
-
-                <div id="onlineResult"></div>
-
-                <div id="onlineChatArea" class="hidden">
-
-                    <div class="match-info">
-                        <span>🟢</span>
-
-                        <div>
-                            <strong id="partnerName">Connected User</strong>
-                            <p id="partnerRole">Teacher</p>
-                        </div>
-                    </div>
-
-                    <div class="chat-box" id="onlineChat"></div>
-
-                    <div class="chat-input">
-
-                        <input
-                            type="text"
-                            id="onlineInput"
-                            placeholder="Type a message..."
-                            onkeydown="if(event.key === 'Enter') sendOnlineMessage()"
-                        >
-
-                        <button onclick="sendOnlineMessage()">
-                            Send ➤
-                        </button>
-
-                    </div>
-
-                    <div class="emoji-bar">
-                        <button onclick="sendEmoji('👍')">👍</button>
-                        <button onclick="sendEmoji('😊')">😊</button>
-                        <button onclick="sendEmoji('🎉')">🎉</button>
-                        <button onclick="sendEmoji('💡')">💡</button>
-                        <button onclick="sendEmoji('🔥')">🔥</button>
-                    </div>
-
-                    <button
-                        class="danger-button"
-                        onclick="leaveOnlineSession()"
-                    >
-                        Leave Session
-                    </button>
-
-                </div>
-
-            </section>
-
-
-            <!-- MYSTERY + STREAK + TRADE -->
-            <section class="feature-grid">
-
-                <div class="card feature-card">
-                    <span>🕵️</span>
-
-                    <h3>Mystery Topic</h3>
-
-                    <p>
-                        Get a random topic and challenge yourself to teach it.
-                    </p>
-
-                    <button onclick="mysteryTopic()">Get Topic</button>
-
-                    <div id="mysteryResult"></div>
-                </div>
-
-
-                <div class="card feature-card">
-                    <span>🔥</span>
-
-                    <h3>Knowledge Streak</h3>
-
-                    <p>
-                        Keep learning and teaching to build your streak.
-                    </p>
-
-                    <strong id="streakMessage">
-                        Start your streak today!
-                    </strong>
-                </div>
-
-
-                <div class="card feature-card">
-                    <span>🔄</span>
-
-                    <h3>Skill Trading</h3>
-
-                    <p>
-                        Teach someone what you know and learn what they know.
-                    </p>
-
-                    <button onclick="showSkillTrading()">
-                        Find a Skill Trade
-                    </button>
-
-                    <div id="tradeResult"></div>
-                </div>
-
-            </section>
-
-        </section>
-
-
-        <!-- WORLD MAP PAGE -->
-        <section id="mapPage" class="page-section hidden">
-
-            <section class="card map-header">
-
-                <div>
-                    <h2>🌎 World Explorer</h2>
-
-                    <p>
-                        Discover countries and famous places to earn XP.
-                        Countries and places are <strong>not for sale</strong>.
-                    </p>
-                </div>
-
-                <div class="xp-display">
-                    ⭐ <span id="mapXP">0</span> XP
-                </div>
-
-            </section>
-
-
-            <section class="card">
-
-                <h2>🗺️ Choose a Country</h2>
-
-                <p>
-                    Click a country to learn about it.
-                </p>
-
-                <div id="countryGrid" class="country-grid"></div>
-
-            </section>
-
-
-            <section id="countryPanel" class="card hidden">
-
-                <div class="country-hero">
-
-                    <div id="countryFlag" class="country-flag">
-                        🌎
-                    </div>
-
-                    <div>
-                        <h2 id="countryName">Country</h2>
-
-                        <p id="countryTagline">
-                            Discover something new.
-                        </p>
-                    </div>
-
-                </div>
-
-
-                <div class="country-facts">
-
-                    <div>
-                        <span>🏛️</span>
-                        <strong>Capital</strong>
-                        <p id="countryCapital">-</p>
-                    </div>
-
-                    <div>
-                        <span>🗣️</span>
-                        <strong>Language</strong>
-                        <p id="countryLanguage">-</p>
-                    </div>
-
-                    <div>
-                        <span>💰</span>
-                        <strong>Currency</strong>
-                        <p id="countryCurrency">-</p>
-                    </div>
-
-                    <div>
-                        <span>🌍</span>
-                        <strong>Continent</strong>
-                        <p id="countryContinent">-</p>
-                    </div>
-
-                </div>
-
-
-                <div class="famous-section">
-
-                    <h3>⭐ Famous For</h3>
-
-                    <div id="famousPlaces" class="place-grid"></div>
-
-                </div>
-
-            </section>
-
-
-            <!-- PLACE MODAL -->
-            <div id="placeModal" class="place-modal hidden">
-
-                <div class="place-modal-content">
-
-                    <button
-                        class="modal-close"
-                        onclick="closePlaceModal()"
-                    >
-                        ✕
-                    </button>
-
-                    <div id="placeVisual" class="place-visual">
-                        🏛️
-                    </div>
-
-                    <h2 id="placeTitle">Famous Place</h2>
-
-                    <p id="placeDescription">
-                        Description
-                    </p>
-
-                    <div class="place-reward">
-                        ⭐ <strong>+25 XP</strong> for discovering this place
-                    </div>
-
-                    <button
-                        id="discoverPlaceButton"
-                        onclick="discoverCurrentPlace()"
-                    >
-                        🔎 Discover Place
-                    </button>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- QUIZ PAGE -->
-        <section id="quizPage" class="page-section hidden">
-
-            <section class="card">
-
-                <div class="section-header">
-
-                    <div>
-                        <h2>🧠 Teachly Quizzes</h2>
-
-                        <p>
-                            Test what you have learned and earn XP.
-                        </p>
-                    </div>
-
-                    <div class="quiz-score">
-                        ⭐ <span id="quizXP">0</span> XP
-                    </div>
-
-                </div>
-
-                <div id="quizStart">
-
-                    <h3>🌎 World Knowledge Quiz</h3>
-
-                    <p>
-                        Answer questions about countries, geography and famous places.
-                    </p>
-
-                    <button onclick="startQuiz()">
-                        Start Quiz 🚀
-                    </button>
-
-                </div>
-
-
-                <div id="quizArea" class="hidden">
-
-                    <div class="quiz-progress">
-                        Question <span id="quizNumber">1</span> / 5
-                    </div>
-
-                    <h2 id="quizQuestion">
-                        Question
-                    </h2>
-
-                    <div id="quizOptions" class="quiz-options"></div>
-
-                    <div id="quizFeedback"></div>
-
-                    <button
-                        id="nextQuizButton"
-                        class="hidden"
-                        onclick="nextQuizQuestion()"
-                    >
-                        Next Question ➜
-                    </button>
-
-                </div>
-
-
-                <div id="quizFinished" class="hidden">
-
-                    <div class="quiz-finished">
-
-                        <span>🎉</span>
-
-                        <h2>Quiz Complete!</h2>
-
-                        <p id="quizFinalScore">
-                            Score
-                        </p>
-
-                        <button onclick="startQuiz()">
-                            Try Again 🔄
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-        </section>
-
-
-        <!-- SHOP -->
-        <section id="shopPage" class="page-section hidden">
-
-            <section class="card">
-
-                <div class="section-header">
-
-                    <div>
-                        <h2>🛍️ Teachly Shop</h2>
-
-                        <p>
-                            Spend your Teachly Coins on profile customization.
-                        </p>
-                    </div>
-
-                    <div class="shop-coins">
-                        💰 <span id="shopCoins">0</span>
-                    </div>
-
-                </div>
-
-                <div class="shop-notice">
-                    🔒 Countries and famous places cannot be purchased.
-                    You discover them by learning.
-                </div>
-
-                <div id="shopGrid" class="shop-grid"></div>
-
-            </section>
-
-        </section>
-
-
-        <!-- ACHIEVEMENTS -->
-        <section id="achievementPage" class="page-section hidden">
-
-            <section class="card">
-
-                <h2>🏆 Your Achievements</h2>
-
-                <p>
-                    Keep learning to unlock achievements.
-                </p>
-
-                <div id="achievementGrid" class="achievement-grid"></div>
-
-            </section>
-
-
-            <section class="card">
-
-                <h2>🌎 Your Discoveries</h2>
-
-                <div id="discoveryStats"></div>
-
-                <div id="discoveryList" class="discovery-list"></div>
-
-            </section>
-
-        </section>
-
-
-        <!-- OLD SESSION BADGES -->
-        <section class="card">
-
-            <div class="section-header">
-
-                <div>
-                    <h2>🏆 Session Badges</h2>
-
-                    <p>
-                        Complete teaching sessions to earn badges.
-                    </p>
-                </div>
-
-            </div>
-
-            <div class="badge-grid">
-
-                <div class="badge">
-                    <span>🥉</span>
-                    <strong>Starter</strong>
-                    <small>5 sessions</small>
-                </div>
-
-                <div class="badge">
-                    <span>🥉</span>
-                    <strong>Learner</strong>
-                    <small>15 sessions</small>
-                </div>
-
-                <div class="badge">
-                    <span>🥈</span>
-                    <strong>Explorer</strong>
-                    <small>50 sessions</small>
-                </div>
-
-                <div class="badge">
-                    <span>🥈</span>
-                    <strong>Knowledge Seeker</strong>
-                    <small>75 sessions</small>
-                </div>
-
-                <div class="badge">
-                    <span>🥇</span>
-                    <strong>Skill Builder</strong>
-                    <small>100 sessions</small>
-                </div>
-
-                <div class="badge">
-                    <span>🥇</span>
-                    <strong>Mentor</strong>
-                    <small>150 sessions</small>
-                </div>
-
-                <div class="badge">
-                    <span>🏆</span>
-                    <strong>Expert</strong>
-                    <small>250 sessions</small>
-                </div>
-
-                <div class="badge">
-                    <span>🏆</span>
-                    <strong>Master</strong>
-                    <small>500 sessions</small>
-                </div>
-
-                <div class="badge">
-                    <span>💎</span>
-                    <strong>Legend</strong>
-                    <small>750 sessions</small>
-                </div>
-
-                <div class="badge">
-                    <span>👑</span>
-                    <strong>Teachly Champion</strong>
-                    <small>1000 sessions</small>
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- COINS -->
-        <section class="card">
-
-            <h2>💰 Teachly Coins</h2>
-
-            <p>
-                Earn coins by participating in teaching and learning sessions.
-            </p>
-
-            <div class="coin-grid">
-
-                <div>
-                    <span>🎨</span>
-                    <strong>Profile Customization</strong>
-                    <small>Use coins for special profile options.</small>
-                </div>
-
-                <div>
-                    <span>✨</span>
-                    <strong>Profile Effects</strong>
-                    <small>Make your profile stand out.</small>
-                </div>
-
-                <div>
-                    <span>😀</span>
-                    <strong>Special Emojis</strong>
-                    <small>Unlock extra chat reactions.</small>
-                </div>
-
-                <div>
-                    <span>🏆</span>
-                    <strong>Badges</strong>
-                    <small>Badges are earned through sessions.</small>
-                </div>
-
-            </div>
-
-        </section>
-
-    </section>
+</section>
 
 </main>
 
+<nav>
+  <button onclick="show('dashboard')">🏠<small>Home</small></button>
+  <button onclick="world()">🌍<small>World</small></button>
+  <button onclick="shop()">🛒<small>Shop</small></button>
+  <button onclick="profile()">👤<small>Profile</small></button>
+</nav>
 
-<footer>
-    <p>Teachly — Teach. Learn. Earn. 🌎</p>
-</footer>
-
-<script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
 
 </body>
