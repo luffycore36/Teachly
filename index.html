@@ -1,568 +1,240 @@
-* {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #07111f;
-    color: #eef5ff;
-}
-
-button,
-input {
-    font: inherit;
-}
-
-button {
-    cursor: pointer;
-    border: 0;
-    border-radius: 12px;
-    padding: 11px 16px;
-    background: #17283d;
-    color: white;
-}
-
-button:hover {
-    filter: brightness(1.15);
-}
-
-.hidden {
-    display: none !important;
-}
-
-.full {
-    width: 100%;
-}
-
-.primary {
-    background: #4f8cff;
-}
-
-
-/* NAV */
-
-header {
-    height: 70px;
-    padding: 0 5%;
-    display: flex;
-    align-items: center;
-    gap: 30px;
-    background: #0b1727;
-    border-bottom: 1px solid #20334c;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
-
-.brand {
-    font-size: 25px;
-    font-weight: 800;
-}
-
-nav {
-    display: flex;
-    gap: 7px;
-    flex: 1;
-}
-
-nav button {
-    background: transparent;
-}
-
-.nav-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-
-/* PAGES */
-
-.page {
-    max-width: 1250px;
-    margin: auto;
-    padding: 42px 5%;
-}
-
-
-/* AUTH */
-
-.auth-page {
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-}
-
-.auth-card {
-    width: min(440px, 100%);
-    padding: 35px;
-    border: 1px solid #263b56;
-    border-radius: 25px;
-    background: #0d1b2d;
-    box-shadow: 0 20px 60px #0005;
-}
-
-.auth-card h1 {
-    text-align: center;
-    font-size: 45px;
-    margin: 0;
-}
-
-.tagline {
-    text-align: center;
-    color: #a9bad0;
-}
-
-.tabs {
-    display: flex;
-    gap: 6px;
-    margin: 25px 0;
-}
-
-.tabs button {
-    flex: 1;
-}
-
-.tabs .active {
-    background: #4f8cff;
-}
-
-input {
-    width: 100%;
-    padding: 13px 14px;
-    margin: 6px 0;
-    background: #081525;
-    border: 1px solid #29415e;
-    color: white;
-    border-radius: 11px;
-}
-
-.message {
-    min-height: 22px;
-    color: #ffb4b4;
-}
-
-
-/* HERO */
-
-.hero {
-    padding: 45px;
-    border-radius: 28px;
-    background: linear-gradient(
-        135deg,
-        #132d4a,
-        #0d1c30
-    );
-
-    display: flex;
-    justify-content: space-between;
-    gap: 30px;
-}
-
-.hero h1 {
-    font-size: 54px;
-    margin: 8px 0;
-}
-
-.hero p {
-    color: #a9bad0;
-}
-
-.eyebrow {
-    letter-spacing: 3px;
-    color: #77a9ff !important;
-    font-weight: 800;
-}
-
-.role-row {
-    display: flex;
-    gap: 10px;
-    margin-top: 25px;
-}
-
-.stats {
-    display: flex;
-    gap: 22px;
-    align-items: center;
-}
-
-.stats div {
-    min-width: 100px;
-    text-align: center;
-}
-
-.stats b {
-    display: block;
-    font-size: 30px;
-}
-
-.stats span {
-    color: #9db0c7;
-}
-
-
-/* CARDS */
-
-.cards {
-    display: grid;
-    grid-template-columns:
-        repeat(auto-fit, minmax(260px, 1fr));
-
-    gap: 18px;
-    margin-top: 24px;
-}
-
-.card {
-    background: #0d1b2d;
-    border: 1px solid #233b56;
-    border-radius: 20px;
-    padding: 23px;
-}
-
-.card p {
-    color: #a9bad0;
-    line-height: 1.5;
-}
-
-
-/* CHAT */
-
-.chat {
-    margin-top: 22px;
-    background: #0d1b2d;
-    border: 1px solid #29415e;
-    border-radius: 20px;
-    overflow: hidden;
-}
-
-.chat-head {
-    padding: 15px 18px;
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 1px solid #29415e;
-}
-
-.messages {
-    height: 330px;
-    overflow-y: auto;
-    padding: 18px;
-}
-
-.msg {
-    max-width: 75%;
-    padding: 10px 13px;
-    margin: 8px 0;
-    border-radius: 13px;
-    background: #17283d;
-}
-
-.mine {
-    margin-left: auto;
-    background: #315fa8;
-}
-
-.chat-send {
-    display: flex;
-    gap: 8px;
-    padding: 12px;
-}
-
-.chat-send input {
-    margin: 0;
-}
-
-
-/* PROFILE */
-
-.profile-card {
-    display: flex;
-    gap: 35px;
-    align-items: center;
-    background: #0d1b2d;
-    padding: 30px;
-    border-radius: 22px;
-    margin: 25px 0;
-}
-
-.avatar-wrap {
-    position: relative;
-    width: 160px;
-    text-align: center;
-}
-
-.profile-avatar {
-    width: 130px;
-    height: 130px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid white;
-    position: relative;
-    z-index: 2;
-    background: #17283d;
-}
-
-/*
-    EFFECT IS OUTSIDE THE CIRCLE.
-    IT DOES NOT COVER THE PROFILE IMAGE.
-*/
-
-.avatar-effect {
-    position: absolute;
-    inset: -17px;
-    border: 4px dashed #79aaff;
-    border-radius: 50%;
-    animation: spin 8s linear infinite;
-    z-index: 1;
-    pointer-events: none;
-}
-
-.avatar-effect.spark {
-    border-style: dotted;
-    transform: scale(1.08);
-}
-
-.avatar-effect.crown::before {
-    content: "👑";
-    position: absolute;
-    top: -23px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 25px;
-}
-
-.upload-btn {
-    display: block;
-    margin-top: 15px;
-    font-size: 13px;
-    cursor: pointer;
-}
-
-.upload-btn input {
-    display: none;
-}
-
-.effect-options {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.effect-option {
-    padding: 18px;
-    border: 1px solid #29415e;
-    border-radius: 15px;
-}
-
-
-/* BADGES */
-
-.badge-grid {
-    display: grid;
-    grid-template-columns:
-        repeat(auto-fit, minmax(180px, 1fr));
-
-    gap: 15px;
-    margin-top: 25px;
-}
-
-.badge {
-    padding: 20px;
-    text-align: center;
-    border-radius: 18px;
-    background: #0d1b2d;
-    border: 1px solid #29415e;
-}
-
-.badge .icon {
-    font-size: 38px;
-}
-
-.locked {
-    opacity: 0.35;
-}
-
-
-/* WORLD */
-
-.world-layout {
-    display: grid;
-    grid-template-columns:
-        minmax(0, 1fr) 360px;
-
-    gap: 18px;
-    margin-top: 25px;
-}
-
-#map {
-    height: 650px;
-    border-radius: 22px;
-    overflow: hidden;
-    border: 1px solid #29415e;
-    background: #0a1625;
-}
-
-.country-panel {
-    background: #0d1b2d;
-    border: 1px solid #29415e;
-    border-radius: 22px;
-    padding: 23px;
-    overflow-y: auto;
-    max-height: 650px;
-}
-
-.country-title {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-}
-
-.flag {
-    font-size: 45px;
-}
-
-.facts {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin: 18px 0;
-}
-
-.fact {
-    background: #13253a;
-    padding: 12px;
-    border-radius: 12px;
-}
-
-.fact small {
-    display: block;
-    color: #91a6bd;
-}
-
-.place-card {
-    margin-top: 12px;
-    border: 1px solid #29415e;
-    border-radius: 15px;
-    overflow: hidden;
-    cursor: pointer;
-}
-
-.place-card img {
-    width: 100%;
-    height: 130px;
-    object-fit: cover;
-}
-
-.place-card div {
-    padding: 12px;
-}
-
-.place-detail {
-    margin-top: 20px;
-}
-
-.place-detail img {
-    width: 100%;
-    height: 190px;
-    object-fit: cover;
-    border-radius: 14px;
-}
-
-.empty-country {
-    text-align: center;
-    margin-top: 150px;
-    color: #9db0c7;
-}
-
-.empty-country span {
-    font-size: 60px;
-}
-
-
-/* MODAL */
-
-.modal {
-    position: fixed;
-    inset: 0;
-    background: #0009;
-    display: grid;
-    place-items: center;
-    z-index: 2000;
-}
-
-.modal-card {
-    background: #0d1b2d;
-    padding: 30px;
-    border-radius: 22px;
-    width: min(850px, 92%);
-    max-height: 90vh;
-    overflow: auto;
-}
-
-.close {
-    float: right;
-    font-size: 25px;
-}
-
-
-/* ANIMATION */
-
-@keyframes spin {
-
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
-
-}
-
-
-/* MOBILE */
-
-@media (max-width: 850px) {
-
-    header {
-        height: auto;
-        flex-wrap: wrap;
-        padding: 15px;
-    }
-
-    nav {
-        order: 3;
-        width: 100%;
-        overflow: auto;
-    }
-
-    .hero {
-        display: block;
-    }
-
-    .hero h1 {
-        font-size: 40px;
-    }
-
-    .stats {
-        margin-top: 25px;
-    }
-
-    .world-layout {
-        grid-template-columns: 1fr;
-    }
-
-    #map {
-        height: 450px;
-    }
-
-    .country-panel {
-        max-height: none;
-    }
-
-    .profile-card {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teachly</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="floating">
+  🎓 🧠 🪙 🌍 🔥 🏆 📚 🎲 ✨ 💡
+</div>
+
+<header>
+  <h2>🎓 Teachly</h2>
+  <div id="coins">🪙 0</div>
+</header>
+
+<main>
+
+<!-- WELCOME -->
+<section id="welcome" class="screen active">
+  <div class="card hero">
+    <div class="big">🌟</div>
+    <h1>Learn. Teach. Connect.</h1>
+    <p>Teachly connects real learners with real teachers.</p>
+    <button onclick="show('account')">Get Started 🚀</button>
+  </div>
+</section>
+
+<!-- ACCOUNT -->
+<section id="account" class="screen">
+  <div class="card form">
+    <h2>👤 Create Account</h2>
+
+    <input id="name" placeholder="Your name">
+    <input id="email" placeholder="Email">
+
+    <button onclick="createAccount()">Continue</button>
+
+    <small>Demo version stores your data on this device.</small>
+  </div>
+</section>
+
+<!-- ROLE -->
+<section id="role" class="screen">
+  <div class="card">
+    <h2>What do you want to do?</h2>
+
+    <div class="roles">
+
+      <button onclick="chooseRole('learner')">
+        🎓
+        <b>Learn</b>
+        <small>Find a real teacher</small>
+      </button>
+
+      <button onclick="chooseRole('teacher')">
+        👨‍🏫
+        <b>Teach</b>
+        <small>Help a real learner</small>
+      </button>
+
+    </div>
+  </div>
+</section>
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="screen">
+
+  <div class="card profileTop">
+    <div>
+      <small>Welcome</small>
+      <h2 id="username">User</h2>
+      <p id="role"></p>
+    </div>
+
+    <div class="avatar">👤</div>
+  </div>
+
+  <div class="grid">
+
+    <button onclick="people()" class="card feature">
+      👥
+      <b>People</b>
+      <small>Find real users</small>
+    </button>
+
+    <button onclick="mystery()" class="card feature">
+      🎲
+      <b>Mystery</b>
+      <small>Random topic</small>
+    </button>
+
+    <button onclick="shop()" class="card feature">
+      🛒
+      <b>Shop</b>
+      <small>Buy with coins</small>
+    </button>
+
+    <button onclick="profile()" class="card feature">
+      🏅
+      <b>Profile</b>
+      <small>Badges & effects</small>
+    </button>
+
+    <button onclick="world()" class="card feature">
+      🌍
+      <b>World Explorer</b>
+      <small>Explore the world</small>
+    </button>
+
+  </div>
+
+</section>
+
+<!-- PEOPLE -->
+<section id="people" class="screen">
+  <div class="card">
+
+    <button class="back" onclick="show('dashboard')">← Back</button>
+
+    <h2>👥 Real People</h2>
+    <p>Find teachers and learners registered on Teachly.</p>
+
+    <div id="peopleList"></div>
+
+  </div>
+</section>
+
+<!-- MYSTERY -->
+<section id="mystery" class="screen">
+  <div class="card center">
+
+    <button class="back" onclick="show('dashboard')">← Back</button>
+
+    <div class="mysteryIcon">🎲</div>
+
+    <h2>Mystery Topic</h2>
+
+    <h3 id="topic">Tap the button!</h3>
+
+    <button onclick="randomTopic()">Reveal Topic ✨</button>
+
+    <div class="flow">
+      🎲 Mystery
+      →
+      👨‍🏫 Teacher teaches
+      →
+      ❓ Question
+      →
+      🎓 Student answers
+      →
+      ✅
+      →
+      🪙 Coin
+    </div>
+
+  </div>
+</section>
+
+<!-- SHOP -->
+<section id="shop" class="screen">
+  <div class="card">
+
+    <button class="back" onclick="show('dashboard')">← Back</button>
+
+    <h2>🛒 Teachly Shop</h2>
+    <p>Everything is bought using Teachly Coins.</p>
+
+    <div id="shopItems" class="shop"></div>
+
+  </div>
+</section>
+
+<!-- PROFILE -->
+<section id="profile" class="screen">
+  <div class="card center">
+
+    <button class="back" onclick="show('dashboard')">← Back</button>
+
+    <div id="profileEffect" class="profileEffect">👤</div>
+
+    <h2 id="profileName">User</h2>
+
+    <p id="stats"></p>
+
+    <h3>🏅 Badges</h3>
+
+    <div id="badges"></div>
+
+  </div>
+</section>
+
+<!-- WORLD -->
+<section id="world" class="screen">
+
+  <div class="card">
+
+    <button class="back" onclick="show('dashboard')">← Back</button>
+
+    <h2>🌍 World Explorer</h2>
+
+    <p>Tap a place to explore it.</p>
+
+    <div class="map">
+
+      <button onclick="place('North America')">🌎</button>
+      <button onclick="place('South America')">🌎</button>
+      <button onclick="place('Europe')">🌍</button>
+      <button onclick="place('Africa')">🌍</button>
+      <button onclick="place('Asia')">🌏</button>
+      <button onclick="place('Australia')">🌏</button>
+
+    </div>
+
+    <div id="placeInfo" class="place">
+      <h3>🌎 Choose a place</h3>
+      <p>Tap one of the locations on the map.</p>
+    </div>
+
+  </div>
+
+</section>
+
+</main>
+
+<nav>
+  <button onclick="show('dashboard')">🏠<small>Home</small></button>
+  <button onclick="world()">🌍<small>World</small></button>
+  <button onclick="shop()">🛒<small>Shop</small></button>
+  <button onclick="profile()">👤<small>Profile</small></button>
+</nav>
+
+<script src="script.js"></script>
+
+</body>
+</html>
