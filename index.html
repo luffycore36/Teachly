@@ -1,152 +1,237 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Teachly</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-
-  <div class="emoji-bg">✨ 🌟 💡 📚 🧠 🚀 ⭐ 🌍 💫 🎓</div>
-
-  <header>
+<body>  <div class="emoji-bg">✨ 🌟 💡 📚 🧠 🚀 ⭐ 🌍 💫 🎓</div>  <header>
     <div class="logo">🔥 Teachly</div>
     <div class="coin-pill">💰 <span id="coins">100</span></div>
-  </header>
+  </header>  <main><!-- ROLE -->
 
-  <main>
+<section id="roleScreen" class="screen active">
 
-    <!-- ACCOUNT -->
-    <section id="accountScreen" class="screen active">
-      <div class="hero">
-        <span class="big-emoji">📚</span>
-        <h1>Welcome to Teachly</h1>
-        <p>
-          Learn from people. Teach people.
-          Or let AI teach you when no volunteer is available.
-        </p>
-      </div>
+  <div class="hero">
+    <span class="big-emoji">🎯</span>
+    <h1>Welcome to Teachly</h1>
+    <p>What do you want to do?</p>
+  </div>
 
-      <div class="card">
-        <h2>👤 Create your account</h2>
+  <div class="role-grid">
 
-        <input id="nameInput" placeholder="Your name" maxlength="30">
-        <input id="emailInput" type="email" placeholder="Email">
+    <button class="role-card teacher"
+            onclick="chooseRole('teacher')">
 
-        <button type="button" class="primary" onclick="createAccount()">
-          Continue 🚀
-        </button>
+      <span>👨‍🏫</span>
+      <strong>TEACHER</strong>
+      <small>Connect with a student</small>
 
-        <p id="accountMsg" class="msg"></p>
-      </div>
-    </section>
+    </button>
 
-    <!-- ROLE -->
-    <section id="roleScreen" class="screen">
+    <button class="role-card learner"
+            onclick="chooseRole('learner')">
 
-      <div class="hero">
-        <span class="big-emoji">🎯</span>
-        <h1>What do you want to do?</h1>
-        <p>Choose your role first.</p>
-      </div>
+      <span>🎓</span>
+      <strong>LEARNER</strong>
+      <small>Connect with a teacher</small>
 
-      <div class="role-grid">
+    </button>
 
-        <button class="role-card teacher"
-                onclick="chooseRole('teacher')">
-          <span>👨‍🏫</span>
-          <strong>TEACHER</strong>
-          <small>Connect with a student</small>
-        </button>
+  </div>
 
-        <button class="role-card learner"
-                onclick="chooseRole('learner')">
-          <span>🎓</span>
-          <strong>LEARNER</strong>
-          <small>Connect with a teacher</small>
-        </button>
+</section>
 
-      </div>
-    </section>
 
-    <!-- DASHBOARD -->
-    <section id="dashboardScreen" class="screen">
+<!-- DASHBOARD -->
 
-      <div class="hero compact">
-        <h1 id="hello">Hello!</h1>
-        <p id="roleText"></p>
-      </div>
+<section id="dashboardScreen" class="screen">
 
-      <div id="mainFlow" class="card main-flow"></div>
+  <div class="hero compact">
 
-      <div class="feature-grid">
+    <h1 id="hello">Welcome! 👋</h1>
 
-        <button onclick="openPage('people')">
-          👥
-          <b>People</b>
-        </button>
+    <p id="roleText"></p>
 
-        <button onclick="openPage('chat')">
-          💬
-          <b>Chat</b>
-        </button>
+  </div>
 
-        <button onclick="openPage('shop')">
-          🛍️
-          <b>Shop</b>
-        </button>
 
-        <button onclick="openPage('badges')">
-          🏆
-          <b>Badges</b>
-        </button>
+  <div id="mainFlow" class="card main-flow"></div>
 
-        <button onclick="openPage('map')">
-          🌍
-          <b>World</b>
-        </button>
 
-        <button onclick="resetRole()">
-          🔄
-          <b>Change Role</b>
-        </button>
+  <div class="feature-grid">
 
-      </div>
-    </section>
+    <button onclick="openPage('people')">
+      👥
+      <b>People</b>
+    </button>
 
-    <!-- OTHER PAGES -->
-    <section id="pageScreen" class="screen">
+    <button onclick="openPage('chat')">
+      💬
+      <b>Chat</b>
+    </button>
 
-      <button class="back"
-              onclick="showScreen('dashboardScreen')">
-        ← Back
+    <button onclick="openPage('shop')">
+      🛍️
+      <b>Shop</b>
+    </button>
+
+    <button onclick="openPage('badges')">
+      🏆
+      <b>Badges</b>
+    </button>
+
+    <button onclick="openPage('map')">
+      🌍
+      <b>World</b>
+    </button>
+
+    <button onclick="resetRole()">
+      🔄
+      <b>Change Role</b>
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- OTHER PAGES -->
+
+<section id="pageScreen" class="screen">
+
+  <button class="back"
+          onclick="showScreen('dashboardScreen')">
+    ← Back
+  </button>
+
+  <div id="pageContent"></div>
+
+</section>
+
+
+<!-- AI -->
+
+<section id="aiScreen" class="screen">
+
+  <div class="ai-head">
+
+    <span>🤖</span>
+
+    <div>
+
+      <h1>Teachly AI Teacher</h1>
+
+      <p>
+        Ask me anything about today's lesson.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div class="card">
+
+    <div class="topic-box">
+
+      <small>🎲 RANDOM TOPIC</small>
+
+      <h2 id="aiTopic"></h2>
+
+    </div>
+
+
+    <div id="aiLesson" class="lesson"></div>
+
+    <div id="aiChat" class="ai-chat"></div>
+
+
+    <div class="ask-row">
+
+      <input
+        id="aiQuestion"
+        placeholder="Ask the AI teacher..."
+        onkeydown="if(event.key==='Enter') askAI()"
+      >
+
+      <button onclick="askAI()">
+        Send 💬
       </button>
 
-      <div id="pageContent"></div>
+    </div>
 
-    </section>
 
-    <!-- AI -->
-    <section id="aiScreen" class="screen">
+    <button class="secondary full"
+            onclick="newAITopic()">
+      🎲 New Random Topic
+    </button>
 
-      <div class="ai-head">
 
-        <span>🤖</span>
+    <button class="primary full"
+            onclick="showQuiz()">
+      📝 Take the Quiz
+    </button>
 
-        <div>
-          <h1>Teachly AI Teacher</h1>
-          <p>Ask me anything about today's lesson.</p>
-        </div>
+  </div>
 
-      </div>
+</section>
 
-      <div class="card">
 
-        <div class="topic-box">
+<!-- QUIZ -->
 
-          <small>🎲 RANDOM TOPIC</small>
+<section id="quizScreen" class="screen">
 
-          <h2 id="aiTopic"></h2>
+  <button class="back"
+          onclick="showScreen('aiScreen')">
+    ← Back to lesson
+  </button>
 
-       
+
+  <div class="card">
+
+    <h1>📝 Quick Quiz</h1>
+
+    <p id="quizQuestion"></p>
+
+
+    <input
+      id="quizAnswer"
+      placeholder="Type your answer"
+    >
+
+
+    <button class="primary full"
+            onclick="checkQuiz()">
+      Submit Answer ✅
+    </button>
+
+
+    <p id="quizResult" class="msg"></p>
+
+  </div>
+
+</section>
+
+  </main>  <!-- BOTTOM NAV -->  <nav id="bottomNav" class="bottom-nav"><button onclick="showScreen('dashboardScreen')">
+  🏠
+  <span>Home</span>
+</button>
+
+<button onclick="openPage('people')">
+  👥
+  <span>People</span>
+</button>
+
+<button onclick="openPage('chat')">
+  💬
+  <span>Chat</span>
+</button>
+
+<button onclick="openPage('shop')">
+  🛍️
+  <span>Shop</span>
+</button>
+
+  </nav>  <script src="script.js"></script></body>
+</html>
