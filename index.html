@@ -6,235 +6,147 @@
   <title>Teachly</title>
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<div class="floating">
-  🎓 🧠 🪙 🌍 🔥 🏆 📚 🎲 ✨ 💡
-</div>
+  <div class="emoji-bg">✨ 🌟 💡 📚 🧠 🚀 ⭐ 🌍 💫 🎓</div>
 
-<header>
-  <h2>🎓 Teachly</h2>
-  <div id="coins">🪙 0</div>
-</header>
+  <header>
+    <div class="logo">🔥 Teachly</div>
+    <div class="coin-pill">💰 <span id="coins">100</span></div>
+  </header>
 
-<main>
+  <main>
 
-<!-- WELCOME -->
-<section id="welcome" class="screen active">
-  <div class="card hero">
-    <div class="big">🌟</div>
-    <h1>Learn. Teach. Connect.</h1>
-    <p>Teachly connects real learners with real teachers.</p>
-    <button onclick="show('account')">Get Started 🚀</button>
-  </div>
-</section>
+    <!-- ACCOUNT -->
+    <section id="accountScreen" class="screen active">
+      <div class="hero">
+        <span class="big-emoji">📚</span>
+        <h1>Welcome to Teachly</h1>
+        <p>
+          Learn from people. Teach people.
+          Or let AI teach you when no volunteer is available.
+        </p>
+      </div>
 
-<!-- ACCOUNT -->
-<section id="account" class="screen">
-  <div class="card form">
-    <h2>👤 Create Account</h2>
+      <div class="card">
+        <h2>👤 Create your account</h2>
 
-    <input id="name" placeholder="Your name">
-    <input id="email" placeholder="Email">
+        <input id="nameInput" placeholder="Your name" maxlength="30">
+        <input id="emailInput" type="email" placeholder="Email">
 
-    <button onclick="createAccount()">Continue</button>
+        <button class="primary" onclick="createAccount()">
+          Continue 🚀
+        </button>
 
-    <small>Demo version stores your data on this device.</small>
-  </div>
-</section>
+        <p id="accountMsg" class="msg"></p>
+      </div>
+    </section>
 
-<!-- ROLE -->
-<section id="role" class="screen">
-  <div class="card">
-    <h2>What do you want to do?</h2>
+    <!-- ROLE -->
+    <section id="roleScreen" class="screen">
 
-    <div class="roles">
+      <div class="hero">
+        <span class="big-emoji">🎯</span>
+        <h1>What do you want to do?</h1>
+        <p>Choose your role first.</p>
+      </div>
 
-      <button onclick="chooseRole('learner')">
-        🎓
-        <b>Learn</b>
-        <small>Find a real teacher</small>
+      <div class="role-grid">
+
+        <button class="role-card teacher"
+                onclick="chooseRole('teacher')">
+          <span>👨‍🏫</span>
+          <strong>TEACHER</strong>
+          <small>Connect with a student</small>
+        </button>
+
+        <button class="role-card learner"
+                onclick="chooseRole('learner')">
+          <span>🎓</span>
+          <strong>LEARNER</strong>
+          <small>Connect with a teacher</small>
+        </button>
+
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="dashboardScreen" class="screen">
+
+      <div class="hero compact">
+        <h1 id="hello">Hello!</h1>
+        <p id="roleText"></p>
+      </div>
+
+      <div id="mainFlow" class="card main-flow"></div>
+
+      <div class="feature-grid">
+
+        <button onclick="openPage('people')">
+          👥
+          <b>People</b>
+        </button>
+
+        <button onclick="openPage('chat')">
+          💬
+          <b>Chat</b>
+        </button>
+
+        <button onclick="openPage('shop')">
+          🛍️
+          <b>Shop</b>
+        </button>
+
+        <button onclick="openPage('badges')">
+          🏆
+          <b>Badges</b>
+        </button>
+
+        <button onclick="openPage('map')">
+          🌍
+          <b>World</b>
+        </button>
+
+        <button onclick="resetRole()">
+          🔄
+          <b>Change Role</b>
+        </button>
+
+      </div>
+    </section>
+
+    <!-- OTHER PAGES -->
+    <section id="pageScreen" class="screen">
+
+      <button class="back"
+              onclick="showScreen('dashboardScreen')">
+        ← Back
       </button>
 
-      <button onclick="chooseRole('teacher')">
-        👨‍🏫
-        <b>Teach</b>
-        <small>Help a real learner</small>
-      </button>
+      <div id="pageContent"></div>
 
-    </div>
-  </div>
-</section>
+    </section>
 
-<!-- DASHBOARD -->
-<section id="dashboard" class="screen">
+    <!-- AI -->
+    <section id="aiScreen" class="screen">
 
-  <div class="card profileTop">
-    <div>
-      <small>Welcome</small>
-      <h2 id="username">User</h2>
-      <p id="role"></p>
-    </div>
+      <div class="ai-head">
 
-    <div class="avatar">👤</div>
-  </div>
+        <span>🤖</span>
 
-  <div class="grid">
+        <div>
+          <h1>Teachly AI Teacher</h1>
+          <p>Ask me anything about today's lesson.</p>
+        </div>
 
-    <button onclick="people()" class="card feature">
-      👥
-      <b>People</b>
-      <small>Find real users</small>
-    </button>
+      </div>
 
-    <button onclick="mystery()" class="card feature">
-      🎲
-      <b>Mystery</b>
-      <small>Random topic</small>
-    </button>
+      <div class="card">
 
-    <button onclick="shop()" class="card feature">
-      🛒
-      <b>Shop</b>
-      <small>Buy with coins</small>
-    </button>
+        <div class="topic-box">
 
-    <button onclick="profile()" class="card feature">
-      🏅
-      <b>Profile</b>
-      <small>Badges & effects</small>
-    </button>
+          <small>🎲 RANDOM TOPIC</small>
 
-    <button onclick="world()" class="card feature">
-      🌍
-      <b>World Explorer</b>
-      <small>Explore the world</small>
-    </button>
+          <h2 id="aiTopic"></h2>
 
-  </div>
-
-</section>
-
-<!-- PEOPLE -->
-<section id="people" class="screen">
-  <div class="card">
-
-    <button class="back" onclick="show('dashboard')">← Back</button>
-
-    <h2>👥 Real People</h2>
-    <p>Find teachers and learners registered on Teachly.</p>
-
-    <div id="peopleList"></div>
-
-  </div>
-</section>
-
-<!-- MYSTERY -->
-<section id="mystery" class="screen">
-  <div class="card center">
-
-    <button class="back" onclick="show('dashboard')">← Back</button>
-
-    <div class="mysteryIcon">🎲</div>
-
-    <h2>Mystery Topic</h2>
-
-    <h3 id="topic">Tap the button!</h3>
-
-    <button onclick="randomTopic()">Reveal Topic ✨</button>
-
-    <div class="flow">
-      🎲 Mystery
-      →
-      👨‍🏫 Teacher teaches
-      →
-      ❓ Question
-      →
-      🎓 Student answers
-      →
-      ✅
-      →
-      🪙 Coin
-    </div>
-
-  </div>
-</section>
-
-<!-- SHOP -->
-<section id="shop" class="screen">
-  <div class="card">
-
-    <button class="back" onclick="show('dashboard')">← Back</button>
-
-    <h2>🛒 Teachly Shop</h2>
-    <p>Everything is bought using Teachly Coins.</p>
-
-    <div id="shopItems" class="shop"></div>
-
-  </div>
-</section>
-
-<!-- PROFILE -->
-<section id="profile" class="screen">
-  <div class="card center">
-
-    <button class="back" onclick="show('dashboard')">← Back</button>
-
-    <div id="profileEffect" class="profileEffect">👤</div>
-
-    <h2 id="profileName">User</h2>
-
-    <p id="stats"></p>
-
-    <h3>🏅 Badges</h3>
-
-    <div id="badges"></div>
-
-  </div>
-</section>
-
-<!-- WORLD -->
-<section id="world" class="screen">
-
-  <div class="card">
-
-    <button class="back" onclick="show('dashboard')">← Back</button>
-
-    <h2>🌍 World Explorer</h2>
-
-    <p>Tap a place to explore it.</p>
-
-    <div class="map">
-
-      <button onclick="place('North America')">🌎</button>
-      <button onclick="place('South America')">🌎</button>
-      <button onclick="place('Europe')">🌍</button>
-      <button onclick="place('Africa')">🌍</button>
-      <button onclick="place('Asia')">🌏</button>
-      <button onclick="place('Australia')">🌏</button>
-
-    </div>
-
-    <div id="placeInfo" class="place">
-      <h3>🌎 Choose a place</h3>
-      <p>Tap one of the locations on the map.</p>
-    </div>
-
-  </div>
-
-</section>
-
-</main>
-
-<nav>
-  <button onclick="show('dashboard')">🏠<small>Home</small></button>
-  <button onclick="world()">🌍<small>World</small></button>
-  <button onclick="shop()">🛒<small>Shop</small></button>
-  <button onclick="profile()">👤<small>Profile</small></button>
-</nav>
-
-<script src="script.js"></script>
-
-</body>
-</html>
+       
