@@ -1,833 +1,569 @@
 * {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  color: white;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #07111f;
+    color: #eef5ff;
+}
 
-  background:
-    radial-gradient(
-      circle at 20% 10%,
-      #35458f,
-      transparent 30%
-    ),
-    radial-gradient(
-      circle at 80% 80%,
-      #49257d,
-      transparent 30%
-    ),
-    #070914;
+button,
+input {
+    font: inherit;
+}
 
-  min-height: 100vh;
+button {
+    cursor: pointer;
+    border: 0;
+    border-radius: 12px;
+    padding: 11px 16px;
+    background: #17283d;
+    color: white;
+}
+
+button:hover {
+    filter: brightness(1.15);
+}
+
+.hidden {
+    display: none !important;
+}
+
+.full {
+    width: 100%;
+}
+
+.primary {
+    background: #4f8cff;
 }
 
 
-/* HEADER */
+/* NAV */
 
 header {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  padding: 15px 25px;
-
-  background: #080b1ddd;
-  backdrop-filter: blur(15px);
-
-  border-bottom:
-    1px solid #ffffff20;
+    height: 70px;
+    padding: 0 5%;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    background: #0b1727;
+    border-bottom: 1px solid #20334c;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
-header h2 {
-  margin: 0;
+.brand {
+    font-size: 25px;
+    font-weight: 800;
 }
 
-#coins {
-  background: #ffffff15;
-  padding: 10px 18px;
-  border-radius: 30px;
-  font-weight: bold;
+nav {
+    display: flex;
+    gap: 7px;
+    flex: 1;
 }
 
+nav button {
+    background: transparent;
+}
 
-/* MAIN */
-
-main {
-  max-width: 1100px;
-  margin: auto;
-  padding: 30px 15px 110px;
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 
 /* PAGES */
 
-.screen {
-  display: none;
-}
-
-.screen.active {
-  display: block;
-}
-
-.hidden {
-  display: none !important;
+.page {
+    max-width: 1250px;
+    margin: auto;
+    padding: 42px 5%;
 }
 
 
-/* CARDS */
+/* AUTH */
 
-.card {
-  background: #11172ddd;
+.auth-page {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+}
 
-  border:
-    1px solid #ffffff18;
+.auth-card {
+    width: min(440px, 100%);
+    padding: 35px;
+    border: 1px solid #263b56;
+    border-radius: 25px;
+    background: #0d1b2d;
+    box-shadow: 0 20px 60px #0005;
+}
 
-  border-radius: 24px;
+.auth-card h1 {
+    text-align: center;
+    font-size: 45px;
+    margin: 0;
+}
 
-  padding: 25px;
+.tagline {
+    text-align: center;
+    color: #a9bad0;
+}
 
-  box-shadow:
-    0 15px 50px #0007;
+.tabs {
+    display: flex;
+    gap: 6px;
+    margin: 25px 0;
+}
 
-  backdrop-filter: blur(15px);
+.tabs button {
+    flex: 1;
+}
+
+.tabs .active {
+    background: #4f8cff;
+}
+
+input {
+    width: 100%;
+    padding: 13px 14px;
+    margin: 6px 0;
+    background: #081525;
+    border: 1px solid #29415e;
+    color: white;
+    border-radius: 11px;
+}
+
+.message {
+    min-height: 22px;
+    color: #ffb4b4;
 }
 
 
 /* HERO */
 
 .hero {
-  text-align: center;
-  padding: 80px 20px;
+    padding: 45px;
+    border-radius: 28px;
+    background: linear-gradient(
+        135deg,
+        #132d4a,
+        #0d1c30
+    );
+
+    display: flex;
+    justify-content: space-between;
+    gap: 30px;
 }
 
 .hero h1 {
-  font-size: 48px;
+    font-size: 54px;
+    margin: 8px 0;
 }
 
-.big {
-  font-size: 80px;
+.hero p {
+    color: #a9bad0;
 }
 
-
-/* BUTTON */
-
-button {
-  border: 0;
-
-  border-radius: 14px;
-
-  padding: 13px 18px;
-
-  color: white;
-
-  font-weight: bold;
-
-  background:
-    linear-gradient(
-      135deg,
-      #6878ff,
-      #9858ff
-    );
-
-  cursor: pointer;
-
-  transition: .2s;
+.eyebrow {
+    letter-spacing: 3px;
+    color: #77a9ff !important;
+    font-weight: 800;
 }
 
-button:hover {
-  transform: translateY(-2px);
+.role-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
 }
 
-
-/* FORMS */
-
-.form {
-  max-width: 500px;
-  margin: 50px auto;
+.stats {
+    display: flex;
+    gap: 22px;
+    align-items: center;
 }
 
-input {
-  display: block;
-
-  width: 100%;
-
-  padding: 15px;
-
-  margin: 10px 0;
-
-  border-radius: 12px;
-
-  border:
-    1px solid #ffffff20;
-
-  background: #080b18;
-
-  color: white;
+.stats div {
+    min-width: 100px;
+    text-align: center;
 }
 
-.form button {
-  width: 100%;
+.stats b {
+    display: block;
+    font-size: 30px;
+}
+
+.stats span {
+    color: #9db0c7;
 }
 
 
-/* ROLES */
+/* CARDS */
 
-.roles {
-  display: grid;
+.cards {
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(260px, 1fr));
 
-  grid-template-columns:
-    1fr 1fr;
-
-  gap: 15px;
+    gap: 18px;
+    margin-top: 24px;
 }
 
-.roles button {
-  min-height: 190px;
-
-  font-size: 45px;
-
-  display: flex;
-
-  flex-direction: column;
-
-  justify-content: center;
-
-  align-items: center;
-
-  gap: 8px;
+.card {
+    background: #0d1b2d;
+    border: 1px solid #233b56;
+    border-radius: 20px;
+    padding: 23px;
 }
 
-.roles b {
-  font-size: 20px;
-}
-
-.roles small {
-  color: #ccc;
+.card p {
+    color: #a9bad0;
+    line-height: 1.5;
 }
 
 
-/* DASHBOARD */
-
-.profileTop {
-  display: flex;
-
-  justify-content:
-    space-between;
-
-  align-items: center;
-}
-
-.avatar {
-  font-size: 50px;
-}
-
-.grid {
-  display: grid;
-
-  grid-template-columns:
-    repeat(2, 1fr);
-
-  gap: 15px;
-
-  margin-top: 15px;
-}
-
-.feature {
-  text-align: left;
-  font-size: 35px;
-}
-
-.feature b {
-  display: block;
-  font-size: 18px;
-}
-
-.feature small {
-  color: #adb5d1;
-}
-
-.worldFeature {
-  grid-column: span 2;
-}
-
-
-/* BACK */
-
-.back {
-  background: #ffffff12;
-  margin-bottom: 15px;
-}
-
-
-/* CENTER */
-
-.center {
-  text-align: center;
-}
-
-.mysteryIcon {
-  font-size: 80px;
-}
-
-
-/* ONLINE */
-
-.fullButton {
-  width: 100%;
-  margin-bottom: 15px;
-}
-
-.status {
-  padding: 15px;
-
-  margin-top: 10px;
-
-  border-radius: 14px;
-
-  background: #ffffff09;
-}
-
-.status.success {
-  border:
-    1px solid #25d6a566;
-}
-
-.status.error {
-  border:
-    1px solid #ff6b7a66;
-}
+/* CHAT */
 
 .chat {
-  height: 300px;
-
-  overflow-y: auto;
-
-  padding: 15px;
-
-  background: #080b18;
-
-  border-radius: 18px;
-
-  margin: 15px 0;
+    margin-top: 22px;
+    background: #0d1b2d;
+    border: 1px solid #29415e;
+    border-radius: 20px;
+    overflow: hidden;
 }
 
-.message {
-  padding: 10px 15px;
-
-  margin: 8px 0;
-
-  border-radius: 14px;
-
-  max-width: 80%;
-
-  background: #ffffff0b;
+.chat-head {
+    padding: 15px 18px;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #29415e;
 }
 
-.userMessage {
-  margin-left: auto;
-
-  background: #4b58bb;
+.messages {
+    height: 330px;
+    overflow-y: auto;
+    padding: 18px;
 }
 
-.message p {
-  margin: 5px 0;
+.msg {
+    max-width: 75%;
+    padding: 10px 13px;
+    margin: 8px 0;
+    border-radius: 13px;
+    background: #17283d;
 }
 
-.chatInput {
-  display: flex;
-  gap: 8px;
+.mine {
+    margin-left: auto;
+    background: #315fa8;
 }
 
-.chatInput input {
-  margin: 0;
+.chat-send {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
 }
 
-.emojiRow {
-  display: flex;
-  gap: 7px;
-
-  margin-top: 10px;
-}
-
-.emojiRow button {
-  padding: 8px 12px;
-}
-
-.danger {
-  margin-top: 15px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #a73555,
-      #702f65
-    );
-}
-
-
-/* SHOP */
-
-.shop {
-  display: grid;
-
-  grid-template-columns:
-    repeat(4, 1fr);
-
-  gap: 15px;
-}
-
-.item {
-  background: #ffffff09;
-
-  padding: 18px;
-
-  border-radius: 18px;
-}
-
-.itemIcon {
-  font-size: 50px;
-}
-
-.item p {
-  color: #aaa;
-
-  min-height: 35px;
-}
-
-.item button {
-  width: 100%;
-
-  margin-top: 12px;
+.chat-send input {
+    margin: 0;
 }
 
 
 /* PROFILE */
 
-.profileEffect {
-  width: 130px;
-  height: 130px;
-
-  margin: auto;
-
-  display: grid;
-
-  place-items: center;
-
-  border-radius: 50%;
-
-  font-size: 70px;
-
-  background: #ffffff0c;
-
-  box-shadow:
-    0 0 30px #7c72ff,
-    inset 0 0 30px #ffffff15;
+.profile-card {
+    display: flex;
+    gap: 35px;
+    align-items: center;
+    background: #0d1b2d;
+    padding: 30px;
+    border-radius: 22px;
+    margin: 25px 0;
 }
 
-.owned {
-  display: inline-block;
+.avatar-wrap {
+    position: relative;
+    width: 160px;
+    text-align: center;
+}
 
-  padding: 10px 14px;
+.profile-avatar {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid white;
+    position: relative;
+    z-index: 2;
+    background: #17283d;
+}
 
-  margin: 5px;
 
-  border-radius: 12px;
+/*
+    EFFECT IS OUTSIDE THE CIRCLE.
+    IT DOES NOT COVER THE PROFILE IMAGE.
+*/
 
-  background: #ffffff0b;
+.avatar-effect {
+    position: absolute;
+    inset: -17px;
+    border: 4px dashed #79aaff;
+    border-radius: 50%;
+    animation: spin 8s linear infinite;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.avatar-effect.spark {
+    border-style: dotted;
+    transform: scale(1.08);
+}
+
+.avatar-effect.crown::before {
+    content: "👑";
+    position: absolute;
+    top: -23px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 25px;
+}
+
+.upload-btn {
+    display: block;
+    margin-top: 15px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.upload-btn input {
+    display: none;
+}
+
+.effect-options {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.effect-option {
+    padding: 18px;
+    border: 1px solid #29415e;
+    border-radius: 15px;
 }
 
 
 /* BADGES */
 
-.badgeGrid {
-  display: grid;
+.badge-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(180px, 1fr));
 
-  grid-template-columns:
-    repeat(3, 1fr);
-
-  gap: 15px;
+    gap: 15px;
+    margin-top: 25px;
 }
 
 .badge {
-  padding: 22px;
-
-  border-radius: 18px;
-
-  text-align: center;
-
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 8px;
-
-  background: #ffffff09;
+    padding: 20px;
+    text-align: center;
+    border-radius: 18px;
+    background: #0d1b2d;
+    border: 1px solid #29415e;
 }
 
-.badgeIcon {
-  font-size: 50px;
+.badge .icon {
+    font-size: 38px;
 }
 
-.badge.earned {
-  border:
-    1px solid #24d9a466;
-}
-
-.badge.locked {
-  opacity: .4;
+.locked {
+    opacity: 0.35;
 }
 
 
-/* ================= PAGE 2 ================= */
+/* WORLD */
 
-.worldPage {
-  max-width: 1400px;
+.world-layout {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1fr) 360px;
 
-  margin: auto;
-
-  padding:
-    30px 20px 120px;
+    gap: 18px;
+    margin-top: 25px;
 }
 
-.worldCard {
-  padding: 30px;
+#map {
+    height: 650px;
+    border-radius: 22px;
+    overflow: hidden;
+    border: 1px solid #29415e;
+    background: #0a1625;
 }
 
-.worldHeader {
-  display: flex;
-
-  justify-content:
-    space-between;
-
-  align-items:
-    flex-start;
-
-  gap: 20px;
+.country-panel {
+    background: #0d1b2d;
+    border: 1px solid #29415e;
+    border-radius: 22px;
+    padding: 23px;
+    overflow-y: auto;
+    max-height: 650px;
 }
 
-.worldHeader h1 {
-  font-size: 42px;
-
-  margin:
-    8px 0;
-}
-
-.pageLabel {
-  color: #9ca8ff;
-
-  font-size: 12px;
-
-  font-weight: bold;
-
-  letter-spacing: 2px;
-}
-
-
-/* REAL MAP */
-
-#worldMap {
-  width: 100%;
-
-  height: 600px;
-
-  margin-top: 25px;
-
-  border-radius: 22px;
-
-  overflow: hidden;
-
-  border:
-    1px solid #ffffff25;
-}
-
-.leaflet-container {
-  background: #071426;
-}
-
-.mapHint {
-  text-align: center;
-
-  color: #aeb7d7;
-
-  padding: 12px;
-}
-
-
-/* COUNTRY */
-
-.countryPanel {
-  margin-top: 20px;
-
-  padding: 25px;
-
-  border-radius: 22px;
-
-  background: #ffffff09;
-}
-
-.emptyCountry {
-  text-align: center;
-
-  padding: 50px;
-
-  color: #bac3e1;
-}
-
-.emptyCountry h2 {
-  color: white;
-}
-
-.countryHead {
-  display: flex;
-
-  align-items: center;
-
-  gap: 18px;
-}
-
-.countryHead h2 {
-  margin: 0 0 5px;
+.country-title {
+    display: flex;
+    gap: 15px;
+    align-items: center;
 }
 
 .flag {
-  font-size: 60px;
+    font-size: 45px;
 }
-
-
-/* FACTS */
 
 .facts {
-  display: grid;
-
-  grid-template-columns:
-    repeat(4, 1fr);
-
-  gap: 12px;
-
-  margin: 25px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 18px 0;
 }
 
-.facts div {
-  background: #ffffff08;
-
-  padding: 17px;
-
-  border-radius: 15px;
+.fact {
+    background: #13253a;
+    padding: 12px;
+    border-radius: 12px;
 }
 
-.facts b {
-  display: block;
-
-  color: #9faaff;
+.fact small {
+    display: block;
+    color: #91a6bd;
 }
 
-.facts span {
-  display: block;
-
-  margin-top: 8px;
-
-  color: #d8ddf0;
+.place-card {
+    margin-top: 12px;
+    border: 1px solid #29415e;
+    border-radius: 15px;
+    overflow: hidden;
+    cursor: pointer;
 }
 
-
-/* PLACES */
-
-.placeGrid {
-  display: grid;
-
-  grid-template-columns:
-    repeat(4, 1fr);
-
-  gap: 15px;
+.place-card img {
+    width: 100%;
+    height: 130px;
+    object-fit: cover;
 }
 
-.placeCard {
-  padding: 0;
-
-  overflow: hidden;
-
-  text-align: left;
-
-  background: #ffffff09;
+.place-card div {
+    padding: 12px;
 }
 
-.placeCard img {
-  width: 100%;
-
-  height: 150px;
-
-  object-fit: cover;
-
-  display: block;
+.place-detail {
+    margin-top: 20px;
 }
 
-.placeCard span {
-  display: block;
+.place-detail img {
+    width: 100%;
+    height: 190px;
+    object-fit: cover;
+    border-radius: 14px;
+}
 
-  padding: 14px;
+.empty-country {
+    text-align: center;
+    margin-top: 150px;
+    color: #9db0c7;
+}
+
+.empty-country span {
+    font-size: 60px;
 }
 
 
-/* SELECTED PLACE */
+/* MODAL */
 
-.selectedPlace {
-  display: grid;
-
-  grid-template-columns:
-    1fr 1fr;
-
-  gap: 25px;
-
-  margin-top: 25px;
-
-  padding: 18px;
-
-  border-radius: 20px;
-
-  background: #080b18;
+.modal {
+    position: fixed;
+    inset: 0;
+    background: #0009;
+    display: grid;
+    place-items: center;
+    z-index: 2000;
 }
 
-.selectedPlace img {
-  width: 100%;
-
-  height: 300px;
-
-  object-fit: cover;
-
-  border-radius: 15px;
+.modal-card {
+    background: #0d1b2d;
+    padding: 30px;
+    border-radius: 22px;
+    width: min(850px, 92%);
+    max-height: 90vh;
+    overflow: auto;
 }
 
-.selectedPlace p {
-  color: #d5daf0;
-
-  line-height: 1.7;
+.close {
+    float: right;
+    font-size: 25px;
 }
 
 
-/* NAV */
+/* ANIMATION */
 
-nav {
-  position: fixed;
+@keyframes spin {
 
-  bottom: 0;
+    from {
+        transform: rotate(0deg);
+    }
 
-  left: 0;
-  right: 0;
+    to {
+        transform: rotate(360deg);
+    }
 
-  z-index: 2000;
-
-  display: flex;
-
-  justify-content:
-    center;
-
-  background: #080b18ee;
-
-  backdrop-filter:
-    blur(15px);
-
-  border-top:
-    1px solid #ffffff15;
-}
-
-nav button {
-  background: transparent;
-
-  box-shadow: none;
-
-  display: flex;
-
-  flex-direction: column;
-
-  align-items: center;
-
-  font-size: 20px;
-}
-
-nav small {
-  font-size: 10px;
-
-  color: #aaa;
 }
 
 
 /* MOBILE */
 
-@media(max-width: 850px) {
+@media (max-width: 850px) {
 
-  .shop {
-    grid-template-columns:
-      repeat(2, 1fr);
-  }
+    header {
+        height: auto;
+        flex-wrap: wrap;
+        padding: 15px;
+    }
 
-  .placeGrid {
-    grid-template-columns:
-      repeat(2, 1fr);
-  }
+    nav {
+        order: 3;
+        width: 100%;
+        overflow: auto;
+    }
 
-  .facts {
-    grid-template-columns:
-      repeat(2, 1fr);
-  }
+    .hero {
+        display: block;
+    }
 
-  .selectedPlace {
-    grid-template-columns: 1fr;
-  }
+    .hero h1 {
+        font-size: 40px;
+    }
 
-}
+    .stats {
+        margin-top: 25px;
+    }
 
+    .world-layout {
+        grid-template-columns: 1fr;
+    }
 
-@media(max-width: 600px) {
+    #map {
+        height: 450px;
+    }
 
-  .roles,
-  .grid,
-  .shop,
-  .placeGrid,
-  .badgeGrid {
-    grid-template-columns: 1fr;
-  }
+    .country-panel {
+        max-height: none;
+    }
 
-  .worldFeature {
-    grid-column: span 1;
-  }
+    .profile-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 
-  .hero h1 {
-    font-size: 32px;
-  }
-
-  .card {
-    padding: 18px;
-  }
-
-  .worldHeader {
-    flex-direction: column;
-  }
-
-  .worldHeader h1 {
-    font-size: 32px;
-  }
-
-  #worldMap {
-    height: 430px;
-  }
-
-  .facts {
-    grid-template-columns:
-      1fr 1fr;
-  }
-
-}
-
-#coins {
-  background: #ffffff15;
-  padding: 10px 18px;
-  border-radius: 30px;
-  font-weight: bold;
-  font-size: 17px;
 }
