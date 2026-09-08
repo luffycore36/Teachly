@@ -1,349 +1,808 @@
-* {
-    box-sizing: border-box;
-}
+/* =====================================================
+   TEACHLY FRONTEND AUTHENTICATION
+   Username + Password only
+===================================================== */
 
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #07111f;
-    color: #eef5ff;
-}
+let currentUser = null;
 
-button,
-input {
-    font: inherit;
-}
-
-button {
-    cursor: pointer;
-    border: 0;
-    border-radius: 12px;
-    padding: 11px 16px;
-    background: #17283d;
-    color: white;
-}
-
-button:hover {
-    filter: brightness(1.15);
-}
-
-.hidden {
-    display: none !important;
-}
-
-.full {
-    width: 100%;
-}
-
-.primary {
-    background: #4f8cff;
-}
+const USERS_KEY = "teachlyUsers";
+const SESSION_KEY = "teachlyCurrentUser";
 
 
-/* NAV */
+/* =====================================================
+   BADGES
+===================================================== */
 
-header {
-    min-height: 70px;
-    padding: 0 5%;
-    display: flex;
-    align-items: center;
-    gap: 30px;
-    background: #0b1727;
-    border-bottom: 1px solid #20334c;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
+const badges = [
+    { name: "Starter", sessions: 5, icon: "🥉" },
+    { name: "Learner", sessions: 15, icon: "🥉" },
+    { name: "Explorer", sessions: 50, icon: "🥈" },
+    { name: "Knowledge Seeker", sessions: 75, icon: "🥈" },
+    { name: "Skill Builder", sessions: 100, icon: "🥇" },
+    { name: "Mentor", sessions: 150, icon: "🥇" },
+    { name: "Expert", sessions: 250, icon: "🏆" },
+    { name: "Master", sessions: 500, icon: "🏆" },
+    { name: "Legend", sessions: 750, icon: "💎" },
+    { name: "Teachly Champion", sessions: 1000, icon: "👑" }
+];
 
-.brand {
-    font-size: 25px;
-    font-weight: 800;
-}
 
-nav {
-    display: flex;
-    gap: 7px;
-    flex: 1;
-}
+/* =====================================================
+   STORAGE
+===================================================== */
 
-nav button {
-    background: transparent;
-}
+function getUsers() {
 
-.nav-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    try {
+
+        return JSON.parse(
+            localStorage.getItem(USERS_KEY)
+        ) || [];
+
+    } catch {
+
+        return [];
+
+    }
 }
 
 
-/* PAGES */
+function saveUsers(users) {
 
-.page {
-    max-width: 1250px;
-    margin: auto;
-    padding: 42px 5%;
-}
-
-
-/* AUTH */
-
-.auth-page {
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-    padding: 20px;
-}
-
-.auth-card {
-    width: min(440px, 100%);
-    padding: 35px;
-    border: 1px solid #263b56;
-    border-radius: 25px;
-    background: #0d1b2d;
-    box-shadow: 0 20px 60px #0005;
-}
-
-.auth-card h1 {
-    text-align: center;
-    font-size: 45px;
-    margin: 0;
-}
-
-.tagline {
-    text-align: center;
-    color: #a9bad0;
-}
-
-.tabs {
-    display: flex;
-    gap: 6px;
-    margin: 25px 0;
-}
-
-.tabs button {
-    flex: 1;
-}
-
-.tabs .active {
-    background: #4f8cff;
-}
-
-input {
-    width: 100%;
-    padding: 13px 14px;
-    margin: 6px 0;
-    background: #081525;
-    border: 1px solid #29415e;
-    color: white;
-    border-radius: 11px;
-    outline: none;
-}
-
-input:focus {
-    border-color: #4f8cff;
-}
-
-.message {
-    min-height: 22px;
-    margin-top: 12px;
-    color: #ffb4b4;
-}
-
-
-/* HERO */
-
-.hero {
-    padding: 45px;
-    border-radius: 28px;
-    background: linear-gradient(
-        135deg,
-        #132d4a,
-        #0d1c30
+    localStorage.setItem(
+        USERS_KEY,
+        JSON.stringify(users)
     );
 
-    display: flex;
-    justify-content: space-between;
-    gap: 30px;
-}
-
-.hero h1 {
-    font-size: 54px;
-    margin: 8px 0;
-}
-
-.hero p {
-    color: #a9bad0;
-}
-
-.eyebrow {
-    letter-spacing: 3px;
-    color: #77a9ff;
-    font-weight: 800;
-}
-
-.role-row {
-    display: flex;
-    gap: 10px;
-    margin-top: 25px;
-}
-
-.stats {
-    display: flex;
-    gap: 22px;
-    align-items: center;
-}
-
-.stats div {
-    min-width: 100px;
-    text-align: center;
-}
-
-.stats b {
-    display: block;
-    font-size: 30px;
-}
-
-.stats span {
-    color: #9db0c7;
 }
 
 
-/* CARDS */
+/* =====================================================
+   AUTH MODE
+===================================================== */
 
-.cards {
-    display: grid;
-    grid-template-columns:
-        repeat(auto-fit, minmax(260px, 1fr));
+function setAuthMode(mode) {
 
-    gap: 18px;
-    margin-top: 24px;
-}
+    const loginForm =
+        document.getElementById("loginForm");
 
-.card {
-    background: #0d1b2d;
-    border: 1px solid #233b56;
-    border-radius: 20px;
-    padding: 23px;
-}
+    const signupForm =
+        document.getElementById("signupForm");
 
-.card p {
-    color: #a9bad0;
-    line-height: 1.5;
-}
+    const loginTab =
+        document.getElementById("loginTab");
+
+    const signupTab =
+        document.getElementById("signupTab");
 
 
-/* PROFILE */
+    loginForm.classList.toggle(
+        "hidden",
+        mode !== "login"
+    );
 
-.profile-card {
-    display: flex;
-    gap: 35px;
-    align-items: center;
-    background: #0d1b2d;
-    padding: 30px;
-    border-radius: 22px;
-    margin: 25px 0;
-}
+    signupForm.classList.toggle(
+        "hidden",
+        mode !== "signup"
+    );
 
-.avatar-wrap {
-    position: relative;
-    width: 160px;
-    text-align: center;
-}
 
-.profile-avatar {
-    width: 130px;
-    height: 130px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid white;
-    position: relative;
-    z-index: 2;
-    background: #17283d;
-}
+    loginTab.classList.toggle(
+        "active",
+        mode === "login"
+    );
 
-.avatar-effect {
-    position: absolute;
-    inset: -17px;
-    border: 4px dashed #79aaff;
-    border-radius: 50%;
-    animation: spin 8s linear infinite;
-    z-index: 1;
-    pointer-events: none;
+    signupTab.classList.toggle(
+        "active",
+        mode === "signup"
+    );
+
+
+    showAuthMessage("");
+
 }
 
 
-/* BADGES */
+/* =====================================================
+   MESSAGE
+===================================================== */
 
-.badge-grid {
-    display: grid;
-    grid-template-columns:
-        repeat(auto-fit, minmax(180px, 1fr));
+function showAuthMessage(message) {
 
-    gap: 15px;
-    margin-top: 25px;
-}
+    document.getElementById(
+        "authMessage"
+    ).textContent = message;
 
-.badge {
-    padding: 20px;
-    text-align: center;
-    border-radius: 18px;
-    background: #0d1b2d;
-    border: 1px solid #29415e;
-}
-
-.badge .icon {
-    font-size: 38px;
-}
-
-.locked {
-    opacity: 0.35;
 }
 
 
-/* ANIMATION */
+/* =====================================================
+   REGISTER
+===================================================== */
 
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
+function register(event) {
+
+    event.preventDefault();
+
+
+    const username =
+        document
+            .getElementById("signupUsername")
+            .value
+            .trim();
+
+
+    const password =
+        document
+            .getElementById("signupPassword")
+            .value;
+
+
+    const confirmPassword =
+        document
+            .getElementById("signupPasswordConfirm")
+            .value;
+
+
+    if (!username) {
+
+        showAuthMessage(
+            "Please enter a username."
+        );
+
+        return;
+
     }
 
-    to {
-        transform: rotate(360deg);
+
+    if (!/^[a-zA-Z0-9_.-]{3,30}$/.test(username)) {
+
+        showAuthMessage(
+            "Username must be 3–30 characters and use only letters, numbers, _, . or -."
+        );
+
+        return;
+
     }
+
+
+    if (password.length < 8) {
+
+        showAuthMessage(
+            "Password must contain at least 8 characters."
+        );
+
+        return;
+
+    }
+
+
+    if (password !== confirmPassword) {
+
+        showAuthMessage(
+            "Passwords do not match."
+        );
+
+        return;
+
+    }
+
+
+    const users = getUsers();
+
+
+    /*
+       Username comparison is case-insensitive.
+       Example:
+       Luffy
+       luffy
+       LUFFY
+
+       These are treated as the same username.
+    */
+
+    const usernameTaken =
+        users.some(
+            user =>
+                user.username.toLowerCase() ===
+                username.toLowerCase()
+        );
+
+
+    if (usernameTaken) {
+
+        showAuthMessage(
+            "Username is already taken"
+        );
+
+        return;
+
+    }
+
+
+    const user = {
+
+        id:
+            crypto.randomUUID
+                ? crypto.randomUUID()
+                : Date.now().toString(),
+
+        username,
+
+        password,
+
+        sessions: 0,
+
+        tickets: 0,
+
+        streak: 0,
+
+        earnedBadges: [],
+
+        ownedEffects: [],
+
+        equippedEffect: "",
+
+        profileImage: ""
+
+    };
+
+
+    users.push(user);
+
+    saveUsers(users);
+
+
+    showAuthMessage(
+        "Account created successfully! You can now log in."
+    );
+
+
+    document
+        .getElementById("signupForm")
+        .reset();
+
+
+    setTimeout(() => {
+
+        setAuthMode("login");
+
+        document
+            .getElementById("loginUsername")
+            .value = username;
+
+    }, 500);
+
 }
 
 
-/* MOBILE */
+/* =====================================================
+   LOGIN
+===================================================== */
 
-@media (max-width: 850px) {
+function login(event) {
 
-    header {
-        height: auto;
-        flex-wrap: wrap;
-        padding: 15px;
+    event.preventDefault();
+
+
+    const username =
+        document
+            .getElementById("loginUsername")
+            .value
+            .trim();
+
+
+    const password =
+        document
+            .getElementById("loginPassword")
+            .value;
+
+
+    if (!username || !password) {
+
+        showAuthMessage(
+            "Please enter your username and password."
+        );
+
+        return;
+
     }
 
-    nav {
-        order: 3;
-        width: 100%;
-        overflow: auto;
+
+    const users = getUsers();
+
+
+    const user =
+        users.find(
+            item =>
+                item.username.toLowerCase() ===
+                    username.toLowerCase() &&
+                item.password === password
+        );
+
+
+    if (!user) {
+
+        showAuthMessage(
+            "Username or password is incorrect."
+        );
+
+        return;
+
     }
 
-    .hero {
-        display: block;
-    }
 
-    .hero h1 {
-        font-size: 40px;
-    }
+    currentUser = user;
 
-    .stats {
-        margin-top: 25px;
-    }
 
-    .profile-card {
-        flex-direction: column;
-        align-items: flex-start;
-    }
+    localStorage.setItem(
+        SESSION_KEY,
+        user.id
+    );
+
+
+    finishLogin();
+
 }
+
+
+/* =====================================================
+   FINISH LOGIN
+===================================================== */
+
+function finishLogin() {
+
+    document
+        .getElementById("authPage")
+        .classList.add("hidden");
+
+
+    document
+        .getElementById("mainNav")
+        .classList.remove("hidden");
+
+
+    document
+        .getElementById("navUsername")
+        .textContent =
+        currentUser.username;
+
+
+    updateProfile();
+
+    showPage("homePage");
+
+}
+
+
+/* =====================================================
+   LOGOUT
+===================================================== */
+
+function logout() {
+
+    localStorage.removeItem(
+        SESSION_KEY
+    );
+
+
+    currentUser = null;
+
+
+    document
+        .getElementById("mainNav")
+        .classList.add("hidden");
+
+
+    document
+        .querySelectorAll(".page")
+        .forEach(
+            page =>
+                page.classList.add("hidden")
+        );
+
+
+    document
+        .getElementById("authPage")
+        .classList.remove("hidden");
+
+
+    document
+        .getElementById("loginForm")
+        .reset();
+
+
+    showAuthMessage("");
+
+}
+
+
+/* =====================================================
+   PAGE NAVIGATION
+===================================================== */
+
+function showPage(id) {
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    document
+        .querySelectorAll("main > .page")
+        .forEach(
+            page =>
+                page.classList.add("hidden")
+        );
+
+
+    const page =
+        document.getElementById(id);
+
+
+    if (page) {
+        page.classList.remove("hidden");
+    }
+
+
+    if (id === "badgesPage") {
+        renderBadges();
+    }
+
+}
+
+
+/* =====================================================
+   ROLE
+===================================================== */
+
+function selectRole(role) {
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    currentUser.role = role;
+
+    updateStoredUser();
+
+
+    alert(
+        `You selected ${role}.`
+    );
+
+}
+
+
+/* =====================================================
+   PROFILE
+===================================================== */
+
+function updateProfile() {
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    document.getElementById(
+        "profileName"
+    ).textContent =
+        currentUser.username;
+
+
+    document.getElementById(
+        "profileSessions"
+    ).textContent =
+        currentUser.sessions || 0;
+
+
+    document.getElementById(
+        "profileTickets"
+    ).textContent =
+        currentUser.tickets || 0;
+
+
+    document.getElementById(
+        "profileStreak"
+    ).textContent =
+        currentUser.streak || 0;
+
+
+    document.getElementById(
+        "sessionsStat"
+    ).textContent =
+        currentUser.sessions || 0;
+
+
+    document.getElementById(
+        "ticketsStat"
+    ).textContent =
+        currentUser.tickets || 0;
+
+
+    document.getElementById(
+        "navUsername"
+    ).textContent =
+        currentUser.username;
+
+
+    const avatar =
+        document.getElementById(
+            "profileAvatar"
+        );
+
+
+    if (currentUser.profileImage) {
+
+        avatar.src =
+            currentUser.profileImage;
+
+    } else {
+
+        /*
+           Simple generated avatar using the
+           first letter of the username.
+        */
+
+        avatar.src =
+            createAvatar(
+                currentUser.username
+            );
+
+    }
+
+
+    updateAvatarEffect();
+
+}
+
+
+/* =====================================================
+   AVATAR
+===================================================== */
+
+function createAvatar(username) {
+
+    const letter =
+        username
+            .charAt(0)
+            .toUpperCase();
+
+
+    const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg"
+             width="200"
+             height="200">
+
+            <rect
+                width="200"
+                height="200"
+                rx="100"
+                fill="#17283d"
+            />
+
+            <text
+                x="100"
+                y="125"
+                text-anchor="middle"
+                font-size="90"
+                fill="white"
+                font-family="Arial"
+            >
+                ${letter}
+            </text>
+
+        </svg>
+    `;
+
+
+    return (
+        "data:image/svg+xml;charset=UTF-8," +
+        encodeURIComponent(svg)
+    );
+
+}
+
+
+/* =====================================================
+   EFFECT
+===================================================== */
+
+function updateAvatarEffect() {
+
+    const effect =
+        document.getElementById(
+            "avatarEffect"
+        );
+
+
+    effect.className =
+        "avatar-effect";
+
+
+    if (
+        currentUser &&
+        currentUser.equippedEffect
+    ) {
+
+        effect.classList.add(
+            currentUser.equippedEffect
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   BADGES
+===================================================== */
+
+function renderBadges() {
+
+    const grid =
+        document.getElementById(
+            "badgeGrid"
+        );
+
+
+    if (!grid) {
+        return;
+    }
+
+
+    const sessions =
+        currentUser?.sessions || 0;
+
+
+    grid.innerHTML = "";
+
+
+    badges.forEach(badge => {
+
+        const unlocked =
+            sessions >= badge.sessions;
+
+
+        const div =
+            document.createElement("div");
+
+
+        div.className =
+            "badge" +
+            (
+                unlocked
+                    ? ""
+                    : " locked"
+            );
+
+
+        div.innerHTML = `
+
+            <div class="icon">
+                ${badge.icon}
+            </div>
+
+            <h3>
+                ${badge.name}
+            </h3>
+
+            <p>
+                ${badge.sessions} sessions
+            </p>
+
+            <strong>
+                ${unlocked ? "Unlocked" : "Locked"}
+            </strong>
+
+        `;
+
+
+        grid.appendChild(div);
+
+    });
+
+}
+
+
+/* =====================================================
+   UPDATE USER
+===================================================== */
+
+function updateStoredUser() {
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    const users =
+        getUsers();
+
+
+    const index =
+        users.findIndex(
+            user =>
+                user.id ===
+                currentUser.id
+        );
+
+
+    if (index === -1) {
+        return;
+    }
+
+
+    users[index] =
+        currentUser;
+
+
+    saveUsers(users);
+
+}
+
+
+/* =====================================================
+   RESTORE SESSION
+===================================================== */
+
+function restoreSession() {
+
+    const userId =
+        localStorage.getItem(
+            SESSION_KEY
+        );
+
+
+    if (!userId) {
+        return;
+    }
+
+
+    const users =
+        getUsers();
+
+
+    const user =
+        users.find(
+            item =>
+                item.id === userId
+        );
+
+
+    if (!user) {
+
+        localStorage.removeItem(
+            SESSION_KEY
+        );
+
+        return;
+
+    }
+
+
+    currentUser =
+        user;
+
+
+    finishLogin();
+
+}
+
+
+/* =====================================================
+   START
+===================================================== */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        setAuthMode("login");
+
+        restoreSession();
+
+    }
+);
