@@ -3,623 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Teachly — Teach. Learn. Earn.</title>
-
-    <link rel="stylesheet"
-          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-
+    <title>Teachly</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- =========================
-     NAVIGATION
-========================= -->
+    <!-- AUTH -->
+    <section id="authPage" class="auth-page">
 
-<header id="mainNav" class="hidden">
+        <div class="auth-card">
 
-    <div class="brand">
-        Teachly
-    </div>
+            <h1>Teachly</h1>
+            <p class="tagline">Learn. Teach. Connect.</p>
 
-    <nav>
-        <button onclick="showPage('homePage')">
-            Home
-        </button>
-
-        <button onclick="showPage('worldPage')">
-            🌍 World Explorer
-        </button>
-
-        <button onclick="showPage('badgesPage')">
-            🏆 Badges
-        </button>
-
-        <button onclick="showPage('profilePage')">
-            👤 Profile
-        </button>
-    </nav>
-
-    <div class="nav-right">
-
-        <span id="navTickets">
-            🎫 0
-        </span>
-
-        <button onclick="logout()">
-            Log out
-        </button>
-
-    </div>
-
-</header>
-
-
-<main>
-
-<!-- =========================
-     LOGIN / SIGNUP
-========================= -->
-
-<section id="authPage" class="page auth-page">
-
-    <div class="auth-card">
-
-        <h1>Teachly</h1>
-
-        <p class="tagline">
-            Everyone has something to teach.
-            Everyone has something to learn.
-        </p>
-
-        <div class="tabs">
-
-            <button
-                class="active"
-                onclick="setAuthMode('login')">
-                Log in
-            </button>
-
-            <button onclick="setAuthMode('signup')">
-                Create account
-            </button>
-
-        </div>
-
-
-        <!-- LOGIN -->
-
-        <div id="loginForm">
-
-            <input
-                id="loginEmail"
-                type="email"
-                placeholder="Email">
-
-            <input
-                id="loginPassword"
-                type="password"
-                placeholder="Password">
-
-            <button
-                class="primary full"
-                onclick="login()">
-                Log in
-            </button>
-
-        </div>
-
-
-        <!-- SIGNUP -->
-
-        <div id="signupForm" class="hidden">
-
-            <input
-                id="signupUsername"
-                placeholder="Username">
-
-            <input
-                id="signupEmail"
-                type="email"
-                placeholder="Email">
-
-            <input
-                id="signupPassword"
-                type="password"
-                placeholder="Password">
-
-            <button
-                class="primary full"
-                onclick="checkAndRegister()">
-                Create account
-            </button>
-
-        </div>
-
-
-        <!-- EMAIL VERIFICATION -->
-
-        <div id="verifyBox" class="hidden">
-
-            <h3>Verify your email</h3>
-
-            <p>
-                We sent a verification code to your email.
-            </p>
-
-            <input
-                id="verifyCode"
-                inputmode="numeric"
-                maxlength="6"
-                placeholder="6-digit code">
-
-            <button
-                class="primary full"
-                onclick="verifyEmail()">
-                Verify email
-            </button>
-
-        </div>
-
-
-        <p id="authMessage" class="message"></p>
-
-    </div>
-
-</section>
-
-
-<!-- =========================
-     HOME
-========================= -->
-
-<section id="homePage" class="page hidden">
-
-    <div class="hero">
-
-        <div>
-
-            <p class="eyebrow">
-                TEACHLY
-            </p>
-
-            <h1>
-                Teach. Learn. Earn.
-            </h1>
-
-            <p>
-                Connect with real people,
-                exchange knowledge,
-                and grow together.
-            </p>
-
-
-            <div class="role-row">
-
-                <button
-                    id="teacherBtn"
-                    onclick="chooseRole('teacher')">
-                    👨‍🏫 I want to teach
+            <div class="tabs">
+                <button id="loginTab" class="active" onclick="setAuthMode('login')">
+                    Login
                 </button>
 
-                <button
-                    id="learnerBtn"
-                    onclick="chooseRole('learner')">
-                    🎓 I want to learn
+                <button id="signupTab" onclick="setAuthMode('signup')">
+                    Create Account
                 </button>
-
             </div>
 
-        </div>
-
-
-        <div class="stats">
-
-            <div>
-                <b id="sessionCount">0</b>
-                <span>Sessions</span>
-            </div>
-
-            <div>
-                <b id="streakCount">0</b>
-                <span>Streak</span>
-            </div>
-
-            <div>
-                <b id="ticketCount">0</b>
-                <span>Tickets</span>
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div class="cards">
-
-
-        <!-- ONLINE -->
-
-        <article class="card">
-
-            <h2>
-                👥 Online Mode
-            </h2>
-
-            <p>
-                Find a real teacher or learner
-                for a text-only knowledge session.
-            </p>
-
-            <input
-                id="topicInput"
-                placeholder="What topic? e.g. Python, maths, French">
-
-            <button
-                class="primary"
-                onclick="findPeople()">
-                Find a person
-            </button>
-
-            <p id="onlineStatus"></p>
-
-        </article>
-
-
-        <!-- AI -->
-
-        <article class="card">
-
-            <h2>
-                🤖 AI Mode
-            </h2>
-
-            <p>
-                Ask the AI Study Buddy anything.
-            </p>
-
-            <button
-                class="primary"
-                onclick="openAIMode()">
-                Open AI Mode
-            </button>
-
-        </article>
-
-
-        <!-- MYSTERY -->
-
-        <article class="card">
-
-            <h2>
-                🎲 Mystery Topic
-            </h2>
-
-            <p>
-                Get a random topic and try
-                to teach it back.
-            </p>
-
-            <button onclick="mysteryTopic()">
-                Mystery Topic
-            </button>
-
-            <p id="mysteryOutput"></p>
-
-        </article>
-
-
-        <!-- SHOP -->
-
-        <article class="card">
-
-            <h2>
-                🛍️ Ticket Shop
-            </h2>
-
-            <p>
-                Use 🎫 tickets for profile
-                cosmetics and effects.
-            </p>
-
-            <button onclick="openShop()">
-                Open Shop
-            </button>
-
-        </article>
-
-    </div>
-
-
-    <!-- ONLINE CHAT -->
-
-    <div
-        id="chatPanel"
-        class="chat hidden">
-
-        <div class="chat-head">
-
-            <b id="chatTitle">
-                Session
-            </b>
-
-            <button onclick="leaveOnlineSession()">
-                Leave
-            </button>
-
-        </div>
-
-        <div
-            id="chatMessages"
-            class="messages">
-        </div>
-
-        <div class="chat-send">
-
-            <input
-                id="onlineMessage"
-                placeholder="Type a message...">
-
-            <button onclick="sendOnlineMessage()">
-                Send
-            </button>
-
-        </div>
-
-    </div>
-
-
-    <!-- AI CHAT -->
-
-    <div
-        id="aiPanel"
-        class="chat hidden">
-
-        <div class="chat-head">
-
-            <b>
-                🤖 AI Study Buddy
-            </b>
-
-            <button onclick="closeAIMode()">
-                Close
-            </button>
-
-        </div>
-
-        <div
-            id="aiMessages"
-            class="messages">
-        </div>
-
-        <div class="chat-send">
-
-            <input
-                id="aiMessage"
-                placeholder="Ask anything...">
-
-            <button onclick="sendAI()">
-                Send
-            </button>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-<!-- =========================
-     PROFILE
-========================= -->
-
-<section id="profilePage" class="page hidden">
-
-    <div class="section-head">
-
-        <h1>
-            Profile
-        </h1>
-
-    </div>
-
-
-    <div class="profile-card">
-
-        <div class="avatar-wrap">
-
-            <div
-                id="profileEffect"
-                class="avatar-effect">
-            </div>
-
-            <img
-                id="profileImage"
-                class="profile-avatar"
-                alt="Profile picture">
-
-            <label class="upload-btn">
-
-                Choose image
+            <!-- LOGIN -->
+            <form id="loginForm" onsubmit="login(event)">
 
                 <input
-                    type="file"
-                    accept="image/*"
-                    onchange="uploadAvatar(event)">
+                    id="loginUsername"
+                    type="text"
+                    placeholder="Username"
+                    autocomplete="username"
+                    maxlength="30"
+                    required
+                >
 
-            </label>
+                <input
+                    id="loginPassword"
+                    type="password"
+                    placeholder="Password"
+                    autocomplete="current-password"
+                    required
+                >
 
-        </div>
+                <button class="primary full" type="submit">
+                    Login
+                </button>
 
+            </form>
 
-        <div>
+            <!-- SIGNUP -->
+            <form id="signupForm" class="hidden" onsubmit="register(event)">
 
-            <h2 id="profileName"></h2>
+                <input
+                    id="signupUsername"
+                    type="text"
+                    placeholder="Choose a username"
+                    autocomplete="username"
+                    maxlength="30"
+                    required
+                >
 
-            <p id="profileEmail"></p>
+                <input
+                    id="signupPassword"
+                    type="password"
+                    placeholder="Create a password"
+                    autocomplete="new-password"
+                    minlength="8"
+                    required
+                >
 
-            <p id="streakMessage"></p>
+                <input
+                    id="signupPasswordConfirm"
+                    type="password"
+                    placeholder="Confirm password"
+                    autocomplete="new-password"
+                    minlength="8"
+                    required
+                >
 
-            <p>
-                🎫 Tickets:
-                <b id="profileTickets">
-                    0
-                </b>
-            </p>
+                <button class="primary full" type="submit">
+                    Create Account
+                </button>
 
-            <p>
-                Sessions:
-                <b id="profileSessions">
-                    0
-                </b>
-            </p>
+            </form>
 
-        </div>
-
-    </div>
-
-
-    <h2>
-        Profile Effects
-    </h2>
-
-    <div
-        id="effectOptions"
-        class="effect-options">
-    </div>
-
-</section>
-
-
-<!-- =========================
-     BADGES
-========================= -->
-
-<section id="badgesPage" class="page hidden">
-
-    <div class="section-head">
-
-        <h1>
-            🏆 Badges
-        </h1>
-
-    </div>
-
-    <p>
-        Badges are earned through sessions.
-        They cannot be purchased.
-    </p>
-
-    <div
-        id="badgeGrid"
-        class="badge-grid">
-    </div>
-
-</section>
-
-
-<!-- =========================
-     WORLD EXPLORER
-========================= -->
-
-<section id="worldPage" class="page hidden">
-
-    <div class="section-head">
-
-        <div>
-
-            <p class="eyebrow">
-                DISCOVER
-            </p>
-
-            <h1>
-                🌍 World Explorer
-            </h1>
+            <div id="authMessage" class="message"></div>
 
         </div>
 
-        <span>
-            Click a country on the map
-        </span>
-
-    </div>
+    </section>
 
 
-    <div class="world-layout">
+    <!-- NAV -->
+    <header id="mainNav" class="hidden">
 
-        <div id="map"></div>
+        <div class="brand">
+            Teachly
+        </div>
+
+        <nav>
+            <button onclick="showPage('homePage')">
+                Home
+            </button>
+
+            <button onclick="showPage('profilePage')">
+                Profile
+            </button>
+
+            <button onclick="showPage('badgesPage')">
+                Badges
+            </button>
+        </nav>
+
+        <div class="nav-right">
+            <span id="navUsername"></span>
+
+            <button onclick="logout()">
+                Logout
+            </button>
+        </div>
+
+    </header>
 
 
-        <aside
-            id="countryPanel"
-            class="country-panel">
+    <main>
 
-            <div class="empty-country">
+        <!-- HOME -->
+        <section id="homePage" class="page hidden">
 
-                <span>
-                    🌍
-                </span>
+            <div class="hero">
 
-                <h2>
-                    Select a country
-                </h2>
+                <div>
+                    <div class="eyebrow">
+                        WELCOME TO TEACHLY
+                    </div>
 
-                <p>
-                    Click a country on the map
-                    to see its real country facts,
-                    famous places and discoveries.
-                </p>
+                    <h1>
+                        Learn something new.
+                    </h1>
+
+                    <p>
+                        Connect with other learners and grow your knowledge.
+                    </p>
+
+                    <div class="role-row">
+                        <button class="primary" onclick="selectRole('learner')">
+                            I'm a Learner
+                        </button>
+
+                        <button onclick="selectRole('teacher')">
+                            I'm a Teacher
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats">
+
+                    <div>
+                        <b id="sessionsStat">0</b>
+                        <span>Sessions</span>
+                    </div>
+
+                    <div>
+                        <b id="ticketsStat">0</b>
+                        <span>Tickets</span>
+                    </div>
+
+                </div>
 
             </div>
 
-        </aside>
+            <div class="cards">
 
-    </div>
+                <div class="card">
+                    <h2>📚 Learn</h2>
+                    <p>
+                        Explore topics and improve your skills.
+                    </p>
+                </div>
 
-</section>
+                <div class="card">
+                    <h2>🎓 Teach</h2>
+                    <p>
+                        Share what you know with other learners.
+                    </p>
+                </div>
 
-</main>
+                <div class="card">
+                    <h2>🌎 Explore</h2>
+                    <p>
+                        Discover people, places and knowledge.
+                    </p>
+                </div>
 
+            </div>
 
-<!-- =========================
-     SHOP MODAL
-========================= -->
-
-<div
-    id="shopModal"
-    class="modal hidden">
-
-    <div class="modal-card">
-
-        <button
-            class="close"
-            onclick="closeShop()">
-            ×
-        </button>
-
-        <h2>
-            🎫 Ticket Shop
-        </h2>
-
-        <div
-            id="shopModalGrid"
-            class="cards">
-        </div>
-
-    </div>
-
-</div>
+        </section>
 
 
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+        <!-- PROFILE -->
+        <section id="profilePage" class="page hidden">
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+            <h1>Profile</h1>
 
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+            <div class="profile-card">
 
-<script src="script.js"></script>
+                <div class="avatar-wrap">
+
+                    <img
+                        id="profileAvatar"
+                        class="profile-avatar"
+                        src=""
+                        alt="Profile avatar"
+                    >
+
+                    <div
+                        id="avatarEffect"
+                        class="avatar-effect"
+                    ></div>
+
+                </div>
+
+                <div>
+                    <h2 id="profileName"></h2>
+
+                    <p>
+                        Sessions:
+                        <strong id="profileSessions">0</strong>
+                    </p>
+
+                    <p>
+                        Tickets:
+                        <strong id="profileTickets">0</strong>
+                    </p>
+
+                    <p>
+                        Streak:
+                        <strong id="profileStreak">0</strong>
+                    </p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- BADGES -->
+        <section id="badgesPage" class="page hidden">
+
+            <h1>Badges</h1>
+
+            <div id="badgeGrid" class="badge-grid"></div>
+
+        </section>
+
+    </main>
+
+
+    <script src="script.js"></script>
 
 </body>
 </html>
