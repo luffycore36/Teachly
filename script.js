@@ -121,9 +121,9 @@ function closeWorldPage() {
 
 function update() {
 
-  document.getElementById("coins")
-    .textContent =
-    "🪙 " + data.coins;
+document.getElementById("coins")
+  .textContent =
+  "🎫 " + data.coins;
 
   document.getElementById("username")
     .textContent =
@@ -698,7 +698,7 @@ function shop() {
             </p>
 
             <strong>
-              🪙 ${item.price}
+              🎫 ${item.price}
             </strong>
 
             <button
@@ -709,7 +709,7 @@ function shop() {
               ${
                 owned
                   ? "Equip"
-                  : "Buy for 🪙 " +
+                  : "Buy for 🎫 " +
                     item.price
               }
             </button>
@@ -813,7 +813,7 @@ function profile() {
     .getElementById("stats")
     .textContent =
     data.sessions +
-    " completed sessions • 🪙 " +
+    " completed sessions • 🎫 " +
     data.coins +
     " coins";
 
