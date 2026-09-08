@@ -1,808 +1,430 @@
-/* =====================================================
-   TEACHLY FRONTEND AUTHENTICATION
-   Username + Password only
-===================================================== */
+let data = JSON.parse(
+  localStorage.getItem("teachly")
+) || {
+  name: "",
+  email: "",
+  role: "",
+  coins: 100,
+  sessions: 0,
+  owned: [],
+  effect: ""
+};
 
-let currentUser = null;
+function save() {
+  localStorage.setItem(
+    "teachly",
+    JSON.stringify(data)
+  );
 
-const USERS_KEY = "teachlyUsers";
-const SESSION_KEY = "teachlyCurrentUser";
+  update();
+}
 
+function show(id) {
 
-/* =====================================================
-   BADGES
-===================================================== */
+  document.querySelectorAll(".screen")
+    .forEach(x => x.classList.remove("active"));
 
-const badges = [
-    { name: "Starter", sessions: 5, icon: "🥉" },
-    { name: "Learner", sessions: 15, icon: "🥉" },
-    { name: "Explorer", sessions: 50, icon: "🥈" },
-    { name: "Knowledge Seeker", sessions: 75, icon: "🥈" },
-    { name: "Skill Builder", sessions: 100, icon: "🥇" },
-    { name: "Mentor", sessions: 150, icon: "🥇" },
-    { name: "Expert", sessions: 250, icon: "🏆" },
-    { name: "Master", sessions: 500, icon: "🏆" },
-    { name: "Legend", sessions: 750, icon: "💎" },
-    { name: "Teachly Champion", sessions: 1000, icon: "👑" }
+  document.getElementById(id)
+    .classList.add("active");
+
+  window.scrollTo(0, 0);
+}
+
+function update() {
+
+  document.getElementById("coins")
+    .textContent = "🪙 " + data.coins;
+
+  document.getElementById("username")
+    .textContent = data.name || "User";
+
+  document.getElementById("profileName")
+    .textContent = data.name || "User";
+
+  document.getElementById("role")
+    .textContent =
+    data.role === "teacher"
+      ? "👨‍🏫 Teacher"
+      : "🎓 Learner";
+}
+
+function createAccount() {
+
+  let name =
+    document.getElementById("name").value.trim();
+
+  let email =
+    document.getElementById("email").value.trim();
+
+  if (!name || !email) {
+    alert("Please enter your name and email.");
+    return;
+  }
+
+  data.name = name;
+  data.email = email;
+
+  save();
+
+  show("role");
+}
+
+function chooseRole(role) {
+
+  data.role = role;
+
+  save();
+
+  show("dashboard");
+}
+
+function people() {
+
+  let users = [
+
+    {
+      name: "Arun",
+      role: "👨‍🏫 Teacher",
+      subject: "Python"
+    },
+
+    {
+      name: "Maya",
+      role: "👩‍🏫 Teacher",
+      subject: "Maths"
+    },
+
+    {
+      name: "Kavin",
+      role: "🎓 Learner",
+      subject: "Science"
+    },
+
+    {
+      name: "Sara",
+      role: "👩‍🏫 Teacher",
+      subject: "English"
+    }
+
+  ];
+
+  document.getElementById("peopleList")
+    .innerHTML = users.map(user => `
+
+      <div class="person">
+
+        <div>
+          <b>${user.name}</b>
+          <br>
+          <small>
+            ${user.role} • ${user.subject}
+          </small>
+        </div>
+
+        <button onclick="request('${user.name}')">
+          Request
+        </button>
+
+      </div>
+
+    `).join("");
+
+  show("people");
+}
+
+function request(name) {
+
+  alert(
+    "Session request sent to " +
+    name +
+    "! 👥"
+  );
+}
+
+const topics = [
+
+  "🌍 Why do we have seasons?",
+  "💧 The water cycle",
+  "✈️ How airplanes fly",
+  "🌱 How plants make food",
+  "🌋 How volcanoes form",
+  "☀️ The Solar System",
+  "⚙️ How gravity works",
+  "🌊 Interesting ocean animals",
+  "💻 Basic coding logic",
+  "🐝 Why bees are important"
+
 ];
 
+function mystery() {
 
-/* =====================================================
-   STORAGE
-===================================================== */
+  show("mystery");
 
-function getUsers() {
-
-    try {
-
-        return JSON.parse(
-            localStorage.getItem(USERS_KEY)
-        ) || [];
-
-    } catch {
-
-        return [];
-
-    }
+  document.getElementById("topic")
+    .textContent = "Tap Reveal Topic!";
 }
 
+function randomTopic() {
 
-function saveUsers(users) {
+  let topic =
+    topics[
+      Math.floor(
+        Math.random() * topics.length
+      )
+    ];
 
-    localStorage.setItem(
-        USERS_KEY,
-        JSON.stringify(users)
-    );
-
+  document.getElementById("topic")
+    .textContent = topic;
 }
 
+let shopItems = [
 
-/* =====================================================
-   AUTH MODE
-===================================================== */
+  {
+    name: "Fire",
+    icon: "🔥",
+    price: 73
+  },
 
-function setAuthMode(mode) {
+  {
+    name: "Void",
+    icon: "🌌",
+    price: 146
+  },
 
-    const loginForm =
-        document.getElementById("loginForm");
+  {
+    name: "Wind",
+    icon: "🌪️",
+    price: 58
+  },
 
-    const signupForm =
-        document.getElementById("signupForm");
+  {
+    name: "Lightning",
+    icon: "⚡",
+    price: 219
+  },
 
-    const loginTab =
-        document.getElementById("loginTab");
+  {
+    name: "Ice",
+    icon: "❄️",
+    price: 91
+  },
 
-    const signupTab =
-        document.getElementById("signupTab");
+  {
+    name: "Galaxy",
+    icon: "✨",
+    price: 175
+  },
 
+  {
+    name: "Nature",
+    icon: "🌿",
+    price: 64
+  },
 
-    loginForm.classList.toggle(
-        "hidden",
-        mode !== "login"
-    );
+  {
+    name: "Emoji Pack",
+    icon: "😀",
+    price: 45
+  }
 
-    signupForm.classList.toggle(
-        "hidden",
-        mode !== "signup"
-    );
+];
 
+function shop() {
 
-    loginTab.classList.toggle(
-        "active",
-        mode === "login"
-    );
+  let html = "";
 
-    signupTab.classList.toggle(
-        "active",
-        mode === "signup"
-    );
+  shopItems.forEach(item => {
 
+    let owned =
+      data.owned.includes(item.name);
 
-    showAuthMessage("");
+    html += `
 
-}
+      <div class="item">
 
+        <div class="itemIcon">
+          ${item.icon}
+        </div>
 
-/* =====================================================
-   MESSAGE
-===================================================== */
+        <h3>${item.name}</h3>
 
-function showAuthMessage(message) {
+        <p>
+          🪙 ${item.price}
+        </p>
 
-    document.getElementById(
-        "authMessage"
-    ).textContent = message;
+        <button
+          onclick="buy('${item.name}')">
 
-}
+          ${owned ? "Equip" : "Buy"}
 
+        </button>
 
-/* =====================================================
-   REGISTER
-===================================================== */
+      </div>
 
-function register(event) {
-
-    event.preventDefault();
-
-
-    const username =
-        document
-            .getElementById("signupUsername")
-            .value
-            .trim();
-
-
-    const password =
-        document
-            .getElementById("signupPassword")
-            .value;
-
-
-    const confirmPassword =
-        document
-            .getElementById("signupPasswordConfirm")
-            .value;
-
-
-    if (!username) {
-
-        showAuthMessage(
-            "Please enter a username."
-        );
-
-        return;
-
-    }
-
-
-    if (!/^[a-zA-Z0-9_.-]{3,30}$/.test(username)) {
-
-        showAuthMessage(
-            "Username must be 3–30 characters and use only letters, numbers, _, . or -."
-        );
-
-        return;
-
-    }
-
-
-    if (password.length < 8) {
-
-        showAuthMessage(
-            "Password must contain at least 8 characters."
-        );
-
-        return;
-
-    }
-
-
-    if (password !== confirmPassword) {
-
-        showAuthMessage(
-            "Passwords do not match."
-        );
-
-        return;
-
-    }
-
-
-    const users = getUsers();
-
-
-    /*
-       Username comparison is case-insensitive.
-       Example:
-       Luffy
-       luffy
-       LUFFY
-
-       These are treated as the same username.
-    */
-
-    const usernameTaken =
-        users.some(
-            user =>
-                user.username.toLowerCase() ===
-                username.toLowerCase()
-        );
-
-
-    if (usernameTaken) {
-
-        showAuthMessage(
-            "Username is already taken"
-        );
-
-        return;
-
-    }
-
-
-    const user = {
-
-        id:
-            crypto.randomUUID
-                ? crypto.randomUUID()
-                : Date.now().toString(),
-
-        username,
-
-        password,
-
-        sessions: 0,
-
-        tickets: 0,
-
-        streak: 0,
-
-        earnedBadges: [],
-
-        ownedEffects: [],
-
-        equippedEffect: "",
-
-        profileImage: ""
-
-    };
-
-
-    users.push(user);
-
-    saveUsers(users);
-
-
-    showAuthMessage(
-        "Account created successfully! You can now log in."
-    );
-
-
-    document
-        .getElementById("signupForm")
-        .reset();
-
-
-    setTimeout(() => {
-
-        setAuthMode("login");
-
-        document
-            .getElementById("loginUsername")
-            .value = username;
-
-    }, 500);
-
-}
-
-
-/* =====================================================
-   LOGIN
-===================================================== */
-
-function login(event) {
-
-    event.preventDefault();
-
-
-    const username =
-        document
-            .getElementById("loginUsername")
-            .value
-            .trim();
-
-
-    const password =
-        document
-            .getElementById("loginPassword")
-            .value;
-
-
-    if (!username || !password) {
-
-        showAuthMessage(
-            "Please enter your username and password."
-        );
-
-        return;
-
-    }
-
-
-    const users = getUsers();
-
-
-    const user =
-        users.find(
-            item =>
-                item.username.toLowerCase() ===
-                    username.toLowerCase() &&
-                item.password === password
-        );
-
-
-    if (!user) {
-
-        showAuthMessage(
-            "Username or password is incorrect."
-        );
-
-        return;
-
-    }
-
-
-    currentUser = user;
-
-
-    localStorage.setItem(
-        SESSION_KEY,
-        user.id
-    );
-
-
-    finishLogin();
-
-}
-
-
-/* =====================================================
-   FINISH LOGIN
-===================================================== */
-
-function finishLogin() {
-
-    document
-        .getElementById("authPage")
-        .classList.add("hidden");
-
-
-    document
-        .getElementById("mainNav")
-        .classList.remove("hidden");
-
-
-    document
-        .getElementById("navUsername")
-        .textContent =
-        currentUser.username;
-
-
-    updateProfile();
-
-    showPage("homePage");
-
-}
-
-
-/* =====================================================
-   LOGOUT
-===================================================== */
-
-function logout() {
-
-    localStorage.removeItem(
-        SESSION_KEY
-    );
-
-
-    currentUser = null;
-
-
-    document
-        .getElementById("mainNav")
-        .classList.add("hidden");
-
-
-    document
-        .querySelectorAll(".page")
-        .forEach(
-            page =>
-                page.classList.add("hidden")
-        );
-
-
-    document
-        .getElementById("authPage")
-        .classList.remove("hidden");
-
-
-    document
-        .getElementById("loginForm")
-        .reset();
-
-
-    showAuthMessage("");
-
-}
-
-
-/* =====================================================
-   PAGE NAVIGATION
-===================================================== */
-
-function showPage(id) {
-
-    if (!currentUser) {
-        return;
-    }
-
-
-    document
-        .querySelectorAll("main > .page")
-        .forEach(
-            page =>
-                page.classList.add("hidden")
-        );
-
-
-    const page =
-        document.getElementById(id);
-
-
-    if (page) {
-        page.classList.remove("hidden");
-    }
-
-
-    if (id === "badgesPage") {
-        renderBadges();
-    }
-
-}
-
-
-/* =====================================================
-   ROLE
-===================================================== */
-
-function selectRole(role) {
-
-    if (!currentUser) {
-        return;
-    }
-
-
-    currentUser.role = role;
-
-    updateStoredUser();
-
-
-    alert(
-        `You selected ${role}.`
-    );
-
-}
-
-
-/* =====================================================
-   PROFILE
-===================================================== */
-
-function updateProfile() {
-
-    if (!currentUser) {
-        return;
-    }
-
-
-    document.getElementById(
-        "profileName"
-    ).textContent =
-        currentUser.username;
-
-
-    document.getElementById(
-        "profileSessions"
-    ).textContent =
-        currentUser.sessions || 0;
-
-
-    document.getElementById(
-        "profileTickets"
-    ).textContent =
-        currentUser.tickets || 0;
-
-
-    document.getElementById(
-        "profileStreak"
-    ).textContent =
-        currentUser.streak || 0;
-
-
-    document.getElementById(
-        "sessionsStat"
-    ).textContent =
-        currentUser.sessions || 0;
-
-
-    document.getElementById(
-        "ticketsStat"
-    ).textContent =
-        currentUser.tickets || 0;
-
-
-    document.getElementById(
-        "navUsername"
-    ).textContent =
-        currentUser.username;
-
-
-    const avatar =
-        document.getElementById(
-            "profileAvatar"
-        );
-
-
-    if (currentUser.profileImage) {
-
-        avatar.src =
-            currentUser.profileImage;
-
-    } else {
-
-        /*
-           Simple generated avatar using the
-           first letter of the username.
-        */
-
-        avatar.src =
-            createAvatar(
-                currentUser.username
-            );
-
-    }
-
-
-    updateAvatarEffect();
-
-}
-
-
-/* =====================================================
-   AVATAR
-===================================================== */
-
-function createAvatar(username) {
-
-    const letter =
-        username
-            .charAt(0)
-            .toUpperCase();
-
-
-    const svg = `
-        <svg xmlns="http://www.w3.org/2000/svg"
-             width="200"
-             height="200">
-
-            <rect
-                width="200"
-                height="200"
-                rx="100"
-                fill="#17283d"
-            />
-
-            <text
-                x="100"
-                y="125"
-                text-anchor="middle"
-                font-size="90"
-                fill="white"
-                font-family="Arial"
-            >
-                ${letter}
-            </text>
-
-        </svg>
     `;
 
+  });
 
-    return (
-        "data:image/svg+xml;charset=UTF-8," +
-        encodeURIComponent(svg)
+  document.getElementById("shopItems")
+    .innerHTML = html;
+
+  show("shop");
+}
+
+function buy(name) {
+
+  let item =
+    shopItems.find(x => x.name === name);
+
+  if (data.owned.includes(name)) {
+
+    data.effect = name;
+
+    save();
+
+    alert(
+      item.icon +
+      " " +
+      name +
+      " equipped!"
     );
 
+    return;
+  }
+
+  if (data.coins < item.price) {
+
+    alert(
+      "You don't have enough coins! 🪙"
+    );
+
+    return;
+  }
+
+  data.coins -= item.price;
+
+  data.owned.push(name);
+
+  data.effect = name;
+
+  save();
+
+  alert(
+    item.icon +
+    " " +
+    name +
+    " bought!"
+  );
+
+  shop();
 }
 
+function profile() {
 
-/* =====================================================
-   EFFECT
-===================================================== */
+  document.getElementById("stats")
+    .textContent =
+    data.sessions +
+    " completed sessions • 🪙 " +
+    data.coins +
+    " coins";
 
-function updateAvatarEffect() {
+  let milestones = [
 
-    const effect =
-        document.getElementById(
-            "avatarEffect"
-        );
+    [1, "🌱 Starter"],
+    [10, "⭐ Rising Star"],
+    [50, "🥉 Bronze"],
+    [100, "🥈 Silver"],
+    [250, "🥇 Gold"],
+    [500, "💎 Diamond"],
+    [1000, "👑 Master"],
+    [2500, "🔥 Legend"],
+    [5000, "⚡ Elite"],
+    [10000, "🌟 Teachly Titan"]
 
+  ];
 
-    effect.className =
-        "avatar-effect";
+  let badges = "";
 
+  milestones.forEach(x => {
 
-    if (
-        currentUser &&
-        currentUser.equippedEffect
-    ) {
+    if (data.sessions >= x[0]) {
 
-        effect.classList.add(
-            currentUser.equippedEffect
-        );
+      badges +=
+        `<span class="badge">
+          ${x[1]}<br>
+          ${x[0]} sessions
+        </span>`;
 
     }
 
+  });
+
+  if (!badges) {
+
+    badges =
+      "<p>Complete your first session to unlock 🌱 Starter!</p>";
+
+  }
+
+  document.getElementById("badges")
+    .innerHTML = badges;
+
+  let effect =
+    shopItems.find(
+      x => x.name === data.effect
+    );
+
+  document.getElementById("profileEffect")
+    .textContent =
+    effect ? effect.icon : "👤";
+
+  show("profile");
 }
 
-
-/* =====================================================
-   BADGES
-===================================================== */
-
-function renderBadges() {
-
-    const grid =
-        document.getElementById(
-            "badgeGrid"
-        );
-
-
-    if (!grid) {
-        return;
-    }
-
-
-    const sessions =
-        currentUser?.sessions || 0;
-
-
-    grid.innerHTML = "";
-
-
-    badges.forEach(badge => {
-
-        const unlocked =
-            sessions >= badge.sessions;
-
-
-        const div =
-            document.createElement("div");
-
-
-        div.className =
-            "badge" +
-            (
-                unlocked
-                    ? ""
-                    : " locked"
-            );
-
-
-        div.innerHTML = `
-
-            <div class="icon">
-                ${badge.icon}
-            </div>
-
-            <h3>
-                ${badge.name}
-            </h3>
-
-            <p>
-                ${badge.sessions} sessions
-            </p>
-
-            <strong>
-                ${unlocked ? "Unlocked" : "Locked"}
-            </strong>
-
-        `;
-
-
-        grid.appendChild(div);
-
-    });
-
+function world() {
+  show("world");
 }
 
+function place(name) {
 
-/* =====================================================
-   UPDATE USER
-===================================================== */
+  let information = {
 
-function updateStoredUser() {
+    "North America":
+      "🏔️ Explore mountains, wildlife and famous places.",
 
-    if (!currentUser) {
-        return;
-    }
+    "South America":
+      "🌳 Explore the Amazon rainforest and amazing wildlife.",
 
+    "Europe":
+      "🏰 Explore history, art and famous landmarks.",
 
-    const users =
-        getUsers();
+    "Africa":
+      "🦁 Explore wildlife, deserts and different cultures.",
 
+    "Asia":
+      "🏯 Explore history, technology, food and cultures.",
 
-    const index =
-        users.findIndex(
-            user =>
-                user.id ===
-                currentUser.id
-        );
+    "Australia":
+      "🦘 Explore unique wildlife, reefs and natural places."
 
+  };
 
-    if (index === -1) {
-        return;
-    }
+  document.getElementById("placeInfo")
+    .innerHTML = `
 
+      <h3>🌍 ${name}</h3>
 
-    users[index] =
-        currentUser;
+      <p>
+        ${information[name]}
+      </p>
 
+      <h4>⭐ Special Things</h4>
 
-    saveUsers(users);
+      <button onclick="alert('More content coming! 📚')">
+        📚 Learn More
+      </button>
 
+    `;
 }
 
-
-/* =====================================================
-   RESTORE SESSION
-===================================================== */
-
-function restoreSession() {
-
-    const userId =
-        localStorage.getItem(
-            SESSION_KEY
-        );
-
-
-    if (!userId) {
-        return;
-    }
-
-
-    const users =
-        getUsers();
-
-
-    const user =
-        users.find(
-            item =>
-                item.id === userId
-        );
-
-
-    if (!user) {
-
-        localStorage.removeItem(
-            SESSION_KEY
-        );
-
-        return;
-
-    }
-
-
-    currentUser =
-        user;
-
-
-    finishLogin();
-
-}
-
-
-/* =====================================================
-   START
-===================================================== */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        setAuthMode("login");
-
-        restoreSession();
-
-    }
-);
+update();
