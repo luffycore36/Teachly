@@ -823,3 +823,11 @@ nav small {
   }
 
 }
+
+#coins {
+  background: #ffffff15;
+  padding: 10px 18px;
+  border-radius: 30px;
+  font-weight: bold;
+  font-size: 17px;
+}
