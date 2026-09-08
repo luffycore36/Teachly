@@ -1,1637 +1,2632 @@
-let data =
-  JSON.parse(localStorage.getItem("teachly")) || {
-    name: "",
-    email: "",
-    role: "",
-    coins: 100,
-    sessions: 0,
-    owned: [],
-    effect: "",
-    discoveredCountries: []
-  };
-
-data.owned ||= [];
-data.discoveredCountries ||= [];
-
+let currentUser = null;
+let selectedRole = "";
 let socket = null;
 let currentSession = false;
-let worldMap = null;
+let currentRoom = null;
 
 
-/* ================= SAVE ================= */
+/* =========================
+   BADGES
+========================= */
 
-function save() {
+const badges = [
 
-  localStorage.setItem(
-    "teachly",
-    JSON.stringify(data)
-  );
+    { name: "Starter", sessions: 5, icon: "🥉" },
 
-  update();
+    { name: "Learner", sessions: 15, icon: "🥉" },
 
-}
+    { name: "Explorer", sessions: 50, icon: "🥈" },
 
+    { name: "Knowledge Seeker", sessions: 75, icon: "🥈" },
 
-/* ================= PAGE SYSTEM ================= */
+    { name: "Skill Builder", sessions: 100, icon: "🥇" },
 
-function show(id) {
+    { name: "Mentor", sessions: 150, icon: "🥇" },
 
-  document
-    .querySelectorAll(".screen")
-    .forEach(screen =>
-      screen.classList.remove("active")
-    );
+    { name: "Expert", sessions: 250, icon: "🏆" },
 
-  const element =
-    document.getElementById(id);
+    { name: "Master", sessions: 500, icon: "🏆" },
 
-  if (element) {
-    element.classList.add("active");
-  }
+    { name: "Legend", sessions: 750, icon: "💎" },
 
-  document
-    .getElementById("page1")
-    .classList.remove("hidden");
+    { name: "Teachly Champion", sessions: 1000, icon: "👑" }
 
-  document
-    .getElementById("page2")
-    .classList.add("hidden");
-
-  window.scrollTo(0, 0);
-
-}
+];
 
 
-function goHome() {
+/* =========================
+   SHOP
+========================= */
 
-  show(
-    data.name
-      ? "dashboard"
-      : "welcome"
-  );
+const products = [
 
-}
+    {
+        id: "ring",
+        name: "Orbit Ring",
+        price: 30
+    },
 
+    {
+        id: "spark",
+        name: "Spark",
+        price: 45
+    },
 
-function openWorldPage() {
-
-  document
-    .getElementById("page1")
-    .classList.add("hidden");
-
-  document
-    .getElementById("page2")
-    .classList.remove("hidden");
-
-  window.scrollTo(0, 0);
-
-  setTimeout(() => {
-
-    if (!worldMap) {
-      createWorldMap();
-    } else {
-      worldMap.invalidateSize();
+    {
+        id: "crown",
+        name: "Crown Glow",
+        price: 70
     }
 
-  }, 100);
-
-}
+];
 
 
-function closeWorldPage() {
+/* =========================
+   COUNTRY DATA
+========================= */
 
-  document
-    .getElementById("page2")
-    .classList.add("hidden");
+const countries = {
 
-  document
-    .getElementById("page1")
-    .classList.remove("hidden");
+    India: {
 
-  show(
-    data.name
-      ? "dashboard"
-      : "welcome"
-  );
+        flag: "🇮🇳",
 
-}
+        capital: "New Delhi",
+
+        language: "Hindi & English",
+
+        currency: "Indian Rupee (INR)",
+
+        continent: "Asia",
+
+        description:
+            "India is a highly diverse country known for its languages, traditions, food, festivals, technology, cinema and long history.",
+
+        places: [
+
+            {
+                name: "Taj Mahal",
+
+                description:
+                    "The Taj Mahal is a famous white-marble monument in Agra and one of India's best-known landmarks.",
+
+                image:
+                    "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=900&q=80"
+            },
+
+            {
+                name: "Bollywood",
+
+                description:
+                    "Bollywood is the major Hindi-language film industry centered in Mumbai.",
+
+                image:
+                    "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=900&q=80"
+            },
+
+            {
+                name: "Indian Cuisine",
+
+                description:
+                    "India has many regional cuisines with different ingredients, spices and cooking traditions.",
+
+                image:
+                    "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=900&q=80"
+            }
+
+        ]
+
+    },
 
 
-/* ================= UPDATE ================= */
+    France: {
 
-function update() {
+        flag: "🇫🇷",
 
-document.getElementById("coins")
-  .textContent =
-  "🎫 " + data.coins;
+        capital: "Paris",
 
-  document.getElementById("username")
-    .textContent =
-    data.name || "User";
+        language: "French",
 
-  document.getElementById("profileName")
-    .textContent =
-    data.name || "User";
+        currency: "Euro (EUR)",
 
-  document.getElementById("roleText")
-    .textContent =
-    data.role === "teacher"
-      ? "👨‍🏫 Teacher"
-      : data.role === "learner"
-        ? "🎓 Learner"
-        : "";
+        continent: "Europe",
 
-}
+        description:
+            "France is known around the world for art, fashion, cuisine, architecture and history.",
+
+        places: [
+
+            {
+                name: "Eiffel Tower",
+
+                description:
+                    "The Eiffel Tower is a famous iron landmark in Paris.",
+
+                image:
+                    "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=900&q=80"
+            },
+
+            {
+                name: "Louvre Museum",
+
+                description:
+                    "The Louvre is one of the world's major museums and is located in Paris.",
+
+                image:
+                    "https://images.unsplash.com/photo-1564399579883-451a5d44ec08?auto=format&fit=crop&w=900&q=80"
+            }
+
+        ]
+
+    },
 
 
-/* ================= ACCOUNT ================= */
+    Japan: {
 
-function createAccount() {
+        flag: "🇯🇵",
 
-  const name =
+        capital: "Tokyo",
+
+        language: "Japanese",
+
+        currency: "Japanese Yen (JPY)",
+
+        continent: "Asia",
+
+        description:
+            "Japan combines modern technology and large cities with long-standing cultural traditions.",
+
+        places: [
+
+            {
+                name: "Mount Fuji",
+
+                description:
+                    "Mount Fuji is Japan's highest mountain and an important cultural symbol.",
+
+                image:
+                    "https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?auto=format&fit=crop&w=900&q=80"
+            },
+
+            {
+                name: "Tokyo",
+
+                description:
+                    "Tokyo is a huge metropolitan area known for technology, food, shopping and culture.",
+
+                image:
+                    "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=900&q=80"
+            }
+
+        ]
+
+    },
+
+
+    "United States": {
+
+        flag: "🇺🇸",
+
+        capital: "Washington, D.C.",
+
+        language: "English is most widely used",
+
+        currency: "US Dollar (USD)",
+
+        continent: "North America",
+
+        description:
+            "The United States is a large country with diverse landscapes, cultures, industries and cities.",
+
+        places: [
+
+            {
+                name: "New York City",
+
+                description:
+                    "New York City is a major global city known for finance, arts, media and landmarks.",
+
+                image:
+                    "https://images.unsplash.com/photo-1485871981521-5b1fd3805eee?auto=format&fit=crop&w=900&q=80"
+            },
+
+            {
+                name: "Grand Canyon",
+
+                description:
+                    "The Grand Canyon is a vast canyon in Arizona carved by the Colorado River.",
+
+                image:
+                    "https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?auto=format&fit=crop&w=900&q=80"
+            }
+
+        ]
+
+    },
+
+
+    Egypt: {
+
+        flag: "🇪🇬",
+
+        capital: "Cairo",
+
+        language: "Arabic",
+
+        currency: "Egyptian Pound (EGP)",
+
+        continent: "Africa",
+
+        description:
+            "Egypt is famous for its ancient civilization, the Nile River and archaeological sites.",
+
+        places: [
+
+            {
+                name: "Pyramids of Giza",
+
+                description:
+                    "The Pyramids of Giza are ancient monumental structures near Cairo.",
+
+                image:
+                    "https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?auto=format&fit=crop&w=900&q=80"
+            },
+
+            {
+                name: "Nile River",
+
+                description:
+                    "The Nile has played a major role in Egyptian agriculture, settlement and history.",
+
+                image:
+                    "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=900&q=80"
+            }
+
+        ]
+
+    },
+
+
+    Brazil: {
+
+        flag: "🇧🇷",
+
+        capital: "Brasília",
+
+        language: "Portuguese",
+
+        currency: "Brazilian Real (BRL)",
+
+        continent: "South America",
+
+        description:
+            "Brazil is South America's largest country and is known for biodiversity, music, football and cities.",
+
+        places: [
+
+            {
+                name: "Amazon Rainforest",
+
+                description:
+                    "The Amazon rainforest contains extraordinary biodiversity and spans a large part of northern South America.",
+
+                image:
+                    "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=900&q=80"
+            },
+
+            {
+                name: "Rio de Janeiro",
+
+                description:
+                    "Rio de Janeiro is a famous coastal city known for mountains, beaches and landmarks.",
+
+                image:
+                    "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=900&q=80"
+            }
+
+        ]
+
+    },
+
+
+    Australia: {
+
+        flag: "🇦🇺",
+
+        capital: "Canberra",
+
+        language: "English",
+
+        currency: "Australian Dollar (AUD)",
+
+        continent: "Oceania",
+
+        description:
+            "Australia is known for unique wildlife, large landscapes and coastal cities.",
+
+        places: [
+
+            {
+                name: "Sydney Opera House",
+
+                description:
+                    "The Sydney Opera House is a distinctive performing-arts building beside Sydney Harbour.",
+
+                image:
+                    "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d4?auto=format&fit=crop&w=900&q=80"
+            },
+
+            {
+                name: "Great Barrier Reef",
+
+                description:
+                    "The Great Barrier Reef is a huge coral reef system off Australia's northeast coast.",
+
+                image:
+                    "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=900&q=80"
+            }
+
+        ]
+
+    },
+
+
+    Canada: {
+
+        flag: "🇨🇦",
+
+        capital: "Ottawa",
+
+        language: "English & French",
+
+        currency: "Canadian Dollar (CAD)",
+
+        continent: "North America",
+
+        description:
+            "Canada is known for forests, lakes, mountains and multicultural cities.",
+
+        places: [
+
+            {
+                name: "Banff",
+
+                description:
+                    "Banff is known for mountains, lakes and dramatic natural scenery.",
+
+                image:
+                    "https://images.unsplash.com/photo-1503614472-8c93d56e92ce?auto=format&fit=crop&w=900&q=80"
+            },
+
+            {
+                name: "Niagara Falls",
+
+                description:
+                    "Niagara Falls is a group of powerful waterfalls on the Canada–US border.",
+
+                image:
+                    "https://images.unsplash.com/photo-1494783367193-149034c05e8f?auto=format&fit=crop&w=900&q=80"
+            }
+
+        ]
+
+    },
+
+
+    Italy: {
+
+        flag: "🇮🇹",
+
+        capital: "Rome",
+
+        language: "Italian",
+
+        currency: "Euro (EUR)",
+
+        continent: "Europe",
+
+        description:
+            "Italy is known for Roman history, Renaissance art, architecture and regional cuisine.",
+
+        places: [
+
+            {
+                name: "Colosseum",
+
+                description:
+                    "The Colosseum is an ancient Roman amphitheatre in Rome.",
+
+                image:
+                    "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=900&q=80"
+            },
+
+            {
+                name: "Venice",
+
+                description:
+                    "Venice is a historic city built around canals and islands.",
+
+                image:
+                    "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=900&q=80"
+            }
+
+        ]
+
+    },
+
+
+    China: {
+
+        flag: "🇨🇳",
+
+        capital: "Beijing",
+
+        language: "Mandarin Chinese",
+
+        currency: "Renminbi (CNY)",
+
+        continent: "Asia",
+
+        description:
+            "China is a vast country with thousands of years of history and major modern cities.",
+
+        places: [
+
+            {
+                name: "Great Wall",
+
+                description:
+                    "The Great Wall is a historic fortification system stretching across northern China.",
+
+                image:
+                    "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?auto=format&fit=crop&w=900&q=80"
+            },
+
+            {
+                name: "Forbidden City",
+
+                description:
+                    "The Forbidden City is a historic palace complex in central Beijing.",
+
+                image:
+                    "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=900&q=80"
+            }
+
+        ]
+
+    },
+
+
+    "United Kingdom": {
+
+        flag: "🇬🇧",
+
+        capital: "London",
+
+        language: "English",
+
+        currency: "Pound Sterling (GBP)",
+
+        continent: "Europe",
+
+        description:
+            "The United Kingdom has a long history and major contributions to literature, science, music and culture.",
+
+        places: [
+
+            {
+                name: "London",
+
+                description:
+                    "London is the capital city and is known for landmarks, museums, theatres and culture.",
+
+                image:
+                    "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=900&q=80"
+            },
+
+            {
+                name: "Stonehenge",
+
+                description:
+                    "Stonehenge is a prehistoric monument in Wiltshire made from a circle of large stones.",
+
+                image:
+                    "https://images.unsplash.com/photo-1599833975787-5f9f4b9b9b9b?auto=format&fit=crop&w=900&q=80"
+            }
+
+        ]
+
+    },
+
+
+    Mexico: {
+
+        flag: "🇲🇽",
+
+        capital: "Mexico City",
+
+        language: "Spanish",
+
+        currency: "Mexican Peso (MXN)",
+
+        continent: "North America",
+
+        description:
+            "Mexico is known for ancient civilizations, diverse regional cuisine, art and traditions.",
+
+        places: [
+
+            {
+                name: "Chichen Itza",
+
+                description:
+                    "Chichen Itza is a major archaeological site associated with the Maya civilization.",
+
+                image:
+                    "https://images.unsplash.com/photo-1518638150340-f706e86654de?auto=format&fit=crop&w=900&q=80"
+            },
+
+            {
+                name: "Mexico City",
+
+                description:
+                    "Mexico City is a huge capital with museums, historic districts and diverse food culture.",
+
+                image:
+                    "https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?auto=format&fit=crop&w=900&q=80"
+            }
+
+        ]
+
+    }
+
+};
+
+
+/* =========================
+   AUTH
+========================= */
+
+function setAuthMode(mode) {
+
     document
-      .getElementById("name")
-      .value
-      .trim();
+        .getElementById("loginForm")
+        .classList.toggle(
+            "hidden",
+            mode !== "login"
+        );
 
-  const email =
     document
-      .getElementById("email")
-      .value
-      .trim();
+        .getElementById("signupForm")
+        .classList.toggle(
+            "hidden",
+            mode !== "signup"
+        );
 
-  if (!name || !email) {
+    document
+        .getElementById("verifyBox")
+        .classList.add("hidden");
 
-    alert(
-      "Please enter your name and email."
+}
+
+
+function showAuthMessage(text) {
+
+    document.getElementById(
+        "authMessage"
+    ).textContent = text;
+
+}
+
+
+async function api(
+    url,
+    body,
+    method = "POST"
+) {
+
+    const response = await fetch(
+        url,
+        {
+            method,
+            headers: {
+                "Content-Type":
+                    "application/json"
+            },
+
+            body:
+                body
+                    ? JSON.stringify(body)
+                    : undefined
+        }
     );
 
-    return;
 
-  }
+    const data =
+        await response
+            .json()
+            .catch(() => ({}));
 
-  data.name = name;
-  data.email = email;
 
-  save();
+    if (!response.ok) {
 
-  show("role");
+        throw new Error(
+            data.error ||
+            "Request failed."
+        );
+
+    }
+
+
+    if (data.token) {
+
+        localStorage.setItem(
+            "teachlySession",
+            data.token
+        );
+
+    }
+
+
+    return data;
 
 }
 
+
+/* SIGN UP */
+
+async function checkAndRegister() {
+
+    const username =
+        document
+            .getElementById(
+                "signupUsername"
+            )
+            .value
+            .trim();
+
+
+    const email =
+        document
+            .getElementById(
+                "signupEmail"
+            )
+            .value
+            .trim();
+
+
+    const password =
+        document
+            .getElementById(
+                "signupPassword"
+            )
+            .value;
+
+
+    if (!username) {
+
+        showAuthMessage(
+            "Please enter a username."
+        );
+
+        return;
+
+    }
+
+
+    if (
+        !email ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    ) {
+
+        showAuthMessage(
+            "Please enter a valid email address."
+        );
+
+        return;
+
+    }
+
+
+    if (password.length < 8) {
+
+        showAuthMessage(
+            "Password must contain at least 8 characters."
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        const data =
+            await api(
+                "/api/auth/register",
+                {
+                    username,
+                    email,
+                    password
+                }
+            );
+
+
+        showAuthMessage(
+            data.message
+        );
+
+
+        document
+            .getElementById(
+                "signupForm"
+            )
+            .classList.add("hidden");
+
+
+        document
+            .getElementById(
+                "verifyBox"
+            )
+            .classList.remove("hidden");
+
+    }
+
+    catch (error) {
+
+        showAuthMessage(
+            error.message
+        );
+
+    }
+
+}
+
+
+/* VERIFY */
+
+async function verifyEmail() {
+
+    const email =
+        document
+            .getElementById(
+                "signupEmail"
+            )
+            .value
+            .trim();
+
+
+    const code =
+        document
+            .getElementById(
+                "verifyCode"
+            )
+            .value
+            .trim();
+
+
+    try {
+
+        const data =
+            await api(
+                "/api/auth/verify-email",
+                {
+                    email,
+                    code
+                }
+            );
+
+
+        currentUser =
+            data.user;
+
+
+        finishLogin();
+
+    }
+
+    catch (error) {
+
+        showAuthMessage(
+            error.message
+        );
+
+    }
+
+}
+
+
+/* LOGIN */
+
+async function login() {
+
+    const email =
+        document
+            .getElementById(
+                "loginEmail"
+            )
+            .value
+            .trim();
+
+
+    const password =
+        document
+            .getElementById(
+                "loginPassword"
+            )
+            .value;
+
+
+    try {
+
+        const data =
+            await api(
+                "/api/auth/login",
+                {
+                    email,
+                    password
+                }
+            );
+
+
+        currentUser =
+            data.user;
+
+
+        finishLogin();
+
+    }
+
+    catch (error) {
+
+        showAuthMessage(
+            error.message
+        );
+
+    }
+
+}
+
+
+/* AFTER LOGIN */
+
+function finishLogin() {
+
+    document
+        .getElementById(
+            "authPage"
+        )
+        .classList.add("hidden");
+
+
+    document
+        .getElementById(
+            "mainNav"
+        )
+        .classList.remove("hidden");
+
+
+    showPage("homePage");
+
+    updateProfile();
+
+    connectSocket();
+
+}
+
+
+/* LOGOUT */
+
+async function logout() {
+
+    try {
+
+        await api(
+            "/api/auth/logout",
+            {}
+        );
+
+    }
+
+    catch (_) {}
+
+
+    localStorage.removeItem(
+        "teachlySession"
+    );
+
+
+    currentUser = null;
+
+
+    if (socket) {
+
+        socket.disconnect();
+
+    }
+
+
+    document
+        .getElementById(
+            "mainNav"
+        )
+        .classList.add("hidden");
+
+
+    document
+        .querySelectorAll(
+            ".page"
+        )
+        .forEach(
+            page =>
+                page.classList.add(
+                    "hidden"
+                )
+        );
+
+
+    document
+        .getElementById(
+            "authPage"
+        )
+        .classList.remove("hidden");
+
+}
+
+
+/* =========================
+   PAGE NAVIGATION
+========================= */
+
+function showPage(id) {
+
+    if (!currentUser) {
+
+        return;
+
+    }
+
+
+    document
+        .querySelectorAll(
+            "main > .page"
+        )
+        .forEach(
+            page =>
+                page.classList.add(
+                    "hidden"
+                )
+        );
+
+
+    document
+        .getElementById(id)
+        .classList.remove("hidden");
+
+
+    if (id === "worldPage") {
+
+        setTimeout(
+            initMap,
+            100
+        );
+
+    }
+
+
+    if (id === "badgesPage") {
+
+        renderBadges();
+
+    }
+
+
+    if (id === "profilePage") {
+
+        renderEffects();
+
+    }
+
+}
+
+
+/* =========================
+   PROFILE
+========================= */
+
+function updateProfile() {
+
+    document.getElementById(
+        "profileName"
+    ).textContent =
+        currentUser.username;
+
+
+    document.getElementById(
+        "profileEmail"
+    ).textContent =
+        currentUser.email;
+
+
+    document.getElementById(
+        "sessionCount"
+    ).textContent =
+        currentUser.sessions;
+
+
+    document.getElementById(
+        "streakCount"
+    ).textContent =
+        currentUser.streak;
+
+
+    document.getElementById(
+        "ticketCount"
+    ).textContent =
+        currentUser.tickets;
+
+
+    document.getElementById(
+        "navTickets"
+    ).textContent =
+        "🎫 " +
+        currentUser.tickets;
+
+
+    document.getElementById(
+        "profileTickets"
+    ).textContent =
+        currentUser.tickets;
+
+
+    document.getElementById(
+        "profileSessions"
+    ).textContent =
+        currentUser.sessions;
+
+
+    document.getElementById(
+        "streakMessage"
+    ).textContent =
+        currentUser.streak
+            ? `Knowledge streak: ${currentUser.streak} 🔥`
+            : "Start your first session!";
+
+
+    document.getElementById(
+        "profileImage"
+    ).src =
+        currentUser.profileImage ||
+        "https://via.placeholder.com/150";
+
+
+    applyEffect();
+
+}
+
+
+/* =========================
+   ROLE
+========================= */
 
 function chooseRole(role) {
 
-  data.role = role;
+    selectedRole = role;
 
-  save();
 
-  show("dashboard");
+    document
+        .getElementById(
+            "teacherBtn"
+        )
+        .classList.toggle(
+            "primary",
+            role === "teacher"
+        );
+
+
+    document
+        .getElementById(
+            "learnerBtn"
+        )
+        .classList.toggle(
+            "primary",
+            role === "learner"
+        );
+
+
+    document
+        .getElementById(
+            "onlineStatus"
+        )
+        .textContent =
+        `Role selected: ${role}. Enter a topic and find a person.`;
 
 }
 
 
-/* ================= REAL PEOPLE ================= */
-
-function people() {
-
-  show("people");
-
-  connectSocket();
-
-}
-
+/* =========================
+   MULTIPLAYER
+========================= */
 
 function connectSocket() {
 
-  if (socket) return;
+    if (
+        socket &&
+        socket.connected
+    ) {
 
-  if (typeof io === "undefined") {
-
-    setStatus(
-      "Online service is unavailable.",
-      "error"
-    );
-
-    return;
-
-  }
-
-  socket = io();
-
-
-  socket.on("connect", () => {
-
-    setStatus(
-      "🟢 Online matching is ready.",
-      "success"
-    );
-
-  });
-
-
-  socket.on("connect_error", () => {
-
-    setStatus(
-      "Unable to connect to the online service.",
-      "error"
-    );
-
-  });
-
-
-  socket.on(
-    "matchFound",
-    matchFound
-  );
-
-
-  socket.on(
-    "noUsersFound",
-    noVolunteer
-  );
-
-
-  socket.on(
-    "sessionMessage",
-    message => {
-
-      addMessage(
-        message.username,
-        message.message,
-        message.username === data.name
-      );
+        return;
 
     }
-  );
 
 
-  socket.on(
-    "partnerLeft",
-    () => {
+    socket = io({
 
-      addMessage(
-        "Teachly",
-        "The other person left the session.",
-        false
-      );
+        auth: {
 
-    }
-  );
+            token:
+                localStorage.getItem(
+                    "teachlySession"
+                )
+
+        }
+
+    });
+
+
+    socket.on(
+        "connect",
+        () => {
+
+            socket.emit(
+                "authSession"
+            );
+
+        }
+    );
+
+
+    socket.on(
+        "matchFound",
+        data => {
+
+            currentSession = true;
+
+            currentRoom =
+                data.room;
+
+
+            document
+                .getElementById(
+                    "chatPanel"
+                )
+                .classList.remove(
+                    "hidden"
+                );
+
+
+            document
+                .getElementById(
+                    "chatTitle"
+                )
+                .textContent =
+                `Session with ${data.partner.username} — ${data.topic}`;
+
+
+            document
+                .getElementById(
+                    "onlineStatus"
+                )
+                .textContent =
+                "Connected to a real person.";
+
+
+            addMsg(
+                "chatMessages",
+                "Your text session has started.",
+                "system"
+            );
+
+        }
+    );
+
+
+    socket.on(
+        "sessionMessage",
+        data => {
+
+            addMsg(
+                "chatMessages",
+
+                `${data.username}: ${data.message}`,
+
+                data.username ===
+                    currentUser.username
+                    ? "mine"
+                    : ""
+            );
+
+        }
+    );
+
+
+    socket.on(
+        "noUsersFound",
+        () => {
+
+            const useAI =
+                confirm(
+                    "Unable to find volunteer connecting to ai instead\n\nWould you like AI Mode?"
+                );
+
+
+            if (useAI) {
+
+                openAIMode();
+
+            }
+
+            else {
+
+                document
+                    .getElementById(
+                        "onlineStatus"
+                    )
+                    .textContent =
+                    "No people found right now. Try again.";
+
+            }
+
+        }
+    );
+
+
+    socket.on(
+        "partnerLeft",
+        () => {
+
+            addMsg(
+                "chatMessages",
+                "Your partner left the session.",
+                "system"
+            );
+
+            currentSession = false;
+
+        }
+    );
+
+
+    socket.on(
+        "sessionCompleted",
+        user => {
+
+            currentUser = user;
+
+            updateProfile();
+
+            addMsg(
+                "chatMessages",
+                "Session completed! Your progress was saved.",
+                "system"
+            );
+
+        }
+    );
 
 }
 
+
+/* FIND PERSON */
 
 function findPeople() {
 
-  const topic =
-    document
-      .getElementById("topicInput")
-      .value
-      .trim();
+    if (!selectedRole) {
 
-  if (!data.role) {
+        alert(
+            "Choose Teacher or Learner first."
+        );
 
-    alert(
-      "Please choose Learn or Teach first."
-    );
+        return;
 
-    return;
-
-  }
-
-  if (!topic) {
-
-    alert(
-      "Enter a topic first."
-    );
-
-    return;
-
-  }
-
-  connectSocket();
-
-  if (!socket) return;
-
-  setStatus(
-    "🔎 Looking for a real volunteer...",
-    "success"
-  );
-
-  socket.emit(
-    "findUser",
-    {
-      username: data.name,
-      role: data.role,
-      topic: topic
     }
-  );
+
+
+    const topic =
+        document
+            .getElementById(
+                "topicInput"
+            )
+            .value
+            .trim();
+
+
+    if (!topic) {
+
+        alert(
+            "Enter a topic."
+        );
+
+        return;
+
+    }
+
+
+    connectSocket();
+
+
+    setTimeout(
+        () => {
+
+            socket.emit(
+                "findUser",
+                {
+                    role:
+                        selectedRole,
+
+                    topic
+                }
+            );
+
+        },
+        200
+    );
+
+
+    document
+        .getElementById(
+            "onlineStatus"
+        )
+        .textContent =
+        "Searching for a real person...";
 
 }
 
 
-function matchFound(info) {
+/* SEND */
 
-  currentSession = true;
+function sendOnlineMessage() {
 
-  document
-    .getElementById("onlineChatArea")
-    .classList.remove("hidden");
+    const input =
+        document
+            .getElementById(
+                "onlineMessage"
+            );
 
-  document
-    .getElementById("partnerName")
-    .textContent =
-    info.partner.username;
 
-  document
-    .getElementById("partnerRole")
-    .textContent =
-    info.partner.role;
+    const message =
+        input.value.trim();
 
-  document
-    .getElementById("onlineChat")
-    .innerHTML = "";
 
-  addMessage(
-    "Teachly",
-    "🎉 You are connected to a real person!",
-    false
-  );
+    if (
+        !message ||
+        !currentSession
+    ) {
+
+        return;
+
+    }
+
+
+    socket.emit(
+        "sessionMessage",
+        {
+            room:
+                currentRoom,
+
+            message
+        }
+    );
+
+
+    input.value = "";
 
 }
 
 
-function noVolunteer() {
+/* LEAVE */
 
-  const message =
-    "Unable to find volunteer connecting to AI instead";
+function leaveOnlineSession() {
 
-  setStatus(
-    message,
-    "error"
-  );
+    if (
+        socket &&
+        currentRoom
+    ) {
 
-  const answer =
-    confirm(
-      message +
-      "\n\nConnect to AI instead?\n\nOK = Yes\nCancel = No"
+        socket.emit(
+            "leaveSession",
+            {
+                room:
+                    currentRoom
+            }
+        );
+
+    }
+
+
+    currentSession = false;
+
+    currentRoom = null;
+
+
+    document
+        .getElementById(
+            "chatPanel"
+        )
+        .classList.add("hidden");
+
+
+    document
+        .getElementById(
+            "onlineStatus"
+        )
+        .textContent =
+        "Session ended.";
+
+}
+
+
+/* MESSAGE */
+
+function addMsg(
+    elementId,
+    text,
+    className = ""
+) {
+
+    const element =
+        document.createElement(
+            "div"
+        );
+
+
+    element.className =
+        "msg " +
+        className;
+
+
+    element.textContent =
+        text;
+
+
+    const container =
+        document.getElementById(
+            elementId
+        );
+
+
+    container.appendChild(
+        element
     );
 
-  if (answer) {
 
-    openAI();
+    container.scrollTop =
+        container.scrollHeight;
 
-  } else {
+}
 
-    setStatus(
-      "No volunteer found. Try another topic.",
-      ""
+
+/* =========================
+   AI
+========================= */
+
+function openAIMode() {
+
+    document
+        .getElementById(
+            "aiPanel"
+        )
+        .classList.remove(
+            "hidden"
+        );
+
+
+    if (
+        !document
+            .getElementById(
+                "aiMessages"
+            )
+            .children.length
+    ) {
+
+        addMsg(
+            "aiMessages",
+            "Hi! Ask me anything. I can explain concepts, give examples, quiz you, or re-explain something more simply.",
+            "system"
+        );
+
+    }
+
+}
+
+
+function closeAIMode() {
+
+    document
+        .getElementById(
+            "aiPanel"
+        )
+        .classList.add(
+            "hidden"
+        );
+
+}
+
+
+async function sendAI() {
+
+    const input =
+        document
+            .getElementById(
+                "aiMessage"
+            );
+
+
+    const message =
+        input.value.trim();
+
+
+    if (!message) {
+
+        return;
+
+    }
+
+
+    addMsg(
+        "aiMessages",
+        "You: " + message,
+        "mine"
     );
 
-  }
+
+    input.value = "";
+
+
+    try {
+
+        const data =
+            await api(
+                "/api/ai",
+                {
+                    message
+                }
+            );
+
+
+        addMsg(
+            "aiMessages",
+            "AI: " +
+                data.answer
+        );
+
+    }
+
+    catch (error) {
+
+        addMsg(
+            "aiMessages",
+            "AI: " +
+                error.message
+        );
+
+    }
+
+}
+
+
+/* =========================
+   MYSTERY TOPIC
+========================= */
+
+function mysteryTopic() {
+
+    const topics = [
+
+        "photosynthesis",
+
+        "basic Python",
+
+        "French greetings",
+
+        "probability",
+
+        "space exploration",
+
+        "Indian geography",
+
+        "creative writing",
+
+        "electricity"
+
+    ];
+
+
+    const topic =
+        topics[
+            Math.floor(
+                Math.random() *
+                topics.length
+            )
+        ];
+
+
+    document
+        .getElementById(
+            "mysteryOutput"
+        )
+        .textContent =
+        `Your mystery topic: ${topic}. Try teaching it back!`;
+
+}
+
+
+/* =========================
+   SHOP
+========================= */
+
+function openShop() {
+
+    document
+        .getElementById(
+            "shopModal"
+        )
+        .classList.remove(
+            "hidden"
+        );
+
+
+    renderShop();
+
+}
+
+
+function closeShop() {
+
+    document
+        .getElementById(
+            "shopModal"
+        )
+        .classList.add(
+            "hidden"
+        );
+
+}
+
+
+function renderShop() {
+
+    document
+        .getElementById(
+            "shopModalGrid"
+        )
+        .innerHTML =
+
+        products
+            .map(
+                product => `
+
+                <div class="card">
+
+                    <h3>
+                        ${product.name}
+                    </h3>
+
+                    <p>
+                        Profile effect.
+                    </p>
+
+                    <b>
+                        🎫 ${product.price}
+                    </b>
+
+                    <br><br>
+
+                    <button
+                        onclick="buyProduct('${product.id}')">
+
+                        ${
+                            currentUser
+                                .ownedEffects
+                                ?.includes(
+                                    product.id
+                                )
+                                ? "Equip"
+                                : "Buy"
+                        }
+
+                    </button>
+
+                </div>
+
+                `
+            )
+            .join("");
+
+}
+
+
+async function buyProduct(id) {
+
+    try {
+
+        const data =
+            await api(
+                "/api/shop/buy",
+                {
+                    id
+                }
+            );
+
+
+        currentUser =
+            data.user;
+
+
+        updateProfile();
+
+        renderShop();
+
+        renderEffects();
+
+    }
+
+    catch (error) {
+
+        alert(
+            error.message ===
+                "Unable to buy product"
+
+                ? "Unable to buy product"
+
+                : error.message
+        );
+
+    }
+
+}
+
+
+/* EQUIP */
+
+async function equipProduct(id) {
+
+    try {
+
+        const data =
+            await api(
+                "/api/shop/equip",
+                {
+                    id
+                }
+            );
+
+
+        currentUser =
+            data.user;
+
+
+        updateProfile();
+
+        renderEffects();
+
+    }
+
+    catch (error) {
+
+        alert(
+            error.message
+        );
+
+    }
+
+}
+
+
+/* EFFECTS */
+
+function renderEffects() {
+
+    const container =
+        document.getElementById(
+            "effectOptions"
+        );
+
+
+    const owned =
+        currentUser
+            .ownedEffects || [];
+
+
+    container.innerHTML =
+        products
+
+            .filter(
+                product =>
+                    owned.includes(
+                        product.id
+                    )
+            )
+
+            .map(
+                product => `
+
+                <button
+                    class="effect-option"
+                    onclick="equipProduct('${product.id}')">
+
+                    ${product.name}
+
+                    ${
+                        currentUser.equippedEffect ===
+                        product.id
+                            ? " ✓"
+                            : ""
+                    }
+
+                </button>
+
+                `
+            )
+
+            .join("");
+
+
+    if (!container.innerHTML) {
+
+        container.innerHTML =
+            "<p>No effects owned yet.</p>";
+
+    }
+
+}
+
+
+function applyEffect() {
+
+    const effect =
+        currentUser.equippedEffect ||
+        "ring";
+
+
+    const element =
+        document.getElementById(
+            "profileEffect"
+        );
+
+
+    element.className =
+        "avatar-effect " +
+        effect;
+
+}
+
+
+/* =========================
+   PROFILE IMAGE
+========================= */
+
+async function uploadAvatar(event) {
+
+    const file =
+        event.target.files[0];
+
+
+    if (!file) {
+
+        return;
+
+    }
+
+
+    if (
+        file.size >
+        3 * 1024 * 1024
+    ) {
+
+        alert(
+            "Please choose an image under 3 MB."
+        );
+
+        return;
+
+    }
+
+
+    const reader =
+        new FileReader();
+
+
+    reader.onload =
+        async () => {
+
+            try {
+
+                const data =
+                    await api(
+                        "/api/auth/avatar",
+                        {
+                            image:
+                                reader.result
+                        }
+                    );
+
+
+                currentUser =
+                    data.user;
+
+
+                updateProfile();
+
+            }
+
+            catch (error) {
+
+                alert(
+                    error.message
+                );
+
+            }
+
+        };
+
+
+    reader.readAsDataURL(
+        file
+    );
+
+}
+
+
+/* =========================
+   BADGES
+========================= */
+
+function renderBadges() {
+
+    document
+        .getElementById(
+            "badgeGrid"
+        )
+        .innerHTML =
+
+        badges
+
+            .map(
+                badge => {
+
+                    const earned =
+                        currentUser
+                            .earnedBadges
+                            ?.includes(
+                                badge.name
+                            );
+
+
+                    return `
+
+                    <div
+                        class="badge ${
+                            earned
+                                ? ""
+                                : "locked"
+                        }">
+
+                        <div class="icon">
+                            ${badge.icon}
+                        </div>
+
+                        <h3>
+                            ${badge.name}
+                        </h3>
+
+                        <p>
+                            ${badge.sessions}
+                            sessions
+                        </p>
+
+                        <small>
+                            ${
+                                earned
+                                    ? "Earned"
+                                    : "Locked"
+                            }
+                        </small>
+
+                    </div>
+
+                    `;
+
+                }
+            )
+
+            .join("");
+
+}
+
+
+/* =====================================================
+   🌍 WORLD EXPLORER
+===================================================== */
+
+let map = null;
+
+let mapLayer = null;
+
+
+/*
+    IMPORTANT:
+
+    The cursor/click now actually touches
+    the individual country polygon.
+
+    It does NOT just send "Asia" or
+    "continent" to the information panel.
+
+    Each polygon gets its own country name.
+*/
+
+
+function initMap() {
+
+    if (map) {
+
+        map.invalidateSize();
+
+        return;
+
+    }
+
+
+    map =
+        L.map(
+            "map",
+            {
+                zoomControl: true,
+                minZoom: 2,
+                maxZoom: 5
+            }
+        )
+        .setView(
+            [20, 0],
+            2
+        );
+
+
+    /*
+        Map background
+    */
+
+    L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            attribution:
+                "© OpenStreetMap contributors"
+        }
+    )
+    .addTo(map);
+
+
+    /*
+        Get actual world country boundaries
+    */
+
+    fetch(
+        "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"
+    )
+
+        .then(
+            response =>
+                response.json()
+        )
+
+        .then(
+            world => {
+
+                const geojson =
+                    topojson.feature(
+                        world,
+                        world.objects.countries
+                    );
+
+
+                mapLayer =
+                    L.geoJSON(
+                        geojson,
+                        {
+
+                            style: {
+
+                                fillOpacity:
+                                    0.55,
+
+                                weight:
+                                    1
+
+                            },
+
+
+                            onEachFeature:
+                                (
+                                    feature,
+                                    layer
+                                ) => {
+
+                                    /*
+                                        Get the country
+                                        belonging to the
+                                        polygon the cursor
+                                        touches.
+                                    */
+
+                                    const name =
+                                        getCountryName(
+                                            feature
+                                                .properties
+                                                .name
+                                        );
+
+
+                                    /*
+                                        Small country
+                                        tooltip
+                                    */
+
+                                    layer.bindTooltip(
+                                        name
+                                    );
+
+
+                                    /*
+                                        Hover
+                                    */
+
+                                    layer.on(
+                                        "mouseover",
+                                        () => {
+
+                                            layer.setStyle(
+                                                {
+                                                    fillOpacity:
+                                                        0.8,
+
+                                                    weight:
+                                                        2
+                                                }
+                                            );
+
+                                        }
+                                    );
+
+
+                                    /*
+                                        Mouse leaves
+                                    */
+
+                                    layer.on(
+                                        "mouseout",
+                                        () => {
+
+                                            layer.setStyle(
+                                                {
+                                                    fillOpacity:
+                                                        0.55,
+
+                                                    weight:
+                                                        1
+                                                }
+                                            );
+
+                                        }
+                                    );
+
+
+                                    /*
+                                        CLICK COUNTRY
+                                    */
+
+                                    layer.on(
+                                        "click",
+                                        () => {
+
+                                            showCountry(
+                                                name,
+                                                layer
+                                            );
+
+                                        }
+                                    );
+
+                                }
+
+                        }
+                    )
+                    .addTo(map);
+
+            }
+        )
+
+        .catch(
+            error => {
+
+                console.error(
+                    "World map error:",
+                    error
+                );
+
+            }
+        );
 
 }
 
 
 /*
-  Connect this function to your existing
-  AI screen/API if your project already has one.
+    Some map datasets use
+    slightly different country names.
+
+    Convert them to the names
+    used by our country database.
 */
 
-function openAI() {
+function getCountryName(name) {
 
-  const aiScreen =
-    document.getElementById("aiSection");
+    const aliases = {
 
-  if (aiScreen) {
+        "United States of America":
+            "United States",
 
-    show("aiSection");
+        "USA":
+            "United States",
 
-    return;
+        "UK":
+            "United Kingdom",
 
-  }
+        "Türkiye":
+            "Turkey"
 
-  alert(
-    "AI Mode needs to be connected to your existing AI screen/API."
-  );
-
-}
-
-
-function sendOnlineMessage() {
-
-  const input =
-    document.getElementById("onlineInput");
-
-  const message =
-    input.value.trim();
-
-  if (
-    !message ||
-    !socket ||
-    !currentSession
-  ) return;
-
-  socket.emit(
-    "sessionMessage",
-    {
-      username: data.name,
-      message: message
-    }
-  );
-
-  input.value = "";
-
-}
+    };
 
 
-function sendEmoji(emoji) {
-
-  if (
-    socket &&
-    currentSession
-  ) {
-
-    socket.emit(
-      "sessionMessage",
-      {
-        username: data.name,
-        message: emoji
-      }
+    return (
+        aliases[name] ||
+        name
     );
 
-  }
-
 }
 
 
-function addMessage(
-  username,
-  message,
-  own
+/*
+    COUNTRY INFORMATION PANEL
+
+    This is the main fix.
+
+    When the cursor/click touches
+    a country polygon, this function
+    receives THAT country name.
+
+    It then retrieves the correct
+    country credentials/facts.
+*/
+
+function showCountry(
+    name,
+    selectedLayer
 ) {
 
-  const chat =
-    document.getElementById(
-      "onlineChat"
-    );
+    const country =
+        countries[name];
 
-  const div =
-    document.createElement("div");
 
-  div.className =
-    "message " +
-    (
-      own
-        ? "userMessage"
-        : "otherMessage"
-    );
+    /*
+        Remove previous
+        selection.
+    */
 
-  div.innerHTML = `
-    <b>${escapeHTML(username)}</b>
-    <p>${escapeHTML(message)}</p>
-  `;
+    if (mapLayer) {
 
-  chat.appendChild(div);
+        mapLayer.setStyle(
+            {
+                fillOpacity:
+                    0.55,
 
-  chat.scrollTop =
-    chat.scrollHeight;
-
-}
-
-
-function leaveSession() {
-
-  if (socket && currentSession) {
-
-    socket.emit(
-      "leaveSession"
-    );
-
-  }
-
-  currentSession = false;
-
-  document
-    .getElementById(
-      "onlineChatArea"
-    )
-    .classList.add("hidden");
-
-  data.sessions += 1;
-
-  data.coins += 10;
-
-  save();
-
-  setStatus(
-    "✅ Session complete! +10 🪙 coins",
-    "success"
-  );
-
-}
-
-
-function setStatus(
-  message,
-  type
-) {
-
-  const element =
-    document.getElementById(
-      "onlineStatus"
-    );
-
-  element.textContent =
-    message;
-
-  element.className =
-    "status " +
-    type;
-
-}
-
-
-/* ================= MYSTERY ================= */
-
-const topics = [
-  "🌍 Why do we have seasons?",
-  "💧 The water cycle",
-  "✈️ How airplanes fly",
-  "🌱 How plants make food",
-  "🌋 How volcanoes form",
-  "☀️ The Solar System",
-  "⚙️ How gravity works",
-  "🌊 Interesting ocean animals",
-  "💻 Basic coding logic",
-  "🐝 Why bees are important"
-];
-
-
-function mystery() {
-
-  show("mystery");
-
-  document.getElementById("topic")
-    .textContent =
-    "Tap Reveal Topic!";
-
-}
-
-
-function randomTopic() {
-
-  const random =
-    topics[
-      Math.floor(
-        Math.random() *
-        topics.length
-      )
-    ];
-
-  document.getElementById("topic")
-    .textContent =
-    random;
-
-}
-
-
-/* ================= SHOP ================= */
-
-const shopItems = [
-
-  {
-    name: "Fire",
-    icon: "🔥",
-    price: 73,
-    description:
-      "Fire profile effect"
-  },
-
-  {
-    name: "Void",
-    icon: "🌌",
-    price: 146,
-    description:
-      "Void profile effect"
-  },
-
-  {
-    name: "Wind",
-    icon: "🌪️",
-    price: 58,
-    description:
-      "Wind profile effect"
-  },
-
-  {
-    name: "Lightning",
-    icon: "⚡",
-    price: 219,
-    description:
-      "Lightning profile effect"
-  },
-
-  {
-    name: "Ice",
-    icon: "❄️",
-    price: 91,
-    description:
-      "Ice profile effect"
-  },
-
-  {
-    name: "Galaxy",
-    icon: "✨",
-    price: 175,
-    description:
-      "Galaxy profile effect"
-  },
-
-  {
-    name: "Nature",
-    icon: "🌿",
-    price: 64,
-    description:
-      "Nature profile effect"
-  },
-
-  {
-    name: "Emoji Pack",
-    icon: "😀",
-    price: 45,
-    description:
-      "Extra chat emojis"
-  }
-
-];
-
-
-function shop() {
-
-  document
-    .getElementById("shopItems")
-    .innerHTML =
-    shopItems
-      .map(item => {
-
-        const owned =
-          data.owned.includes(
-            item.name
-          );
-
-        return `
-
-          <div class="item">
-
-            <div class="itemIcon">
-              ${item.icon}
-            </div>
-
-            <h3>
-              ${item.name}
-            </h3>
-
-            <p>
-              ${item.description}
-            </p>
-
-            <strong>
-              🎫 ${item.price}
-            </strong>
-
-            <button
-              onclick="
-                buy('${item.name}')
-              "
-            >
-              ${
-                owned
-                  ? "Equip"
-                  : "Buy for 🎫 " +
-                    item.price
-              }
-            </button>
-
-          </div>
-
-        `;
-
-      })
-      .join("");
-
-  show("shop");
-
-}
-
-
-function buy(name) {
-
-  const item =
-    shopItems.find(
-      x => x.name === name
-    );
-
-  if (!item) return;
-
-
-  /* ALREADY OWNED */
-
-  if (
-    data.owned.includes(
-      name
-    )
-  ) {
-
-    data.effect =
-      name;
-
-    save();
-
-    alert(
-      item.icon +
-      " " +
-      name +
-      " equipped!"
-    );
-
-    shop();
-
-    return;
-
-  }
-
-
-  /* NOT ENOUGH COINS */
-
-  if (
-    data.coins <
-    item.price
-  ) {
-
-    alert(
-      "Unable to buy product"
-    );
-
-    return;
-
-  }
-
-
-  /* PURCHASE */
-
-  data.coins -=
-    item.price;
-
-  data.owned.push(
-    name
-  );
-
-  data.effect =
-    name;
-
-  save();
-
-  alert(
-    item.icon +
-    " " +
-    name +
-    " bought!"
-  );
-
-  shop();
-
-}
-
-
-/* ================= PROFILE ================= */
-
-function profile() {
-
-  document
-    .getElementById("stats")
-    .textContent =
-    data.sessions +
-    " completed sessions • 🎫 " +
-    data.coins +
-    " coins";
-
-
-  const effect =
-    shopItems.find(
-      x =>
-        x.name ===
-        data.effect
-    );
-
-
-  document
-    .getElementById(
-      "profileEffect"
-    )
-    .textContent =
-    effect
-      ? effect.icon
-      : "👤";
-
-
-  document
-    .getElementById(
-      "ownedItems"
-    )
-    .innerHTML =
-    data.owned.length
-      ? data.owned
-          .map(
-            x =>
-              `<span class="owned">${x}</span>`
-          )
-          .join("")
-      : "<p>No shop items yet.</p>";
-
-
-  show("profile");
-
-}
-
-
-/* ================= BADGES ================= */
-
-const badges = [
-
-  ["Starter", 5, "🥉"],
-  ["Learner", 15, "🥉"],
-  ["Explorer", 50, "🥈"],
-  ["Knowledge Seeker", 75, "🥈"],
-  ["Skill Builder", 100, "🥇"],
-  ["Mentor", 150, "🥇"],
-  ["Expert", 250, "🏆"],
-  ["Master", 500, "🏆"],
-  ["Legend", 750, "💎"],
-  ["Teachly Champion", 1000, "👑"]
-
-];
-
-
-function badgesPage() {
-
-  document
-    .getElementById("badgeGrid")
-    .innerHTML =
-    badges
-      .map(badge => {
-
-        const earned =
-          data.sessions >=
-          badge[1];
-
-        return `
-
-          <div
-            class="
-              badge
-              ${earned
-                ? "earned"
-                : "locked"}
-            "
-          >
-
-            <div class="badgeIcon">
-              ${badge[2]}
-            </div>
-
-            <b>
-              ${badge[0]}
-            </b>
-
-            <small>
-              ${badge[1]} sessions
-            </small>
-
-            <span>
-              ${
-                earned
-                  ? "✅ Earned"
-                  : "🔒 Locked"
-              }
-            </span>
-
-          </div>
-
-        `;
-
-      })
-      .join("");
-
-  show("badgesPage");
-
-}
-
-
-/* ================= WORLD DATA ================= */
-
-const countries = {
-
-  India: {
-    flag: "🇮🇳",
-    capital: "New Delhi",
-    language: "Hindi + many regional languages",
-    currency: "Indian Rupee (INR)",
-    continent: "Asia",
-
-    places: [
-
-      [
-        "Taj Mahal",
-        "🕌",
-        "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=900&q=80",
-        "A famous white-marble monument in Agra and one of India's best-known landmarks."
-      ],
-
-      [
-        "Bollywood",
-        "🎬",
-        "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=900&q=80",
-        "India's Hindi-language film industry, centered largely in Mumbai."
-      ],
-
-      [
-        "Indian Cuisine",
-        "🍛",
-        "https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=900&q=80",
-        "India is famous for diverse regional foods, spices, curries, breads and sweets."
-      ],
-
-      [
-        "Culture & Festivals",
-        "🎉",
-        "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=900&q=80",
-        "India has a huge variety of traditions and celebrations, including Diwali and Holi."
-      ]
-
-    ]
-  },
-
-
-  France: {
-    flag: "🇫🇷",
-    capital: "Paris",
-    language: "French",
-    currency: "Euro (EUR)",
-    continent: "Europe",
-
-    places: [
-
-      [
-        "Eiffel Tower",
-        "🗼",
-        "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=900&q=80",
-        "An iconic Paris landmark built for the 1889 World's Fair."
-      ],
-
-      [
-        "Louvre",
-        "🎨",
-        "https://images.unsplash.com/photo-1564399579883-451a5d44ec08?auto=format&fit=crop&w=900&q=80",
-        "One of the world's most famous museums."
-      ],
-
-      [
-        "French Cuisine",
-        "🥐",
-        "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=900&q=80",
-        "France is famous for breads, pastries, cheeses and regional dishes."
-      ]
-
-    ]
-  },
-
-
-  Japan: {
-    flag: "🇯🇵",
-    capital: "Tokyo",
-    language: "Japanese",
-    currency: "Yen (JPY)",
-    continent: "Asia",
-
-    places: [
-
-      [
-        "Mount Fuji",
-        "🗻",
-        "https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?auto=format&fit=crop&w=900&q=80",
-        "Japan's highest mountain and an iconic symbol of the country."
-      ],
-
-      [
-        "Tokyo",
-        "🏙️",
-        "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=900&q=80",
-        "A major global city known for technology, food and culture."
-      ],
-
-      [
-        "Anime & Manga",
-        "🎌",
-        "https://images.unsplash.com/photo-1578632292335-df3abbb0d586?auto=format&fit=crop&w=900&q=80",
-        "Japan is a major center for animated storytelling and comics."
-      ]
-
-    ]
-  },
-
-
-  Egypt: {
-    flag: "🇪🇬",
-    capital: "Cairo",
-    language: "Arabic",
-    currency: "Egyptian Pound (EGP)",
-    continent: "Africa",
-
-    places: [
-
-      [
-        "Pyramids of Giza",
-        "🔺",
-        "https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?auto=format&fit=crop&w=900&q=80",
-        "Ancient pyramids near Cairo and among the world's most famous archaeological sites."
-      ],
-
-      [
-        "Nile River",
-        "🌊",
-        "https://images.unsplash.com/photo-1568322445389-f64ac2515020?auto=format&fit=crop&w=900&q=80",
-        "A major river central to Egypt's geography and history."
-      ]
-
-    ]
-  },
-
-
-  Brazil: {
-    flag: "🇧🇷",
-    capital: "Brasília",
-    language: "Portuguese",
-    currency: "Brazilian Real (BRL)",
-    continent: "South America",
-
-    places: [
-
-      [
-        "Amazon Rainforest",
-        "🌳",
-        "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=900&q=80",
-        "A vast tropical rainforest with extraordinary biodiversity."
-      ],
-
-      [
-        "Christ the Redeemer",
-        "🗿",
-        "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=900&q=80",
-        "A monumental statue overlooking Rio de Janeiro."
-      ]
-
-    ]
-  },
-
-
-  Australia: {
-    flag: "🇦🇺",
-    capital: "Canberra",
-    language: "English is most widely spoken",
-    currency: "Australian Dollar (AUD)",
-    continent: "Oceania",
-
-    places: [
-
-      [
-        "Great Barrier Reef",
-        "🐠",
-        "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=900&q=80",
-        "The world's largest coral reef system."
-      ],
-
-      [
-        "Sydney Opera House",
-        "🎭",
-        "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d6?auto=format&fit=crop&w=900&q=80",
-        "A famous performing arts building in Sydney."
-      ]
-
-    ]
-  },
-
-
-  Canada: {
-    flag: "🇨🇦",
-    capital: "Ottawa",
-    language: "English and French",
-    currency: "Canadian Dollar (CAD)",
-    continent: "North America",
-
-    places: [
-
-      [
-        "Niagara Falls",
-        "💦",
-        "https://images.unsplash.com/photo-1494783367193-149034c05e8f?auto=format&fit=crop&w=900&q=80",
-        "A spectacular group of waterfalls on the Canada–US border."
-      ],
-
-      [
-        "Banff",
-        "🏔️",
-        "https://images.unsplash.com/photo-1503614472-8c93d56e92ce?auto=format&fit=crop&w=900&q=80",
-        "A famous mountain destination in the Canadian Rockies."
-      ]
-
-    ]
-  },
-
-
-  Italy: {
-    flag: "🇮🇹",
-    capital: "Rome",
-    language: "Italian",
-    currency: "Euro (EUR)",
-    continent: "Europe",
-
-    places: [
-
-      [
-        "Colosseum",
-        "🏛️",
-        "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=900&q=80",
-        "An ancient Roman amphitheater and major historic landmark."
-      ],
-
-      [
-        "Venice",
-        "🚤",
-        "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=900&q=80",
-        "A city famous for canals, bridges and historic architecture."
-      ],
-
-      [
-        "Italian Cuisine",
-        "🍕",
-        "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=900&q=80",
-        "Known worldwide for pasta, pizza, gelato and many regional foods."
-      ]
-
-    ]
-  },
-
-
-  China: {
-    flag: "🇨🇳",
-    capital: "Beijing",
-    language: "Mandarin Chinese",
-    currency: "Renminbi (CNY)",
-    continent: "Asia",
-
-    places: [
-
-      [
-        "Great Wall",
-        "🧱",
-        "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?auto=format&fit=crop&w=900&q=80",
-        "A historic system of fortifications stretching across northern China."
-      ],
-
-      [
-        "Forbidden City",
-        "🏯",
-        "https://images.unsplash.com/photo-1598032895397-b9472444bf93?auto=format&fit=crop&w=900&q=80",
-        "A historic imperial palace complex in Beijing."
-      ]
-
-    ]
-  },
-
-
-  Mexico: {
-    flag: "🇲🇽",
-    capital: "Mexico City",
-    language: "Spanish is most widely spoken",
-    currency: "Mexican Peso (MXN)",
-    continent: "North America",
-
-    places: [
-
-      [
-        "Chichén Itzá",
-        "🏛️",
-        "https://images.unsplash.com/photo-1518638150340-f706e86654de?auto=format&fit=crop&w=900&q=80",
-        "A famous Maya archaeological site on the Yucatán Peninsula."
-      ],
-
-      [
-        "Mexican Cuisine",
-        "🌮",
-        "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&w=900&q=80",
-        "Known for tacos, maize-based foods, spices and many regional traditions."
-      ]
-
-    ]
-  }
-
-};
-
-
-/* ================= MAP ================= */
-
-function createWorldMap() {
-
-  if (worldMap) return;
-
-  worldMap =
-    L.map(
-      "worldMap",
-      {
-        minZoom: 1,
-        maxZoom: 6
-      }
-    ).setView(
-      [20, 0],
-      2
-    );
-
-
-  L.tileLayer(
-    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    {
-      attribution:
-        "© OpenStreetMap contributors"
-    }
-  ).addTo(worldMap);
-
-
-  fetch(
-    "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"
-  )
-    .then(response =>
-      response.json()
-    )
-    .then(world => {
-
-      const geo =
-        topojson.feature(
-          world,
-          world.objects.countries
+                weight:
+                    1
+            }
         );
 
-
-      L.geoJSON(
-        geo,
-        {
-
-          style: {
-            color: "#7d8cff",
-            weight: 1,
-            fillColor: "#5364c9",
-            fillOpacity: .5
-          },
+    }
 
 
-          onEachFeature:
-            function(
-              feature,
-              layer
-            ) {
+    /*
+        Highlight selected country.
+    */
 
-              const name =
-                feature.properties.name;
+    if (selectedLayer) {
 
-              layer.bindTooltip(
-                name
-              );
+        selectedLayer.setStyle(
+            {
+                fillOpacity:
+                    0.9,
 
-
-              layer.on({
-
-                mouseover:
-                  function(event) {
-
-                    event.target.setStyle({
-                      fillColor:
-                        "#9a80ff",
-                      fillOpacity:
-                        .8
-                    });
-
-                  },
-
-
-                mouseout:
-                  function(event) {
-
-                    event.target.setStyle({
-                      fillColor:
-                        "#5364c9",
-                      fillOpacity:
-                        .5
-                    });
-
-                  },
-
-
-                click:
-                  function() {
-
-                    selectCountry(
-                      name
-                    );
-
-                  }
-
-              });
-
+                weight:
+                    3
             }
+        );
+
+    }
+
+
+    /*
+        If we don't have
+        detailed data yet.
+    */
+
+    if (!country) {
+
+        document
+            .getElementById(
+                "countryPanel"
+            )
+            .innerHTML = `
+
+                <div class="country-title">
+
+                    <div class="flag">
+                        🌍
+                    </div>
+
+                    <div>
+
+                        <p class="eyebrow">
+                            COUNTRY
+                        </p>
+
+                        <h2>
+                            ${name}
+                        </h2>
+
+                    </div>
+
+                </div>
+
+                <p>
+                    Detailed Teachly facts
+                    for this country have not
+                    been added yet.
+                </p>
+
+                <p>
+                    Select another country
+                    to explore its information.
+                </p>
+
+            `;
+
+        return;
+
+    }
+
+
+    /*
+        CORRECT COUNTRY DATA
+    */
+
+    document
+        .getElementById(
+            "countryPanel"
+        )
+        .innerHTML = `
+
+        <div class="country-title">
+
+            <div class="flag">
+                ${country.flag}
+            </div>
+
+            <div>
+
+                <p class="eyebrow">
+                    ${country.continent}
+                </p>
+
+                <h2>
+                    ${name}
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <p>
+            ${country.description}
+        </p>
+
+
+        <div class="facts">
+
+            <div class="fact">
+
+                <small>
+                    Capital
+                </small>
+
+                <b>
+                    ${country.capital}
+                </b>
+
+            </div>
+
+
+            <div class="fact">
+
+                <small>
+                    Language
+                </small>
+
+                <b>
+                    ${country.language}
+                </b>
+
+            </div>
+
+
+            <div class="fact">
+
+                <small>
+                    Currency
+                </small>
+
+                <b>
+                    ${country.currency}
+                </b>
+
+            </div>
+
+
+            <div class="fact">
+
+                <small>
+                    Continent
+                </small>
+
+                <b>
+                    ${country.continent}
+                </b>
+
+            </div>
+
+        </div>
+
+
+        <h3>
+            Famous For
+        </h3>
+
+
+        ${
+            country.places
+                .map(
+                    (place, index) => `
+
+                    <div
+                        class="place-card"
+                        onclick="showPlace('${name}', ${index})">
+
+                        <img
+                            src="${place.image}"
+                            alt="${place.name}">
+
+                        <div>
+
+                            <b>
+                                ${place.name}
+                            </b>
+
+                            <p>
+                                ${place.description}
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    `
+                )
+                .join("")
+        }
+
+
+        <div id="placeDetail">
+        </div>
+
+    `;
+
+}
+
+
+/*
+    FAMOUS PLACE DETAILS
+
+    Clicking a place opens its
+    larger image and explanation.
+*/
+
+function showPlace(
+    countryName,
+    index
+) {
+
+    const country =
+        countries[countryName];
+
+
+    if (!country) {
+
+        return;
+
+    }
+
+
+    const place =
+        country.places[index];
+
+
+    document
+        .getElementById(
+            "placeDetail"
+        )
+        .innerHTML = `
+
+        <div class="place-detail">
+
+            <h3>
+                ${place.name}
+            </h3>
+
+            <img
+                src="${place.image}"
+                alt="${place.name}">
+
+            <p>
+                ${place.description}
+            </p>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================
+   ENTER KEY
+========================= */
+
+window.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Enter" &&
+            document.activeElement?.id ===
+                "onlineMessage"
+        ) {
+
+            sendOnlineMessage();
 
         }
 
-      ).addTo(worldMap);
 
-    })
+        if (
+            event.key === "Enter" &&
+            document.activeElement?.id ===
+                "aiMessage"
+        ) {
 
-    .catch(() => {
+            sendAI();
 
-      document
-        .getElementById(
-          "countryPanel"
-        )
-        .innerHTML =
-        `
-        <div class="emptyCountry">
-          ❌ Unable to load the world map.
-          Check your internet connection.
-        </div>
-        `;
+        }
 
-    });
-
-}
-
-
-/* ================= COUNTRY ================= */
-
-const aliases = {
-
-  "United States of America":
-    "United States",
-
-  "United Kingdom":
-    "United Kingdom"
-
-};
-
-
-function selectCountry(
-  rawName
-) {
-
-  const key =
-    aliases[rawName] ||
-    rawName;
-
-
-  const country =
-    countries[key];
-
-
-  if (!country) {
-
-    document
-      .getElementById(
-        "countryPanel"
-      )
-      .innerHTML =
-      `
-      <div class="emptyCountry">
-
-        🌍
-
-        <h2>
-          ${escapeHTML(rawName)}
-        </h2>
-
-        <p>
-          More information for this country
-          will be added soon.
-        </p>
-
-      </div>
-      `;
-
-    return;
-
-  }
-
-
-  if (
-    !data.discoveredCountries
-      .includes(key)
-  ) {
-
-    data.discoveredCountries
-      .push(key);
-
-    data.coins += 5;
-
-    save();
-
-  }
-
-
-  document
-    .getElementById(
-      "countryPanel"
-    )
-    .innerHTML = `
-
-      <div class="countryHead">
-
-        <div class="flag">
-          ${country.flag}
-        </div>
-
-        <div>
-          <h2>
-            ${escapeHTML(rawName)}
-          </h2>
-
-          <small>
-            🌍 ${country.continent}
-          </small>
-        </div>
-
-      </div>
-
-
-      <div class="facts">
-
-        <div>
-          <b>Capital</b>
-          <span>
-            ${country.capital}
-          </span>
-        </div>
-
-        <div>
-          <b>Language</b>
-          <span>
-            ${country.language}
-          </span>
-        </div>
-
-        <div>
-          <b>Currency</b>
-          <span>
-            ${country.currency}
-          </span>
-        </div>
-
-        <div>
-          <b>Continent</b>
-          <span>
-            ${country.continent}
-          </span>
-        </div>
-
-      </div>
-
-
-      <h3>
-        ⭐ Famous For
-      </h3>
-
-
-      <div class="placeGrid">
-
-        ${country.places
-          .map(
-            (place, index) => `
-
-              <button
-                class="placeCard"
-                onclick="
-                  showPlace(
-                    '${key}',
-                    ${index}
-                  )
-                "
-              >
-
-                <img
-                  src="${place[2]}"
-                  alt="${escapeHTML(place[0])}"
-                >
-
-                <span>
-                  ${place[1]}
-                  ${escapeHTML(place[0])}
-                </span>
-
-              </button>
-
-            `
-          )
-          .join("")}
-
-      </div>
-
-
-      <div
-        id="selectedPlace"
-        class="selectedPlace"
-      >
-
-        <p>
-          Click a famous place to learn more.
-        </p>
-
-      </div>
-
-    `;
-
-}
-
-
-function showPlace(
-  countryKey,
-  index
-) {
-
-  const place =
-    countries[
-      countryKey
-    ].places[index];
-
-
-  document
-    .getElementById(
-      "selectedPlace"
-    )
-    .innerHTML = `
-
-      <img
-        src="${place[2]}"
-        alt="${escapeHTML(place[0])}"
-      >
-
-      <div>
-
-        <h2>
-          ${place[1]}
-          ${escapeHTML(place[0])}
-        </h2>
-
-        <p>
-          ${escapeHTML(place[3])}
-        </p>
-
-        <p>
-          💡 Keep exploring to discover more!
-        </p>
-
-      </div>
-
-    `;
-
-}
-
-
-/* ================= SAFETY ================= */
-
-function escapeHTML(text) {
-
-  return String(text)
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
-}
-
-
-/* ================= START ================= */
-
-update();
+    }
+);
