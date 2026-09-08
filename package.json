@@ -1,1 +1,17 @@
-
+{
+  "name": "teachly",
+  "version": "1.0.0",
+  "description": "Teachly learning and skill exchange platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "nodemailer": "^7.0.3",
+    "openai": "^5.12.2",
+    "socket.io": "^4.8.1"
+  }
+}
