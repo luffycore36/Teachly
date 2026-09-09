@@ -1,326 +1,357 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Teachly</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teachly</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Real interactive map -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
 </head>
 
 <body>
 
-<div class="emoji-bg">✨ 📚 🧠 ⭐ 🌍 💡 🚀 🎓 💫 🔥</div>
+<div id="app">
 
-<header>
-  <div class="logo">🔥 Teachly</div>
-  <div class="coin-pill">💰 <span id="coins">100</span></div>
-</header>
+  <!-- USERNAME -->
+  <section id="namePage" class="page active">
+    <div class="welcome">
+      <div class="logo">TEACHLY</div>
+      <h1>Welcome 👋</h1>
+      <p>Enter your username to begin</p>
 
-<main>
+      <input id="usernameInput" type="text" maxlength="20"
+             placeholder="Your username">
 
-<!-- NAME -->
-
-<section id="nameScreen" class="screen active">
-
-  <div class="welcome">
-    <div class="welcome-logo">🔥</div>
-    <h1>Teachly</h1>
-
-    <p>
-      Learn from people.<br>
-      Teach what you know.<br>
-      Discover something new.
-    </p>
-  </div>
-
-  <div class="card">
-
-    <h2>👋 What's your name?</h2>
-
-    <input
-      id="nameInput"
-      maxlength="30"
-      placeholder="Enter your username"
-    >
-
-    <button
-      class="primary big-button"
-      onclick="continueWithName()">
-      Continue 🚀
-    </button>
-
-    <p id="nameMsg" class="msg"></p>
-
-  </div>
-
-</section>
+      <button onclick="startTeachly()">CONTINUE</button>
+    </div>
+  </section>
 
 
-<!-- ROLE -->
+  <!-- HOME -->
+  <section id="homePage" class="page">
 
-<section id="roleScreen" class="screen">
-
-  <div class="hero">
-
-    <div class="big-emoji">🎯</div>
-
-    <h1>Choose Your Role</h1>
-
-    <p>What do you want to do?</p>
-
-  </div>
-
-  <div class="role-grid">
-
-    <button
-      class="role-card teacher"
-      onclick="chooseRole('teacher')">
-
-      <span>👨‍🏫</span>
-
-      <strong>TEACH</strong>
-
-      <small>
-        Share what you know<br>
-        and help someone learn.
-      </small>
-
-    </button>
-
-
-    <button
-      class="role-card learner"
-      onclick="chooseRole('learner')">
-
-      <span>🎓</span>
-
-      <strong>LEARN</strong>
-
-      <small>
-        Find someone who<br>
-        can teach you.
-      </small>
-
-    </button>
-
-  </div>
-
-</section>
-
-
-<!-- DASHBOARD -->
-
-<section id="dashboardScreen" class="screen">
-
-  <div class="role-banner">
-
-    <small>YOUR ROLE</small>
-
-    <h2 id="roleBadge">🎓 LEARN</h2>
-
-  </div>
-
-
-  <div class="hero compact">
-
-    <h1 id="hello">Welcome!</h1>
-
-    <p id="roleText"></p>
-
-  </div>
-
-
-  <div id="mainFlow" class="card main-flow"></div>
-
-
-  <div class="feature-list">
-
-    <button onclick="openPage('people')">
-      <span>👥</span>
+    <header>
       <div>
-        <b>SkillMatch</b>
-        <small>Find people with skills to teach or learn</small>
+        <h1>TEACHLY</h1>
+        <p id="welcomeText"></p>
       </div>
-    </button>
 
-    <button onclick="openPage('chat')">
-      <span>💬</span>
-      <div>
-        <b>ConnectZone</b>
-        <small>Chat with learning partners</small>
+      <button class="profileBtn" onclick="openPage('profilePage')">
+        👤
+      </button>
+    </header>
+
+    <main>
+
+      <!-- BIG ROLE CLOUDS -->
+      <div class="cloudArea">
+
+        <div class="cloud learnCloud" onclick="chooseRole('learner')">
+          <span>LEARNER</span>
+          <small>Find a teacher</small>
+        </div>
+
+        <div class="cloud teachCloud" onclick="chooseRole('teacher')">
+          <span>TEACHER</span>
+          <small>Find a learner</small>
+        </div>
+
       </div>
-    </button>
 
-    <button onclick="openPage('shop')">
-      <span>🛍️</span>
-      <div>
-        <b>CoinCraft</b>
-        <small>Spend your TeachCoins</small>
+
+      <!-- AI TEACHER -->
+      <div class="featureCard aiCard" onclick="openAITeacher()">
+        <div class="featureIcon">🤖</div>
+        <div>
+          <h2>AI TEACHER</h2>
+          <p>Learn different subjects with TutorBot</p>
+        </div>
       </div>
-    </button>
 
-    <button onclick="openPage('badges')">
-      <span>🏆</span>
-      <div>
-        <b>Achievement Vault</b>
-        <small>Unlock achievements</small>
+
+      <!-- MYSTERY -->
+      <div class="featureCard mysteryCard" onclick="mysteryTopic()">
+        <div class="featureIcon">❓</div>
+        <div>
+          <h2>MYSTERY TOPIC</h2>
+          <p>Discover a random topic</p>
+        </div>
       </div>
-    </button>
 
-    <button onclick="openPage('map')">
-      <span>🌍</span>
-      <div>
-        <b>LearnSphere</b>
-        <small>Explore the world</small>
+
+      <!-- FIND PEOPLE -->
+      <div class="featureCard" onclick="openPage('peoplePage')">
+        <div class="featureIcon">🌎</div>
+        <div>
+          <h2>SKILLMATCH</h2>
+          <p>Find people with different skills</p>
+        </div>
       </div>
-    </button>
 
-    <button onclick="resetRole()">
-      <span>🔄</span>
-      <div>
-        <b>Change Role</b>
-        <small>Switch between Teach and Learn</small>
+
+      <!-- QUIZ -->
+      <div class="featureCard" onclick="startQuiz()">
+        <div class="featureIcon">🧠</div>
+        <div>
+          <h2>MINDCHECK</h2>
+          <p>Test what you learned</p>
+        </div>
       </div>
-    </button>
-
-  </div>
-
-</section>
 
 
-<!-- PAGES -->
+      <!-- BADGES -->
+      <div class="sectionTitle">🏆 BADGES</div>
 
-<section id="pageScreen" class="screen">
-
-  <button
-    class="back"
-    onclick="showScreen('dashboardScreen')">
-    ← Back
-  </button>
-
-  <div id="pageContent"></div>
-
-</section>
+      <div id="badgesHome" class="badgeGrid"></div>
 
 
-<!-- AI -->
+      <!-- SHOP -->
+      <div class="sectionTitle">🛒 SHOP</div>
 
-<section id="aiScreen" class="screen">
+      <div class="coinsBox">
+        🪙 <span id="homeCoins">0</span> TeachCoins
+      </div>
 
-  <div class="ai-head">
+      <div id="shopHome" class="shopGrid"></div>
 
-    <span>🤖</span>
 
-    <div>
-      <h1>TutorBot</h1>
-      <p>Your AI Teacher</p>
+      <!-- LEARNSPHERE -->
+      <div class="featureCard mapCard" onclick="openPage('mapPage')">
+        <div class="featureIcon">🌍</div>
+        <div>
+          <h2>LEARNSPHERE</h2>
+          <p>Explore countries around the world</p>
+        </div>
+      </div>
+
+    </main>
+  </section>
+
+
+  <!-- SEARCHING -->
+  <section id="searchPage" class="page">
+    <div class="centerBox">
+      <div class="loadingCircle"></div>
+      <h2 id="searchTitle">Searching...</h2>
+      <p id="searchText"></p>
+    </div>
+  </section>
+
+
+  <!-- CHAT -->
+  <section id="chatPage" class="page">
+    <header>
+      <button onclick="goHome()">←</button>
+      <h2 id="chatTitle">CHAT</h2>
+    </header>
+
+    <div id="chatMessages" class="chatMessages"></div>
+
+    <div class="chatInput">
+      <input id="messageInput" placeholder="Type a message...">
+      <button onclick="sendMessage()">SEND</button>
     </div>
 
-  </div>
+    <div class="emojiBar">
+      <button onclick="addEmoji('👍')">👍</button>
+      <button onclick="addEmoji('😊')">😊</button>
+      <button onclick="addEmoji('🎉')">🎉</button>
+      <button onclick="addEmoji('📚')">📚</button>
+      <button onclick="addEmoji('⭐')">⭐</button>
+    </div>
+  </section>
 
-  <div class="card">
 
-    <div class="topic-box">
+  <!-- AI TEACHER -->
+  <section id="aiPage" class="page">
+    <header>
+      <button onclick="goHome()">←</button>
+      <h2>TUTORBOT</h2>
+    </header>
 
-      <small>🎲 RANDOM TOPIC</small>
+    <div class="aiBox">
+      <div class="robot">🤖</div>
 
-      <h2 id="aiTopic"></h2>
+      <div id="aiTopic"></div>
 
+      <div class="aiControls">
+        <button onclick="newAITopic()">NEW TOPIC</button>
+        <button onclick="aiExplain()">EXPLAIN</button>
+        <button onclick="openPage('quizPage'); setupQuiz();">
+          QUIZ
+        </button>
+      </div>
+
+      <div id="aiAnswer" class="aiAnswer"></div>
     </div>
 
-    <div id="aiLesson" class="lesson"></div>
+    <!-- TEACHER AI MODE -->
+    <div class="teacherAIMode">
+      <h2>👨‍🏫 AI TEACHER MODE</h2>
+      <p>
+        Teacher mode helps you prepare lessons, explanations,
+        questions and activities.
+      </p>
 
-    <div id="aiChat" class="ai-chat"></div>
+      <button onclick="teacherAIHelp()">OPEN TEACHER AI</button>
 
-    <div class="ask-row">
+      <div id="teacherAIResult"></div>
+    </div>
+  </section>
 
-      <input
-        id="aiQuestion"
-        placeholder="Ask TutorBot..."
-        onkeydown="if(event.key==='Enter') askAI()">
 
-      <button onclick="askAI()">Send</button>
+  <!-- MYSTERY -->
+  <section id="mysteryPage" class="page">
+    <header>
+      <button onclick="goHome()">←</button>
+      <h2>MYSTERY TOPIC</h2>
+    </header>
 
+    <div class="mysteryBox">
+      <div>🎲</div>
+      <h1 id="mysteryTitle"></h1>
+      <p id="mysteryDescription"></p>
+
+      <button onclick="mysteryTopic()">ANOTHER TOPIC</button>
+    </div>
+  </section>
+
+
+  <!-- PEOPLE -->
+  <section id="peoplePage" class="page">
+    <header>
+      <button onclick="goHome()">←</button>
+      <h2>SKILLMATCH</h2>
+    </header>
+
+    <div id="peopleList"></div>
+  </section>
+
+
+  <!-- QUIZ -->
+  <section id="quizPage" class="page">
+    <header>
+      <button onclick="goHome()">←</button>
+      <h2>MINDCHECK</h2>
+    </header>
+
+    <div class="quizBox">
+      <div id="quizQuestion"></div>
+
+      <textarea
+        id="quizAnswer"
+        placeholder="Write your complete answer..."
+      ></textarea>
+
+      <button onclick="checkQuiz()">CHECK ANSWER</button>
+
+      <div id="quizResult"></div>
+    </div>
+  </section>
+
+
+  <!-- BADGES -->
+  <section id="badgesPage" class="page">
+    <header>
+      <button onclick="goHome()">←</button>
+      <h2>ACHIEVEMENT VAULT</h2>
+    </header>
+
+    <div id="allBadges" class="badgeGrid"></div>
+  </section>
+
+
+  <!-- SHOP -->
+  <section id="shopPage" class="page">
+    <header>
+      <button onclick="goHome()">←</button>
+      <h2>COINCRAFT</h2>
+    </header>
+
+    <div class="coinsBox">
+      🪙 <span id="shopCoins">0</span> TeachCoins
     </div>
 
-    <button
-      class="secondary full"
-      onclick="newAITopic()">
-      🎲 New Topic
-    </button>
-
-    <button
-      class="primary full"
-      onclick="showQuiz()">
-      📝 MindCheck Quiz
-    </button>
-
-  </div>
-
-</section>
+    <div id="shopList" class="shopGrid"></div>
+  </section>
 
 
-<!-- QUIZ -->
+  <!-- PROFILE -->
+  <section id="profilePage" class="page">
+    <header>
+      <button onclick="goHome()">←</button>
+      <h2>PROFILE</h2>
+    </header>
 
-<section id="quizScreen" class="screen">
+    <div class="profileBox">
+      <div class="bigAvatar">👤</div>
 
-  <button
-    class="back"
-    onclick="showScreen('aiScreen')">
-    ← Back
-  </button>
+      <h1 id="profileName"></h1>
 
-  <div class="card">
+      <div class="stats">
+        <div>
+          <b id="profileSessions">0</b>
+          <span>Sessions</span>
+        </div>
 
-    <div class="quiz-icon">🧠</div>
+        <div>
+          <b id="profileCoins">0</b>
+          <span>Coins</span>
+        </div>
 
-    <h1>MindCheck</h1>
-
-    <p id="quizQuestion"></p>
-
-    <input
-      id="quizAnswer"
-      placeholder="Type your answer">
-
-    <button
-      class="primary full"
-      onclick="checkQuiz()">
-      Submit Answer ✅
-    </button>
-
-    <p id="quizResult" class="msg"></p>
-
-  </div>
-
-</section>
-
-</main>
+        <div>
+          <b id="profileBadges">0</b>
+          <span>Badges</span>
+        </div>
+      </div>
+    </div>
+  </section>
 
 
-<nav class="bottom-nav">
+  <!-- REAL MAP -->
+  <section id="mapPage" class="page">
+    <header>
+      <button onclick="goHome()">←</button>
+      <h2>LEARNSPHERE</h2>
+    </header>
 
-  <button onclick="showScreen('dashboardScreen')">
-    🏠
-    <span>Home</span>
-  </button>
+    <div class="mapIntro">
+      <h2>🌍 Explore the World</h2>
+      <p>
+        Tap countries to discover their information.
+      </p>
+    </div>
 
-  <button onclick="openPage('people')">
-    👥
-    <span>People</span>
-  </button>
+    <div id="worldMap"></div>
 
-  <button onclick="openPage('chat')">
-    💬
-    <span>Chat</span>
-  </button>
+    <div id="countryInfo" class="countryInfo">
+      <h2>🌎 Select a country</h2>
+      <p>Tap a country on the map to see its details.</p>
+    </div>
 
-  <button onclick="openPage('shop')">
-    🛍️
-    <span>Shop</span>
-  </button>
+    <div class="continentButtons">
+      <button onclick="showCountry('India')">🇮🇳 India</button>
+      <button onclick="showCountry('Japan')">🇯🇵 Japan</button>
+      <button onclick="showCountry('United States')">🇺🇸 USA</button>
+      <button onclick="showCountry('Brazil')">🇧🇷 Brazil</button>
+      <button onclick="showCountry('Australia')">🇦🇺 Australia</button>
+      <button onclick="showCountry('Egypt')">🇪🇬 Egypt</button>
+      <button onclick="showCountry('Antarctica')">🧊 Antarctica</button>
+    </div>
+  </section>
 
-</nav>
+</div>
 
+
+<div id="toast"></div>
+
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="script.js"></script>
 
 </body>
