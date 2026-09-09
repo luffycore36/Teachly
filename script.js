@@ -908,7 +908,7 @@ async function teacherAIHelp() {
   try {
 
     const response =
-      await fetch("/api/ai", {
+      await fetch("https://teachly-nmxh.onrender.com/api/ai", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
