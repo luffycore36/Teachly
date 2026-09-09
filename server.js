@@ -673,60 +673,98 @@ let openai = null;
 
 if (process.env.OPENAI_API_KEY) {
     openai = new OpenAI({
-        apiKey:
-            process.env.OPENAI_API_KEY
+        apiKey: process.env.OPENAI_API_KEY
     });
 }
 
 app.post(
     "/api/ai",
-    authenticated,
     async (req, res) => {
 
         try {
 
             const {
-                message
+                message,
+                lesson
             } = req.body;
 
-            if (!message) {
+            if (!message || !String(message).trim()) {
                 return res.status(400).json({
-                    error:
-                        "Please enter a question."
+                    error: "Please enter a question."
                 });
             }
 
             if (!openai) {
                 return res.status(500).json({
-                    error:
-                        "AI is not configured yet."
+                    error: "AI is not configured yet. Check OPENAI_API_KEY in Render."
                 });
             }
 
+            const lessonTitle =
+                lesson?.title || "General learning";
+
+            const lessonCategory =
+                lesson?.category || "General";
+
+            const lessonDescription =
+                lesson?.description || "";
+
+            const lessonContent =
+                lesson?.content || "";
+
             const response =
                 await openai.responses.create({
+
                     model:
                         process.env.OPENAI_MODEL ||
                         "gpt-5.6-luna",
 
-                    instructions:
-                        "You are Teachly AI, a friendly tutor. Explain clearly, adapt to the learner, use examples, and encourage understanding. Do not pretend to be a real human teacher.",
+                    instructions: `
+You are Teachly AI Teacher, a friendly educational tutor.
+
+The learner is studying this lesson:
+
+TITLE:
+${lessonTitle}
+
+CATEGORY:
+${lessonCategory}
+
+DESCRIPTION:
+${lessonDescription}
+
+LESSON MATERIAL:
+${lessonContent}
+
+Rules:
+- Answer the learner's question clearly.
+- Base your explanation on the current lesson whenever possible.
+- If the question is related to another subject, you may still answer it.
+- Explain difficult ideas step by step.
+- Give simple examples.
+- Do not just give an answer when explaining schoolwork; help the learner understand it.
+- Use headings and bullet points when helpful.
+- Keep answers appropriate for a school learner.
+- Never pretend to be a real human.
+`,
 
                     input:
-                        message
+                        String(message).trim()
                 });
 
             res.json({
                 answer:
-                    response.output_text
+                    response.output_text ||
+                    "I couldn't generate an answer right now."
             });
 
         } catch (error) {
 
-            console.error(error);
+            console.error("AI ERROR:", error);
 
             res.status(500).json({
                 error:
+                    error?.message ||
                     "AI could not respond right now."
             });
 
