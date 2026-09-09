@@ -1121,7 +1121,7 @@ async function askAITeacher() {
       ).join("\n");
 
     const response =
-      await fetch("/api/ai", {
+      await fetch("https://teachly-nmxh.onrender.com/api/ai", {
 
         method: "POST",
 
