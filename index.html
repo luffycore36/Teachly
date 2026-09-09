@@ -6,7 +6,6 @@
   <title>Teachly</title>
   <link rel="stylesheet" href="style.css">
 
-  <!-- Real interactive map -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -48,7 +47,6 @@
 
     <main>
 
-      <!-- BIG ROLE CLOUDS -->
       <div class="cloudArea">
 
         <div class="cloud learnCloud" onclick="chooseRole('learner')">
@@ -64,12 +62,12 @@
       </div>
 
 
-      <!-- AI TEACHER -->
+      <!-- AI TEACHER / LESSONS -->
       <div class="featureCard aiCard" onclick="openAITeacher()">
         <div class="featureIcon">🤖</div>
         <div>
           <h2>AI TEACHER</h2>
-          <p>Learn different subjects with TutorBot</p>
+          <p>Choose a lesson, learn it, take a quiz and clear your doubts</p>
         </div>
       </div>
 
@@ -99,7 +97,7 @@
         <div class="featureIcon">🧠</div>
         <div>
           <h2>MINDCHECK</h2>
-          <p>Test what you learned</p>
+          <p>Test what you learned from a lesson</p>
         </div>
       </div>
 
@@ -167,46 +165,86 @@
   </section>
 
 
-  <!-- AI TEACHER -->
+  <!-- AI TEACHER / LESSON LIBRARY -->
   <section id="aiPage" class="page">
+
     <header>
       <button onclick="goHome()">←</button>
       <h2>TUTORBOT</h2>
     </header>
 
-    <div class="aiBox">
-      <div class="robot">🤖</div>
+    <div class="lessonLibrary">
 
-      <div id="aiTopic"></div>
+      <div class="lessonHeader">
+        <div>
+          <h1>📚 Lesson Library</h1>
+          <p>Choose something you want to learn.</p>
+        </div>
 
-      <div class="aiControls">
-        <button onclick="newAITopic()">NEW TOPIC</button>
-        <button onclick="aiExplain()">EXPLAIN</button>
-        <button onclick="openPage('quizPage'); setupQuiz();">
-          QUIZ
+        <div class="lessonCount">
+          <span id="lessonCount">0</span>
+          lessons
+        </div>
+      </div>
+
+      <div id="lessonCategories" class="lessonCategories"></div>
+
+      <div id="lessonGrid" class="lessonGrid"></div>
+
+    </div>
+
+
+    <!-- SELECTED LESSON -->
+    <div id="selectedLessonBox" class="selectedLessonBox hidden">
+
+      <div class="selectedLessonTop">
+        <div>
+          <span id="selectedLessonCategory" class="lessonPill"></span>
+          <h1 id="selectedLessonTitle"></h1>
+        </div>
+
+        <button onclick="startSelectedLessonQuiz()">
+          START QUIZ 🧠
         </button>
       </div>
 
-      <div id="aiAnswer" class="aiAnswer"></div>
+      <p id="selectedLessonDescription"></p>
+
+      <div id="selectedLessonContent" class="lessonContent"></div>
+
+      <div class="lessonActions">
+        <button onclick="startSelectedLessonQuiz()" class="lessonPrimary">
+          LEARNED IT — TAKE QUIZ
+        </button>
+      </div>
+
     </div>
 
-    <!-- TEACHER AI MODE -->
+
+    <!-- OLD TEACHER MODE KEPT -->
     <div class="teacherAIMode">
-      <h2>👨‍🏫 AI TEACHER MODE</h2>
+
+      <h2>👨‍🏫 TEACHER AI MODE</h2>
+
       <p>
-        Teacher mode helps you prepare lessons, explanations,
+        Teacher mode helps prepare lesson explanations,
         questions and activities.
       </p>
 
-      <button onclick="teacherAIHelp()">OPEN TEACHER AI</button>
+      <button onclick="teacherAIHelp()">
+        OPEN TEACHER AI
+      </button>
 
       <div id="teacherAIResult"></div>
+
     </div>
+
   </section>
 
 
   <!-- MYSTERY -->
   <section id="mysteryPage" class="page">
+
     <header>
       <button onclick="goHome()">←</button>
       <h2>MYSTERY TOPIC</h2>
@@ -219,28 +257,35 @@
 
       <button onclick="mysteryTopic()">ANOTHER TOPIC</button>
     </div>
+
   </section>
 
 
   <!-- PEOPLE -->
   <section id="peoplePage" class="page">
+
     <header>
       <button onclick="goHome()">←</button>
       <h2>SKILLMATCH</h2>
     </header>
 
     <div id="peopleList"></div>
+
   </section>
 
 
   <!-- QUIZ -->
   <section id="quizPage" class="page">
+
     <header>
       <button onclick="goHome()">←</button>
       <h2>MINDCHECK</h2>
     </header>
 
     <div class="quizBox">
+
+      <div id="quizLessonName" class="quizLessonName"></div>
+
       <div id="quizQuestion"></div>
 
       <textarea
@@ -248,26 +293,103 @@
         placeholder="Write your complete answer..."
       ></textarea>
 
-      <button onclick="checkQuiz()">CHECK ANSWER</button>
+      <button onclick="checkQuiz()">
+        CHECK ANSWER
+      </button>
 
       <div id="quizResult"></div>
+
     </div>
+
+
+    <!-- REAL AI TEACHER DIRECTLY BELOW QUIZ -->
+    <div id="lessonAITeacher" class="lessonAITeacher">
+
+      <div class="aiTeacherHeader">
+
+        <div class="aiTeacherRobot">
+          🤖
+        </div>
+
+        <div>
+          <h2>AI TEACHER</h2>
+          <p id="aiTeacherLessonLabel">
+            Choose a lesson first.
+          </p>
+        </div>
+
+      </div>
+
+
+      <div id="aiTeacherMessages" class="aiTeacherMessages">
+
+        <div class="aiBubble">
+
+          <b>👋 Hi! I'm your AI Teacher.</b>
+
+          <p>
+            Ask me anything about your selected lesson.
+            I can explain difficult ideas in simpler ways,
+            give examples and help you understand your mistakes.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="aiQuickQuestions">
+
+        <button onclick="askAIQuick('Explain this lesson simply.')">
+          Explain simply
+        </button>
+
+        <button onclick="askAIQuick('Give me a real-life example.')">
+          Real-life example
+        </button>
+
+        <button onclick="askAIQuick('What are the most important things I should remember?')">
+          Key points
+        </button>
+
+      </div>
+
+
+      <div class="aiTeacherInput">
+
+        <textarea
+          id="aiTeacherInput"
+          placeholder="Ask your doubt about this lesson..."
+          rows="3"
+        ></textarea>
+
+        <button onclick="askAITeacher()">
+          ASK AI 🤖
+        </button>
+
+      </div>
+
+    </div>
+
   </section>
 
 
   <!-- BADGES -->
   <section id="badgesPage" class="page">
+
     <header>
       <button onclick="goHome()">←</button>
       <h2>ACHIEVEMENT VAULT</h2>
     </header>
 
     <div id="allBadges" class="badgeGrid"></div>
+
   </section>
 
 
   <!-- SHOP -->
   <section id="shopPage" class="page">
+
     <header>
       <button onclick="goHome()">←</button>
       <h2>COINCRAFT</h2>
@@ -278,22 +400,26 @@
     </div>
 
     <div id="shopList" class="shopGrid"></div>
+
   </section>
 
 
   <!-- PROFILE -->
   <section id="profilePage" class="page">
+
     <header>
       <button onclick="goHome()">←</button>
       <h2>PROFILE</h2>
     </header>
 
     <div class="profileBox">
+
       <div class="bigAvatar">👤</div>
 
       <h1 id="profileName"></h1>
 
       <div class="stats">
+
         <div>
           <b id="profileSessions">0</b>
           <span>Sessions</span>
@@ -308,33 +434,46 @@
           <b id="profileBadges">0</b>
           <span>Badges</span>
         </div>
+
       </div>
+
     </div>
+
   </section>
 
 
   <!-- REAL MAP -->
   <section id="mapPage" class="page">
+
     <header>
       <button onclick="goHome()">←</button>
       <h2>LEARNSPHERE</h2>
     </header>
 
     <div class="mapIntro">
+
       <h2>🌍 Explore the World</h2>
+
       <p>
         Tap countries to discover their information.
       </p>
+
     </div>
 
     <div id="worldMap"></div>
 
     <div id="countryInfo" class="countryInfo">
+
       <h2>🌎 Select a country</h2>
-      <p>Tap a country on the map to see its details.</p>
+
+      <p>
+        Tap a country on the map to see its details.
+      </p>
+
     </div>
 
     <div class="continentButtons">
+
       <button onclick="showCountry('India')">🇮🇳 India</button>
       <button onclick="showCountry('Japan')">🇯🇵 Japan</button>
       <button onclick="showCountry('United States')">🇺🇸 USA</button>
@@ -342,7 +481,9 @@
       <button onclick="showCountry('Australia')">🇦🇺 Australia</button>
       <button onclick="showCountry('Egypt')">🇪🇬 Egypt</button>
       <button onclick="showCountry('Antarctica')">🧊 Antarctica</button>
+
     </div>
+
   </section>
 
 </div>
