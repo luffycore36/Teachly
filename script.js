@@ -1,1163 +1,1146 @@
-/* ================= TOPICS ================= */
+/* =========================
+   TEACHLY DATA
+========================= */
 
-const topics = [
+let state = JSON.parse(localStorage.getItem("teachlyState")) || {
+  name: "",
+  coins: 0,
+  sessions: 0,
+  badges: [],
+  owned: []
+};
+
+let currentRole = "";
+let currentPerson = "";
+
+function save() {
+  localStorage.setItem("teachlyState", JSON.stringify(state));
+}
+
+
+/* =========================
+   START
+========================= */
+
+function startTeachly() {
+
+  const name = document
+    .getElementById("usernameInput")
+    .value
+    .trim();
+
+  if (!name) {
+    showToast("Please enter your username");
+    return;
+  }
+
+  state.name = name;
+  save();
+
+  document.getElementById("welcomeText").textContent =
+    "Welcome, " + state.name + "!";
+
+  openPage("homePage");
+  updateAll();
+}
+
+
+/* =========================
+   PAGE SYSTEM
+========================= */
+
+function openPage(id) {
+
+  document.querySelectorAll(".page").forEach(page => {
+    page.classList.remove("active");
+  });
+
+  document.getElementById(id).classList.add("active");
+
+  updateAll();
+}
+
+function goHome() {
+  openPage("homePage");
+}
+
+
+/* =========================
+   TEACHER / LEARNER
+========================= */
+
+function chooseRole(role) {
+
+  currentRole = role;
+
+  openPage("searchPage");
+
+  if (role === "learner") {
+    document.getElementById("searchTitle").textContent =
+      "Finding a teacher...";
+    document.getElementById("searchText").textContent =
+      "Looking for a teacher volunteer";
+  } else {
+    document.getElementById("searchTitle").textContent =
+      "Finding a learner...";
+    document.getElementById("searchText").textContent =
+      "Looking for a learner volunteer";
+  }
+
+  setTimeout(() => {
+
+    /*
+      DEMO MATCHING
+
+      A real multi-user volunteer system needs
+      a backend/database such as Firebase or Supabase.
+    */
+
+    const found = Math.random() > 0.5;
+
+    if (found) {
+
+      currentPerson =
+        role === "learner"
+          ? "Arjun • Java Teacher"
+          : "Meera • Science Learner";
+
+      state.sessions++;
+      save();
+
+      openChat(currentPerson);
+
+    } else {
+
+      if (role === "learner") {
+
+        showToast("Can't find teacher volunteer");
+
+        setTimeout(() => {
+
+          const useAI = confirm(
+            "Can't find teacher volunteer.\n\nDo you want AI to teach you?"
+          );
+
+          if (useAI) {
+            openAITeacher();
+          } else {
+            goHome();
+          }
+
+        }, 500);
+
+      } else {
+
+        showToast("Can't find learner volunteer");
+
+        setTimeout(goHome, 1200);
+      }
+    }
+
+  }, 1800);
+}
+
+
+/* =========================
+   CHAT
+========================= */
+
+function openChat(person) {
+
+  document.getElementById("chatTitle").textContent =
+    person;
+
+  document.getElementById("chatMessages").innerHTML = `
+    <div class="message">
+      👋 You are connected with <b>${person}</b>
+    </div>
+
+    <div class="message">
+      Please introduce yourself!
+    </div>
+  `;
+
+  openPage("chatPage");
+}
+
+function sendMessage() {
+
+  const input =
+    document.getElementById("messageInput");
+
+  const text = input.value.trim();
+
+  if (!text) return;
+
+  const box =
+    document.getElementById("chatMessages");
+
+  box.innerHTML += `
+    <div class="message me">
+      ${escapeHTML(text)}
+    </div>
+  `;
+
+  input.value = "";
+
+  box.scrollTop = box.scrollHeight;
+}
+
+function addEmoji(emoji) {
+
+  document.getElementById("messageInput").value += emoji;
+}
+
+function escapeHTML(text) {
+
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+
+/* =========================
+   AI TEACHER
+========================= */
+
+const aiTopics = [
 
   {
-    name: "The Water Cycle",
-    lesson:
-      "Water moves around Earth in a continuous cycle. " +
-      "The Sun causes evaporation. Water vapor cools and " +
-      "condenses into clouds. Precipitation then returns " +
-      "water to Earth.",
-    q: "What process changes liquid water into water vapor?",
-    a: ["evaporation"]
+    name: "Python",
+    explanation:
+      "Python is a programming language known for readable syntax and is used for web development, automation, data science and AI."
   },
 
   {
-    name: "Photosynthesis",
-    lesson:
-      "Plants use sunlight to make food. They take in " +
-      "carbon dioxide and water and produce glucose and oxygen.",
-    q: "What gas do plants take in for photosynthesis?",
-    a: ["carbon dioxide", "co2"]
+    name: "Java",
+    explanation:
+      "Java is a programming language that uses classes and objects and is widely used for applications and backend systems."
   },
 
   {
-    name: "Fractions",
-    lesson:
-      "A fraction represents part of a whole. " +
-      "The top number is the numerator and the bottom " +
-      "number is the denominator.",
-    q: "In 3/4, what is the denominator?",
-    a: ["4", "four"]
+    name: "Artificial Intelligence",
+    explanation:
+      "Artificial intelligence allows computer systems to perform tasks that normally require human-like reasoning or pattern recognition."
   },
 
   {
-    name: "Gravity",
-    lesson:
-      "Gravity is a force of attraction between objects " +
-      "with mass. Earth's gravity pulls objects toward Earth.",
-    q: "What force pulls objects toward Earth?",
-    a: ["gravity"]
+    name: "Space",
+    explanation:
+      "Space contains stars, planets, galaxies and many other objects. Our Solar System is part of the Milky Way galaxy."
   },
 
   {
-    name: "The Solar System",
-    lesson:
-      "Our Solar System contains the Sun, planets, moons, " +
-      "asteroids and comets. The Sun is at its center.",
-    q: "What is at the center of our Solar System?",
-    a: ["sun", "the sun"]
+    name: "Physics",
+    explanation:
+      "Physics studies matter, energy, motion, forces and how objects interact."
   },
 
   {
-    name: "Computer Algorithms",
-    lesson:
-      "An algorithm is a clear sequence of steps used " +
-      "to solve a problem or complete a task.",
-    q: "What is a step-by-step procedure for solving a problem?",
-    a: ["algorithm", "an algorithm"]
+    name: "Biology",
+    explanation:
+      "Biology is the study of living organisms and processes such as growth, reproduction and cellular activity."
   },
 
   {
-    name: "The Human Brain",
-    lesson:
-      "The brain controls many activities in the body. " +
-      "It helps us think, remember, learn, move and respond.",
-    q: "Which organ controls most activities of the body?",
-    a: ["brain", "the brain"]
+    name: "Cybersecurity",
+    explanation:
+      "Cybersecurity focuses on protecting computers, networks and information from unauthorized access and attacks."
   },
 
   {
-    name: "Electricity",
-    lesson:
-      "Electricity is associated with the movement of " +
-      "electric charge. Circuits allow electrical energy " +
-      "to power devices.",
-    q: "What provides a path for electric current?",
-    a: ["circuit", "a circuit"]
+    name: "Astronomy",
+    explanation:
+      "Astronomy is the scientific study of objects and events beyond Earth's atmosphere."
   },
 
   {
-    name: "Programming",
-    lesson:
-      "Programming means writing instructions that computers " +
-      "can follow. Languages such as JavaScript, Python and " +
-      "Java are used to create software.",
-    q: "What do programmers write for computers to follow?",
-    a: ["instructions", "code"]
+    name: "Mathematics",
+    explanation:
+      "Mathematics uses numbers, patterns, logic and structures to solve problems."
   },
 
   {
-    name: "World Geography",
-    lesson:
-      "Geography is the study of Earth's places, environments, " +
-      "landforms, people and how they interact.",
-    q: "What subject studies Earth's places and environments?",
-    a: ["geography"]
+    name: "Chemistry",
+    explanation:
+      "Chemistry studies matter, its properties and the reactions that transform substances."
   }
 
 ];
 
+let currentAITopic = null;
 
-/* ================= STATE ================= */
-
-let state;
-
-try {
-
-  state =
-    JSON.parse(
-      localStorage.getItem("teachlyV4") || "null"
-    ) || {
-      name: "",
-      role: "",
-      coins: 100,
-      sessions: 0,
-      owned: []
-    };
-
-} catch {
-
-  state = {
-    name: "",
-    role: "",
-    coins: 100,
-    sessions: 0,
-    owned: []
-  };
-
-}
-
-
-let currentTopic = null;
-
-
-/* ================= SAVE ================= */
-
-function save() {
-
-  localStorage.setItem(
-    "teachlyV4",
-    JSON.stringify(state)
-  );
-
-  const coins =
-    document.getElementById("coins");
-
-  if (coins) {
-    coins.textContent = state.coins;
-  }
-
-}
-
-
-/* ================= SCREEN ================= */
-
-function showScreen(id) {
-
-  document
-    .querySelectorAll(".screen")
-    .forEach(screen =>
-      screen.classList.remove("active")
-    );
-
-  const target =
-    document.getElementById(id);
-
-  if (target) {
-    target.classList.add("active");
-  }
-
-  window.scrollTo(0, 0);
-
-}
-
-
-/* ================= NAME ================= */
-
-function continueWithName() {
-
-  const input =
-    document.getElementById("nameInput");
-
-  const msg =
-    document.getElementById("nameMsg");
-
-  const name =
-    input.value.trim();
-
-
-  if (!name) {
-
-    msg.textContent =
-      "Please enter your username.";
-
-    return;
-
-  }
-
-
-  state.name = name;
-
-  save();
-
-  showScreen("roleScreen");
-
-}
-
-
-/* ================= ROLE ================= */
-
-function chooseRole(role) {
-
-  state.role = role;
-
-  save();
-
-  showScreen("dashboardScreen");
-
-  renderDashboard();
-
-  setTimeout(() => {
-
-    connectVolunteer(role);
-
-  }, 400);
-
-}
-
-
-/* ================= DASHBOARD ================= */
-
-function renderDashboard() {
-
-  const hello =
-    document.getElementById("hello");
-
-  const roleText =
-    document.getElementById("roleText");
-
-  const roleBadge =
-    document.getElementById("roleBadge");
-
-  const flow =
-    document.getElementById("mainFlow");
-
-
-  hello.textContent =
-    `Hello, ${state.name}! 👋`;
-
-
-  if (state.role === "teacher") {
-
-    roleBadge.textContent =
-      "👨‍🏫 TEACH";
-
-    roleText.textContent =
-      "You are in Teach mode.";
-
-  } else {
-
-    roleBadge.textContent =
-      "🎓 LEARN";
-
-    roleText.textContent =
-      "You are in Learn mode.";
-
-  }
-
-
-  flow.innerHTML =
-
-    state.role === "teacher"
-
-      ? `
-
-        <div class="flow-icon">👨‍🏫</div>
-
-        <div class="flow-title">
-          TEACH
-        </div>
-
-        <p class="status">
-          Find a learner who wants to learn from you.
-        </p>
-
-        <button
-          class="primary big-action"
-          onclick="connectVolunteer('teacher')">
-          🔎 Find People
-        </button>
-
-      `
-
-      : `
-
-        <div class="flow-icon">🎓</div>
-
-        <div class="flow-title">
-          LEARN
-        </div>
-
-        <p class="status">
-          Find someone who can teach you a skill.
-        </p>
-
-        <button
-          class="primary big-action"
-          onclick="connectVolunteer('learner')">
-          🔎 Find People
-        </button>
-
-      `;
-
-}
-
-
-/* ================= FIND PEOPLE ================= */
-
-function connectVolunteer(role) {
-
-  const flow =
-    document.getElementById("mainFlow");
-
-
-  flow.innerHTML = `
-
-    <div class="flow-icon">🔎</div>
-
-    <div class="flow-title">
-      Finding people...
-    </div>
-
-    <p class="status">
-      Searching for a volunteer.
-    </p>
-
-  `;
-
-
-  setTimeout(() => {
-
-    if (role === "teacher") {
-
-      flow.innerHTML = `
-
-        <div class="flow-icon">❌</div>
-
-        <div class="flow-title danger">
-          Can't find learner volunteer
-        </div>
-
-        <p class="status">
-          No learner volunteer is available right now.
-        </p>
-
-        <button
-          class="secondary big-action"
-          onclick="renderDashboard()">
-          🔄 Try Again
-        </button>
-
-      `;
-
-    } else {
-
-      flow.innerHTML = `
-
-        <div class="flow-icon">❌</div>
-
-        <div class="flow-title danger">
-          Can't find teacher volunteer
-        </div>
-
-        <p class="status">
-          No teacher volunteer is available right now.
-        </p>
-
-        <button
-          class="primary big-action"
-          onclick="startAI()">
-          🤖 Let AI Teach Me
-        </button>
-
-        <button
-          class="secondary big-action"
-          onclick="renderDashboard()">
-          ↩️ Go Back
-        </button>
-
-      `;
-
-    }
-
-  }, 1000);
-
-}
-
-
-/* ================= AI ================= */
-
-function startAI() {
-
-  showScreen("aiScreen");
+function openAITeacher() {
 
   newAITopic();
-
+  openPage("aiPage");
 }
-
 
 function newAITopic() {
 
-  currentTopic =
-    topics[
-      Math.floor(
-        Math.random() * topics.length
-      )
+  currentAITopic =
+    aiTopics[Math.floor(Math.random() * aiTopics.length)];
+
+  document.getElementById("aiTopic").innerHTML = `
+    <h1>${currentAITopic.name}</h1>
+    <p>
+      TutorBot selected a new topic for you.
+      Ask questions or press EXPLAIN.
+    </p>
+  `;
+
+  document.getElementById("aiAnswer").innerHTML = "";
+}
+
+function aiExplain() {
+
+  if (!currentAITopic) newAITopic();
+
+  document.getElementById("aiAnswer").innerHTML = `
+    <h3>📚 ${currentAITopic.name}</h3>
+    <p>${currentAITopic.explanation}</p>
+  `;
+}
+
+
+/* =========================
+   AI TEACHER MODE
+========================= */
+
+function teacherAIHelp() {
+
+  const topic =
+    aiTopics[Math.floor(Math.random() * aiTopics.length)];
+
+  document.getElementById("teacherAIResult").innerHTML = `
+    <h3>🤖 Teacher AI Assistant</h3>
+
+    <p><b>Suggested lesson:</b> ${topic.name}</p>
+
+    <p>
+      <b>Lesson idea:</b>
+      Explain ${topic.name} using a simple example,
+      ask the learner one question, then give them
+      a small challenge.
+    </p>
+
+    <p>
+      <b>Starter question:</b>
+      "What do you already know about ${topic.name}?"
+    </p>
+
+    <p>
+      <b>Activity:</b>
+      Ask the learner to explain the topic in their own words.
+    </p>
+  `;
+}
+
+
+/* =========================
+   MYSTERY TOPIC
+========================= */
+
+const mysteryTopics = [
+
+  ["Black Holes",
+   "Extremely dense astronomical objects with gravity so strong that light cannot escape from within the event horizon."],
+
+  ["Deep Ocean",
+   "The deep ocean is a huge environment with unusual animals, pressure and almost no sunlight."],
+
+  ["Antarctica",
+   "Antarctica is Earth's southernmost continent and contains most of the planet's ice."],
+
+  ["Quantum Physics",
+   "Quantum physics describes nature at very small scales such as atoms and particles."],
+
+  ["Volcanoes",
+   "Volcanoes form when magma and gases reach Earth's surface."],
+
+  ["Human Brain",
+   "The brain coordinates many functions including movement, senses, memory and thinking."],
+
+  ["Robotics",
+   "Robotics combines engineering and computing to design machines that can perform tasks."],
+
+  ["Ocean Currents",
+   "Large movements of seawater help distribute heat around Earth's oceans."]
+];
+
+function mysteryTopic() {
+
+  const item =
+    mysteryTopics[
+      Math.floor(Math.random() * mysteryTopics.length)
     ];
 
+  document.getElementById("mysteryTitle").textContent =
+    item[0];
 
-  document.getElementById("aiTopic")
-    .textContent =
-    currentTopic.name;
+  document.getElementById("mysteryDescription").textContent =
+    item[1];
 
-
-  document.getElementById("aiLesson")
-    .innerHTML = `
-
-      <strong>🤖 TutorBot:</strong><br><br>
-
-      ${currentTopic.lesson}
-
-    `;
-
-
-  document.getElementById("aiChat")
-    .innerHTML = "";
-
+  openPage("mysteryPage");
 }
 
 
-/* ================= AI CHAT ================= */
+/* =========================
+   QUIZ
+========================= */
 
-function askAI() {
+const quizQuestions = [
 
-  const input =
-    document.getElementById("aiQuestion");
+  {
+    q: "What three things are needed by plants for photosynthesis?",
+    groups: [
+      ["light", "sunlight"],
+      ["water"],
+      ["carbon dioxide", "co2"]
+    ],
+    answer:
+      "Plants need light, water and carbon dioxide for photosynthesis."
+  },
 
-  const q =
-    input.value.trim();
+  {
+    q: "What does AI stand for and what is its basic purpose?",
+    groups: [
+      ["artificial intelligence"],
+      ["computer", "machine", "system"],
+      ["tasks", "problem", "reason"]
+    ],
+    answer:
+      "AI means Artificial Intelligence. It allows computer systems to perform tasks that normally require intelligent reasoning."
+  },
 
-  if (!q) return;
+  {
+    q: "What is gravity?",
+    groups: [
+      ["force"],
+      ["attract", "attraction", "pull"],
+      ["mass", "object", "body"]
+    ],
+    answer:
+      "Gravity is a force of attraction between objects with mass."
+  },
 
+  {
+    q: "What is the capital of India?",
+    groups: [
+      ["new delhi", "delhi"]
+    ],
+    answer:
+      "The capital of India is New Delhi."
+  }
 
-  const chat =
-    document.getElementById("aiChat");
+];
 
+let quizIndex = 0;
+let quizAnswered = false;
 
-  chat.innerHTML += `
+function startQuiz() {
 
-    <div class="bubble user-bubble">
-      🎓 ${escapeHtml(q)}
-    </div>
+  quizIndex =
+    Math.floor(Math.random() * quizQuestions.length);
 
+  quizAnswered = false;
+
+  openPage("quizPage");
+
+  setupQuiz();
+}
+
+function setupQuiz() {
+
+  if (!quizQuestions[quizIndex]) {
+    quizIndex = 0;
+  }
+
+  quizAnswered = false;
+
+  document.getElementById("quizQuestion").innerHTML = `
+    <h2>${quizQuestions[quizIndex].q}</h2>
+    <p>Give a complete answer, not just one keyword.</p>
   `;
 
+  document.getElementById("quizAnswer").value = "";
+  document.getElementById("quizResult").innerHTML = "";
+}
 
-  const answer =
-    getAIAnswer(q);
+function normalize(text) {
 
-
-  chat.innerHTML += `
-
-    <div class="bubble ai-bubble">
-      🤖 <strong>TutorBot:</strong><br>
-      ${answer}
-    </div>
-
-  `;
-
-
-  input.value = "";
-
+  return text
+    .toLowerCase()
+    .replace(/[.,!?;:()]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 
-/* ================= AI ANSWERS ================= */
+/*
+  IMPORTANT QUIZ FIX:
 
-function getAIAnswer(q) {
+  It does NOT simply check whether the answer
+  contains one keyword.
 
-  const s =
-    q.toLowerCase();
-
-
-  if (!currentTopic) {
-    return "Choose a topic first!";
-  }
-
-
-  if (
-    currentTopic.name === "Photosynthesis"
-  ) {
-
-    return `
-      Plants use sunlight to make food from
-      carbon dioxide and water. Oxygen is
-      released during the process.
-    `;
-
-  }
-
-
-  if (
-    currentTopic.name === "Fractions"
-  ) {
-
-    return `
-      The numerator is the top number.
-      The denominator is the bottom number.
-    `;
-
-  }
-
-
-  if (
-    currentTopic.name === "Gravity"
-  ) {
-
-    return `
-      Gravity is an attractive force between
-      objects with mass. Earth's gravity pulls
-      objects toward the ground.
-    `;
-
-  }
-
-
-  if (
-    currentTopic.name === "Programming"
-  ) {
-
-    return `
-      Programming is writing instructions for
-      a computer. Different programming
-      languages let us create apps, games,
-      websites and more.
-    `;
-
-  }
-
-
-  if (
-    currentTopic.name === "The Human Brain"
-  ) {
-
-    return `
-      The brain helps control thinking,
-      memory, movement, learning and many
-      other body functions.
-    `;
-
-  }
-
-
-  return `
-    That's a great question about
-    <strong>${escapeHtml(currentTopic.name)}</strong>!<br><br>
-
-    The main idea is:
-    ${escapeHtml(currentTopic.lesson)}
-  `;
-
-}
-
-
-/* ================= QUIZ ================= */
-
-function showQuiz() {
-
-  if (!currentTopic) {
-    newAITopic();
-  }
-
-
-  document.getElementById("quizQuestion")
-    .textContent =
-    currentTopic.q;
-
-
-  document.getElementById("quizAnswer")
-    .value = "";
-
-
-  document.getElementById("quizResult")
-    .textContent = "";
-
-
-  showScreen("quizScreen");
-
-}
-
+  It checks whether the important concepts
+  needed for the complete answer are present.
+*/
 
 function checkQuiz() {
 
-  const answer =
-    document
-      .getElementById("quizAnswer")
-      .value
-      .trim()
-      .toLowerCase();
+  if (quizAnswered) {
+    showToast("This question has already been checked.");
+    return;
+  }
 
-
-  const correct =
-    currentTopic.a.some(
-      item =>
-        answer === item ||
-        answer.includes(item)
+  const userAnswer =
+    normalize(
+      document.getElementById("quizAnswer").value
     );
 
+  if (userAnswer.length < 10) {
 
-  const result =
-    document.getElementById("quizResult");
+    document.getElementById("quizResult").innerHTML = `
+      <p>❌ Your answer is too short.</p>
+      <p>Please explain your answer completely.</p>
+    `;
 
+    return;
+  }
 
-  if (correct) {
+  const question = quizQuestions[quizIndex];
 
-    state.coins += 5;
+  let conceptsFound = 0;
 
+  question.groups.forEach(group => {
+
+    const found = group.some(word =>
+      userAnswer.includes(word)
+    );
+
+    if (found) conceptsFound++;
+  });
+
+  const required =
+    question.groups.length;
+
+  /*
+    Every important concept must be present.
+  */
+
+  if (conceptsFound === required) {
+
+    quizAnswered = true;
+
+    state.coins += 10;
     state.sessions++;
 
     save();
 
-    result.innerHTML = `
-
-      <span class="success">
-        🎉 Correct! +5 💰 coins!
-        <br>
-        Sessions: ${state.sessions}
-      </span>
-
+    document.getElementById("quizResult").innerHTML = `
+      <h3>✅ Correct!</h3>
+      <p>Your answer contains all the important concepts.</p>
+      <p>🪙 +10 TeachCoins</p>
     `;
+
+    updateAll();
 
   } else {
 
-    result.innerHTML = `
+    const missing =
+      required - conceptsFound;
 
-      <span class="danger">
-        ❌ Not quite!
-        <br>
-        Try again. Hint: ${currentTopic.name}
-      </span>
-
+    document.getElementById("quizResult").innerHTML = `
+      <h3>❌ Not complete yet.</h3>
+      <p>
+        Your answer is missing ${missing}
+        important concept${missing === 1 ? "" : "s"}.
+      </p>
+      <p>
+        Think about the full question and try again.
+      </p>
     `;
-
   }
-
 }
 
 
-/* ================= PEOPLE ================= */
+/* =========================
+   PEOPLE
+========================= */
 
 const people = [
 
-  ["👨‍💻", "Arun", "Python • JavaScript • Coding", "Beginner"],
-  ["👩‍🔬", "Maya", "Biology • Chemistry • Science", "Intermediate"],
-  ["👨‍🎓", "Kavin", "Mathematics • Algebra • Geometry", "Advanced"],
-  ["👩‍🎨", "Diya", "Drawing • Design • Art", "Intermediate"],
-  ["👨‍🚀", "Rohan", "Astronomy • Physics • Space", "Advanced"],
-  ["👩‍🏫", "Anu", "English • Grammar • Writing", "Advanced"],
-  ["👨‍💼", "Vijay", "Business • Marketing • Finance", "Intermediate"],
-  ["👩‍💻", "Sara", "Web Design • HTML • CSS", "Beginner"],
-  ["👨‍🔧", "Arjun", "Robotics • Electronics • STEM", "Advanced"],
-  ["🎹", "Nila", "Music • Piano • Theory", "Intermediate"],
-  ["🌍", "Kevin", "Geography • History • Culture", "Advanced"],
-  ["📸", "Meera", "Photography • Editing • Media", "Intermediate"]
-
+  ["Arjun", "Java", "👨‍💻"],
+  ["Meera", "Biology", "👩‍🔬"],
+  ["Kavin", "Python", "🧑‍💻"],
+  ["Ananya", "Physics", "👩‍🚀"],
+  ["Rohan", "Mathematics", "🧠"],
+  ["Sara", "English", "📖"],
+  ["Vikram", "Robotics", "🤖"],
+  ["Diya", "Chemistry", "🧪"],
+  ["Rahul", "Astronomy", "🔭"],
+  ["Ishita", "AI", "🤖"]
 ];
 
+function loadPeople() {
 
-function renderPeople(c) {
+  const box =
+    document.getElementById("peopleList");
 
-  c.innerHTML = `
+  box.innerHTML = people.map(person => `
 
-    <div class="card">
+    <div class="person">
 
-      <div class="people-title">
+      <div>
+        <div style="font-size:35px">
+          ${person[2]}
+        </div>
 
-        <h1>👥 SkillMatch</h1>
-
-        <p>
-          Find people who teach and learn
-          different skills.
-        </p>
-
+        <h3>${person[0]}</h3>
+        <p>Teaches: ${person[1]}</p>
       </div>
 
-      <button
-        class="primary find-button"
-        onclick="alert('Searching for the best people for you! 🔎')">
-        🔎 Find People
+      <button onclick="connectPerson('${person[0]} • ${person[1]}')">
+        CONNECT
       </button>
 
-      ${people.map(person => `
+    </div>
 
-        <div class="person">
+  `).join("");
+}
 
-          <span class="avatar">
-            ${person[0]}
-          </span>
+function connectPerson(person) {
 
-          <div class="person-info">
+  currentPerson = person;
 
-            <b>${person[1]}</b>
+  state.sessions++;
+  save();
 
-            <div class="subject">
-              ${person[2]}
-            </div>
+  openChat(person);
+}
 
-            <div class="subject">
-              ${person[3]}
-            </div>
 
+/* =========================
+   BADGES
+========================= */
+
+const badgeRequirements = [
+  5,
+  10,
+  25,
+  50,
+  100,
+  200,
+  300,
+  500,
+  750,
+  1000
+];
+
+const badgeNames = [
+  "First Step",
+  "Learner",
+  "Explorer",
+  "Knowledge Seeker",
+  "Smart Mind",
+  "Expert",
+  "Master",
+  "Legend",
+  "Grand Master",
+  "Teachly Champion"
+];
+
+const badgeIcons = [
+  "🌱",
+  "📚",
+  "🔎",
+  "🧠",
+  "⭐",
+  "🏅",
+  "🏆",
+  "👑",
+  "💎",
+  "🌟"
+];
+
+function renderBadges() {
+
+  let unlocked = 0;
+
+  const html =
+    badgeRequirements.map((req, i) => {
+
+      const isUnlocked =
+        state.sessions >= req;
+
+      if (isUnlocked) unlocked++;
+
+      return `
+        <div class="badge ${isUnlocked ? "" : "locked"}">
+
+          <div class="badgeIcon">
+            ${isUnlocked ? badgeIcons[i] : "🔒"}
+          </div>
+
+          <h3>${badgeNames[i]}</h3>
+
+          <p>
+            ${req} sessions
+          </p>
+
+        </div>
+      `;
+
+    }).join("");
+
+  document.getElementById("allBadges").innerHTML = html;
+  document.getElementById("badgesHome").innerHTML =
+    html.slice(0, 1200);
+
+  document.getElementById("profileBadges").textContent =
+    unlocked;
+}
+
+
+/* =========================
+   SHOP
+========================= */
+
+const shopItems = [
+
+  ["Galaxy Theme", 30, "🌌"],
+  ["Spark Badge", 50, "⚡"],
+  ["Rocket Avatar", 75, "🚀"],
+  ["Scholar Frame", 100, "🎓"],
+  ["Master Crown", 200, "👑"]
+];
+
+function renderShop() {
+
+  const html =
+    shopItems.map((item, index) => {
+
+      const owned =
+        state.owned.includes(index);
+
+      const enough =
+        state.coins >= item[1];
+
+      return `
+        <div class="shopItem">
+
+          <div style="font-size:45px">
+            ${item[2]}
+          </div>
+
+          <h3>${item[0]}</h3>
+
+          <div class="price">
+            🪙 ${item[1]}
           </div>
 
           <button
-            onclick="alert('Request sent to ${person[1]}!')">
-            Connect
+            class="${!enough && !owned ? "notEnough" : ""}"
+            onclick="buyItem(${index})"
+          >
+            ${
+              owned
+                ? "OWNED"
+                : enough
+                  ? "BUY"
+                  : "NOT ENOUGH COINS!"
+            }
           </button>
 
         </div>
+      `;
 
-      `).join("")}
+    }).join("");
 
-    </div>
-
-  `;
-
+  document.getElementById("shopList").innerHTML = html;
+  document.getElementById("shopHome").innerHTML = html;
 }
 
+function buyItem(index) {
 
-/* ================= PAGES ================= */
+  const item = shopItems[index];
 
-function openPage(page) {
-
-  const content =
-    document.getElementById("pageContent");
-
-
-  if (page === "people") {
-
-    renderPeople(content);
-
-  }
-
-
-  if (page === "chat") {
-
-    content.innerHTML = `
-
-      <div class="card">
-
-        <h1>💬 ConnectZone</h1>
-
-        <p>
-          Your learning conversations appear here.
-        </p>
-
-        <div class="bubble ai-bubble">
-          💬 Connect with someone from SkillMatch
-          to start learning together.
-        </div>
-
-      </div>
-
-    `;
-
-  }
-
-
-  if (page === "shop") {
-
-    renderShop(content);
-
-  }
-
-
-  if (page === "badges") {
-
-    renderBadges(content);
-
-  }
-
-
-  if (page === "map") {
-
-    renderMap(content);
-
-  }
-
-
-  showScreen("pageScreen");
-
-}
-
-
-/* ================= SHOP ================= */
-
-const shop = [
-
-  ["🔥", "Fire Aura", 73],
-  ["🌌", "Void Aura", 146],
-  ["🌪️", "Wind Aura", 58],
-  ["⚡", "Lightning Aura", 219],
-  ["❄️", "Ice Aura", 91],
-  ["✨", "Galaxy Frame", 175],
-  ["🌿", "Nature Frame", 64],
-  ["😎", "Emoji Pack", 45]
-
-];
-
-
-function renderShop(c) {
-
-  c.innerHTML = `
-
-    <div class="card">
-
-      <h1>🛍️ CoinCraft</h1>
-
-      <p>
-        Buy items using your TeachCoins.
-      </p>
-
-      <div class="shop-grid">
-
-        ${shop.map((item, i) => `
-
-          <div class="shop-item">
-
-            <div class="emoji">
-              ${item[0]}
-            </div>
-
-            <b>${item[1]}</b>
-
-            <div class="price">
-              💰 ${item[2]}
-            </div>
-
-            <button onclick="buyItem(${i})">
-
-              ${
-                state.owned.includes(i)
-                  ? "Owned ✓"
-                  : "Buy"
-              }
-
-            </button>
-
-          </div>
-
-        `).join("")}
-
-      </div>
-
-    </div>
-
-  `;
-
-}
-
-
-function buyItem(i) {
-
-  const item =
-    shop[i];
-
-
-  if (state.owned.includes(i)) {
-
-    alert("You already own this item!");
-
+  if (state.owned.includes(index)) {
+    showToast("Already owned!");
     return;
-
   }
 
+  if (state.coins < item[1]) {
 
-  if (state.coins < item[2]) {
-
-    alert("Not enough TeachCoins!");
-
+    showToast("Not enough coins!");
     return;
-
   }
 
-
-  state.coins -= item[2];
-
-  state.owned.push(i);
+  state.coins -= item[1];
+  state.owned.push(index);
 
   save();
 
-  renderShop(
-    document.getElementById("pageContent")
-  );
-
+  showToast("Purchased!");
+  updateAll();
 }
 
 
-/* ================= BADGES ================= */
+/* =========================
+   PROFILE
+========================= */
 
-function renderBadges(c) {
+function updateProfile() {
 
-  const levels = [
+  document.getElementById("profileName").textContent =
+    state.name;
 
-    [1, "🌱 Starter"],
-    [10, "⭐ Rising Star"],
-    [50, "🥉 Bronze"],
-    [100, "🥈 Silver"],
-    [250, "🥇 Gold"],
-    [500, "💎 Diamond"],
-    [1000, "👑 Master"],
-    [2500, "🔥 Legend"],
-    [5000, "⚡ Elite"],
-    [10000, "🏆 Teachly Titan"]
+  document.getElementById("profileSessions").textContent =
+    state.sessions;
 
-  ];
+  document.getElementById("profileCoins").textContent =
+    state.coins;
 
-
-  c.innerHTML = `
-
-    <div class="card">
-
-      <h1>🏆 Achievement Vault</h1>
-
-      <p>
-        Completed sessions:
-        <b>${state.sessions}</b>
-      </p>
-
-      ${levels.map(level => `
-
-        <div class="badge">
-
-          <span>${level[1]}</span>
-
-          <b>
-            ${
-              state.sessions >= level[0]
-                ? "✅"
-                : level[0] + " sessions"
-            }
-          </b>
-
-        </div>
-
-      `).join("")}
-
-    </div>
-
-  `;
-
+  document.getElementById("profileBadges").textContent =
+    badgeRequirements.filter(
+      x => state.sessions >= x
+    ).length;
 }
 
 
-/* ================= MAP ================= */
+/* =========================
+   REAL WORLD MAP
+========================= */
 
-function renderMap(c) {
-
-  c.innerHTML = `
-
-    <div class="card">
-
-      <h1>🌍 LearnSphere</h1>
-
-      <p>
-        Explore the world and discover something new.
-      </p>
-
-      <div class="map">
-
-        <div class="land na"></div>
-        <div class="land sa"></div>
-        <div class="land eu"></div>
-        <div class="land af"></div>
-        <div class="land as"></div>
-        <div class="land au"></div>
-
-        <button
-          class="m-na"
-          onclick="placeInfo('North America')">
-          North America
-        </button>
-
-        <button
-          class="m-sa"
-          onclick="placeInfo('South America')">
-          South America
-        </button>
-
-        <button
-          class="m-eu"
-          onclick="placeInfo('Europe')">
-          Europe
-        </button>
-
-        <button
-          class="m-af"
-          onclick="placeInfo('Africa')">
-          Africa
-        </button>
-
-        <button
-          class="m-as"
-          onclick="placeInfo('Asia')">
-          Asia
-        </button>
-
-        <button
-          class="m-au"
-          onclick="placeInfo('Australia')">
-          Australia
-        </button>
-
-        <button
-          class="m-sea"
-          onclick="placeInfo('Ocean')">
-          🌊 Ocean
-        </button>
-
-      </div>
-
-      <div
-        id="placeInfo"
-        class="card">
-
-        <h2>📍 Choose a place</h2>
-
-        <p>
-          Tap a region to learn something interesting.
-        </p>
-
-      </div>
-
-    </div>
-
-  `;
-
-}
+let map;
+let countryLayer;
 
 
-/* ================= MAP INFO ================= */
+/*
+  Country information.
 
-function placeInfo(place) {
+  The map itself uses Leaflet + OpenStreetMap
+  so it behaves like an actual interactive map.
+*/
 
-  const data = {
+const countries = {
 
-    "North America":
-      ["North America",
-       "A continent containing countries such as Canada, the United States and Mexico.",
-       "🏞️ Grand Canyon"],
+  "India": {
+    capital: "New Delhi",
+    continent: "Asia",
+    population: "Over 1.4 billion",
+    language: "Hindi, English and many regional languages",
+    currency: "Indian Rupee (INR)",
+    fact: "India is one of the world's most geographically and culturally diverse countries."
+  },
 
-    "South America":
-      ["South America",
-       "Known for the Amazon rainforest and Andes Mountains.",
-       "🌳 Amazon Rainforest"],
+  "Japan": {
+    capital: "Tokyo",
+    continent: "Asia",
+    population: "About 124 million",
+    language: "Japanese",
+    currency: "Japanese Yen (JPY)",
+    fact: "Japan is an island country in East Asia."
+  },
 
-    "Europe":
-      ["Europe",
-       "A continent known for its many countries, languages, history and cultures.",
-       "🏛️ Historic cities"],
+  "United States": {
+    capital: "Washington, D.C.",
+    continent: "North America",
+    population: "Over 300 million",
+    language: "English is the most widely spoken language",
+    currency: "US Dollar (USD)",
+    fact: "The United States contains a wide range of climates and landscapes."
+  },
 
-    "Africa":
-      ["Africa",
-       "A continent with deserts, rainforests, savannas and incredible biodiversity.",
-       "🦁 African savanna"],
+  "Brazil": {
+    capital: "Brasília",
+    continent: "South America",
+    population: "Over 200 million",
+    language: "Portuguese",
+    currency: "Brazilian Real (BRL)",
+    fact: "Brazil contains a large part of the Amazon rainforest."
+  },
 
-    "Asia":
-      ["Asia",
-       "The largest continent, containing many countries, cultures and landscapes.",
-       "🏔️ Mount Everest"],
+  "Australia": {
+    capital: "Canberra",
+    continent: "Oceania",
+    population: "About 27 million",
+    language: "English is the main language",
+    currency: "Australian Dollar (AUD)",
+    fact: "Australia is both a country and a continent."
+  },
 
-    "Australia":
-      ["Australia",
-       "A country and continent famous for unique wildlife and the Great Barrier Reef.",
-       "🐠 Great Barrier Reef"],
+  "Egypt": {
+    capital: "Cairo",
+    continent: "Africa",
+    population: "Over 100 million",
+    language: "Arabic",
+    currency: "Egyptian Pound (EGP)",
+    fact: "Ancient Egypt is famous for its pyramids and civilization along the Nile."
+  },
 
-    "Ocean":
-      ["Ocean",
-       "Oceans cover most of Earth's surface and support huge amounts of life.",
-       "🐋 Marine life"]
+  "United Kingdom": {
+    capital: "London",
+    continent: "Europe",
+    population: "About 69 million",
+    language: "English",
+    currency: "Pound Sterling (GBP)",
+    fact: "The United Kingdom is made up of four constituent countries."
+  },
+
+  "China": {
+    capital: "Beijing",
+    continent: "Asia",
+    population: "Over 1.4 billion",
+    language: "Mandarin Chinese",
+    currency: "Renminbi / Yuan (CNY)",
+    fact: "China has one of the world's oldest continuous civilizations."
+  },
+
+  "Canada": {
+    capital: "Ottawa",
+    continent: "North America",
+    population: "About 40 million",
+    language: "English and French",
+    currency: "Canadian Dollar (CAD)",
+    fact: "Canada has the longest coastline of any country."
+  },
+
+  "South Africa": {
+    capital: "Pretoria, Cape Town and Bloemfontein",
+    continent: "Africa",
+    population: "About 63 million",
+    language: "Multiple official languages",
+    currency: "South African Rand (ZAR)",
+    fact: "South Africa has three capital cities."
+  },
+
+  "Antarctica": {
+    capital: "No capital",
+    continent: "Antarctica",
+    population: "No permanent population",
+    language: "No official language",
+    currency: "No official currency",
+    fact: "Antarctica is Earth's southernmost continent and contains most of the world's land ice."
+  }
+
+};
+
+
+function initMap() {
+
+  if (map) return;
+
+  map = L.map("worldMap", {
+    worldCopyJump: true,
+    minZoom: 1.5,
+    maxZoom: 7
+  }).setView([20, 0], 2);
+
+  /*
+    OpenStreetMap gives LearnSphere an actual
+    world-map appearance with country boundaries.
+  */
+
+  L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+      attribution: "&copy; OpenStreetMap contributors",
+      maxZoom: 19
+    }
+  ).addTo(map);
+
+  /*
+    Add visible country markers for the countries
+    with detailed Teachly information.
+  */
+
+  const locations = {
+
+    "India": [22.5, 79],
+    "Japan": [36, 138],
+    "United States": [39, -98],
+    "Brazil": [-10, -52],
+    "Australia": [-25, 134],
+    "Egypt": [26, 30],
+    "United Kingdom": [54, -2],
+    "China": [35, 103],
+    "Canada": [56, -106],
+    "South Africa": [-30, 25],
+    "Antarctica": [-82, 0]
 
   };
 
+  Object.keys(locations).forEach(name => {
 
-  const d =
-    data[place];
+    const marker =
+      L.marker(locations[name])
+        .addTo(map);
 
+    marker.bindPopup(`
+      <b>${name}</b><br>
+      Tap for details
+    `);
 
-  document.getElementById("placeInfo")
-    .innerHTML = `
+    marker.on("click", () => {
+      showCountry(name);
+    });
 
-      <h2>📍 ${d[0]}</h2>
-
-      <p>${d[1]}</p>
-
-      <h3>⭐ Special Thing</h3>
-
-      <p>${d[2]}</p>
-
-    `;
-
-}
-
-
-/* ================= CHANGE ROLE ================= */
-
-function resetRole() {
-
-  state.role = "";
-
-  save();
-
-  showScreen("roleScreen");
+  });
 
 }
 
 
-/* ================= SECURITY ================= */
+/* =========================
+   COUNTRY DETAILS
+========================= */
 
-function escapeHtml(text) {
+function showCountry(name) {
 
-  return text.replace(
-    /[&<>"']/g,
+  const country = countries[name];
 
-    character => ({
-
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;"
-
-    }[character])
-
-  );
-
-}
-
-
-/* ================= START ================= */
-
-document.addEventListener(
-  "DOMContentLoaded",
-  function () {
-
-    document.getElementById("coins")
-      .textContent = state.coins;
-
-    showScreen("nameScreen");
-
+  if (!country) {
+    showToast("Country information coming soon!");
+    return;
   }
-);
+
+  document.getElementById("countryInfo").innerHTML = `
+
+    <h2>🌎 ${name}</h2>
+
+    <p><b>Continent:</b> ${country.continent}</p>
+
+    <p><b>Capital:</b> ${country.capital}</p>
+
+    <p><b>Population:</b> ${country.population}</p>
+
+    <p><b>Language:</b> ${country.language}</p>
+
+    <p><b>Currency:</b> ${country.currency}</p>
+
+    <p>
+      <b>📚 Teachly Fact:</b>
+      ${country.fact}
+    </p>
+
+  `;
+
+  if (map) {
+
+    const locations = {
+      "India": [22.5, 79],
+      "Japan": [36, 138],
+      "United States": [39, -98],
+      "Brazil": [-10, -52],
+      "Australia": [-25, 134],
+      "Egypt": [26, 30],
+      "United Kingdom": [54, -2],
+      "China": [35, 103],
+      "Canada": [56, -106],
+      "South Africa": [-30, 25],
+      "Antarctica": [-82, 0]
+    };
+
+    if (locations[name]) {
+      map.setView(locations[name], 4);
+    }
+  }
+}
+
+
+/* =========================
+   UPDATE EVERYTHING
+========================= */
+
+function updateAll() {
+
+  document.getElementById("homeCoins").textContent =
+    state.coins;
+
+  document.getElementById("shopCoins").textContent =
+    state.coins;
+
+  document.getElementById("welcomeText").textContent =
+    state.name
+      ? "Welcome, " + state.name + "!"
+      : "";
+
+  renderBadges();
+  renderShop();
+  updateProfile();
+  loadPeople();
+
+  if (
+    document
+      .getElementById("mapPage")
+      .classList.contains("active")
+  ) {
+    setTimeout(initMap, 100);
+  }
+}
+
+
+/* =========================
+   TOAST
+========================= */
+
+function showToast(message) {
+
+  const toast =
+    document.getElementById("toast");
+
+  toast.textContent = message;
+  toast.style.display = "block";
+
+  setTimeout(() => {
+    toast.style.display = "none";
+  }, 2200);
+}
+
+
+/* =========================
+   MAP PAGE DETECTION
+========================= */
+
+const originalOpenPage = openPage;
+
+openPage = function(id) {
+
+  originalOpenPage(id);
+
+  if (id === "mapPage") {
+
+    setTimeout(() => {
+      initMap();
+
+      if (map) {
+        map.invalidateSize();
+      }
+    }, 150);
+  }
+};
+
+
+/* =========================
+   INITIAL LOAD
+========================= */
+
+if (state.name) {
+
+  document.getElementById("usernameInput").value =
+    state.name;
+
+  document.getElementById("welcomeText").textContent =
+    "Welcome, " + state.name + "!";
+
+  openPage("homePage");
+
+} else {
+
+  openPage("namePage");
+}
+
+updateAll();
