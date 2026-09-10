@@ -1,256 +1,319 @@
-require("dotenv").config();
-
 const express = require("express");
 const http = require("http");
-const cors = require("cors");
-const path = require("path");
-const fs = require("fs");
-const crypto = require("crypto");
-const bcrypt = require("bcrypt");
-const OpenAI = require("openai");
 const { Server } = require("socket.io");
+const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
+const dotenv = require("dotenv");
+const OpenAI = require("openai");
+const nodemailer = require("nodemailer");
+
+dotenv.config();
 
 const app = express();
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+    if (req.method === "OPTIONS") {
+        return res.sendStatus(204);
+    }
+
+    next();
+});
 const server = http.createServer(app);
+const io = new Server(server);
 
+const PORT = process.env.PORT || 3000;
 
-/* =====================================================
-   CORS
-===================================================== */
+app.use(express.json({ limit: "5mb" }));
+app.use(express.static(__dirname));
 
-app.use(
-    cors({
-        origin: true,
-        credentials: true
-    })
-);
+/* =========================
+   DATA STORAGE
+========================= */
 
+const dataDir = path.join(__dirname, "data");
+const usersFile = path.join(dataDir, "users.json");
 
-/* =====================================================
-   JSON
-===================================================== */
-
-app.use(
-    express.json({
-        limit: "5mb"
-    })
-);
-
-
-/* =====================================================
-   DATA
-===================================================== */
-
-const DATA_DIR =
-    path.join(__dirname, "data");
-
-const USERS_FILE =
-    path.join(DATA_DIR, "users.json");
-
-
-if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, {
-        recursive: true
-    });
+if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
 }
 
-
-if (!fs.existsSync(USERS_FILE)) {
-
-    fs.writeFileSync(
-        USERS_FILE,
-        "[]"
-    );
-
+if (!fs.existsSync(usersFile)) {
+    fs.writeFileSync(usersFile, "[]");
 }
 
-
-function readUsers() {
-
+function loadUsers() {
     try {
-
-        return JSON.parse(
-            fs.readFileSync(
-                USERS_FILE,
-                "utf8"
-            )
-        );
-
+        return JSON.parse(fs.readFileSync(usersFile, "utf8"));
     } catch {
-
         return [];
-
     }
 }
-
 
 function saveUsers(users) {
-
     fs.writeFileSync(
-        USERS_FILE,
-        JSON.stringify(
-            users,
-            null,
-            2
-        )
+        usersFile,
+        JSON.stringify(users, null, 2)
     );
 }
 
+/* =========================
+   SESSIONS
+========================= */
 
-/* =====================================================
-   PUBLIC USER
-===================================================== */
+const sessions = new Map();
+
+function createSession(userId) {
+    const token = crypto.randomBytes(32).toString("hex");
+
+    sessions.set(token, {
+        userId,
+        createdAt: Date.now()
+    });
+
+    return token;
+}
+
+function getUserFromToken(token) {
+    if (!token) return null;
+
+    const session = sessions.get(token);
+
+    if (!session) return null;
+
+    const users = loadUsers();
+
+    return users.find(
+        user => user.id === session.userId
+    ) || null;
+}
 
 function publicUser(user) {
-
-    if (!user) {
-        return null;
-    }
+    if (!user) return null;
 
     return {
-        id:
-            user.id,
-
-        username:
-            user.username,
-
-        profileImage:
-            user.profileImage || "",
-
-        role:
-            user.role || "",
-
-        tickets:
-            user.tickets || 0,
-
-        sessions:
-            user.sessions || 0,
-
-        streak:
-            user.streak || 0,
-
-        earnedBadges:
-            user.earnedBadges || [],
-
-        ownedEffects:
-            user.ownedEffects || [],
-
-        equippedEffect:
-            user.equippedEffect || ""
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        profileImage: user.profileImage || "",
+        role: user.role || "",
+        tickets: user.tickets || 0,
+        sessions: user.sessions || 0,
+        streak: user.streak || 0,
+        earnedBadges: user.earnedBadges || [],
+        ownedEffects: user.ownedEffects || [],
+        equippedEffect: user.equippedEffect || ""
     };
 }
 
+function authenticated(req, res, next) {
+    const token =
+        req.headers.authorization?.replace(
+            "Bearer ",
+            ""
+        );
 
-/* =====================================================
-   HEALTH
-===================================================== */
+    const user = getUserFromToken(token);
 
-app.get(
-    "/api/health",
-    (req, res) => {
-
-        res.json({
-            ok: true,
-            service: "Teachly"
+    if (!user) {
+        return res.status(401).json({
+            error: "Please log in first."
         });
-
     }
-);
 
+    req.user = user;
+    req.token = token;
 
-/* =====================================================
-   AI TEST
-===================================================== */
+    next();
+}
 
-app.get(
-    "/api/ai-test",
-    (req, res) => {
+/* =========================
+   EMAIL
+========================= */
 
-        res.json({
-            ok: true,
-            service: "Teachly AI API"
-        });
+const transporter =
+    process.env.EMAIL_USER &&
+    process.env.EMAIL_PASSWORD
+        ? nodemailer.createTransport({
+              service: "gmail",
+              auth: {
+                  user: process.env.EMAIL_USER,
+                  pass: process.env.EMAIL_PASSWORD
+              }
+          })
+        : null;
 
-    }
-);
+/* =========================
+   REGISTER
+========================= */
 
-
-/* =====================================================
-   REAL REGISTERED USERS
-===================================================== */
-
-app.get(
-    "/api/people",
-    (req, res) => {
+app.post(
+    "/api/auth/register",
+    async (req, res) => {
 
         try {
 
-            const users =
-                readUsers();
+            const {
+                username,
+                email,
+                password
+            } = req.body;
 
+            if (!username || !email || !password) {
+                return res.status(400).json({
+                    error:
+                        "Please fill in all fields."
+                });
+            }
 
-            /*
-             * Only return safe public information.
-             *
-             * Passwords, verification codes,
-             * tokens, etc. are NEVER returned.
-             */
+            const cleanEmail =
+                email.trim().toLowerCase();
 
-            const people =
-                users
-                    .filter(
-                        user =>
-                            user &&
-                            user.username &&
-                            (
-                                user.verified === undefined ||
-                                user.verified === true
-                            )
+            if (
+                !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+                    cleanEmail
+                )
+            ) {
+                return res.status(400).json({
+                    error:
+                        "Please enter a valid email address."
+                });
+            }
+
+            if (password.length < 8) {
+                return res.status(400).json({
+                    error:
+                        "Password must contain at least 8 characters."
+                });
+            }
+
+            const users = loadUsers();
+
+            const existingEmail =
+                users.find(
+                    user =>
+                        user.email ===
+                        cleanEmail
+                );
+
+            if (existingEmail) {
+                return res.status(409).json({
+                    error:
+                        "This email is already being used. Please log in."
+                });
+            }
+
+            const existingUsername =
+                users.find(
+                    user =>
+                        user.username.toLowerCase() ===
+                        username.trim().toLowerCase()
+                );
+
+            if (existingUsername) {
+                return res.status(409).json({
+                    error:
+                        "That username is already being used."
+                });
+            }
+
+            const hashedPassword =
+                await bcrypt.hash(
+                    password,
+                    12
+                );
+
+            const verificationCode =
+                String(
+                    Math.floor(
+                        100000 +
+                        Math.random() *
+                        900000
                     )
-                    .map(
-                        user => ({
-                            id:
-                                user.id,
+                );
 
-                            username:
-                                user.username,
+            const user = {
+                id: crypto.randomUUID(),
 
-                            profileImage:
-                                user.profileImage || "",
+                username:
+                    username.trim(),
 
-                            role:
-                                user.role || "",
+                email:
+                    cleanEmail,
 
-                            sessions:
-                                Number(
-                                    user.sessions || 0
-                                ),
+                password:
+                    hashedPassword,
 
-                            streak:
-                                Number(
-                                    user.streak || 0
-                                ),
+                verified: false,
 
-                            earnedBadges:
-                                user.earnedBadges || []
-                        })
-                    );
+                verificationCode,
 
+                verificationExpires:
+                    Date.now() +
+                    10 * 60 * 1000,
 
-            res.json(
-                people
-            );
+                profileImage: "",
+
+                role: "",
+
+                tickets: 0,
+
+                sessions: 0,
+
+                streak: 0,
+
+                earnedBadges: [],
+
+                ownedEffects: [],
+
+                equippedEffect: ""
+            };
+
+            users.push(user);
+
+            saveUsers(users);
+
+            if (transporter) {
+
+                await transporter.sendMail({
+                    from:
+                        process.env.EMAIL_USER,
+
+                    to:
+                        cleanEmail,
+
+                    subject:
+                        "Teachly verification code",
+
+                    text:
+                        `Your Teachly verification code is ${verificationCode}. It expires in 10 minutes.`
+                });
+
+            } else {
+
+                console.log(
+                    "Teachly verification code:",
+                    verificationCode
+                );
+
+            }
+
+            res.json({
+                message:
+                    "Verification code sent. Check your email."
+            });
 
         } catch (error) {
 
-            console.error(
-                "PEOPLE ERROR:",
-                error
-            );
+            console.error(error);
 
             res.status(500).json({
                 error:
-                    "Could not load Teachly users."
+                    "Unable to create account."
             });
 
         }
@@ -258,26 +321,360 @@ app.get(
     }
 );
 
+/* =========================
+   VERIFY EMAIL
+========================= */
 
-/* =====================================================
+app.post(
+    "/api/auth/verify-email",
+    (req, res) => {
+
+        const {
+            email,
+            code
+        } = req.body;
+
+        const users = loadUsers();
+
+        const user =
+            users.find(
+                u =>
+                    u.email ===
+                    email.trim().toLowerCase()
+            );
+
+        if (!user) {
+            return res.status(404).json({
+                error:
+                    "Account not found."
+            });
+        }
+
+        if (user.verified) {
+            return res.status(400).json({
+                error:
+                    "This email is already verified."
+            });
+        }
+
+        if (
+            Date.now() >
+            user.verificationExpires
+        ) {
+            return res.status(400).json({
+                error:
+                    "Verification code expired. Please register again."
+            });
+        }
+
+        if (
+            code !==
+            user.verificationCode
+        ) {
+            return res.status(400).json({
+                error:
+                    "Incorrect verification code."
+            });
+        }
+
+        user.verified = true;
+
+        delete user.verificationCode;
+        delete user.verificationExpires;
+
+        saveUsers(users);
+
+        const token =
+            createSession(user.id);
+
+        res.json({
+            token,
+            user:
+                publicUser(user)
+        });
+
+    }
+);
+
+/* =========================
+   LOGIN
+========================= */
+
+app.post(
+    "/api/auth/login",
+    async (req, res) => {
+
+        try {
+
+            const {
+                email,
+                password
+            } = req.body;
+
+            const users = loadUsers();
+
+            const user =
+                users.find(
+                    u =>
+                        u.email ===
+                        email.trim().toLowerCase()
+                );
+
+            if (!user) {
+                return res.status(401).json({
+                    error:
+                        "Email or password is incorrect."
+                });
+            }
+
+            const passwordCorrect =
+                await bcrypt.compare(
+                    password,
+                    user.password
+                );
+
+            if (!passwordCorrect) {
+                return res.status(401).json({
+                    error:
+                        "Email or password is incorrect."
+                });
+            }
+
+            if (!user.verified) {
+                return res.status(403).json({
+                    error:
+                        "Please verify your email before logging in."
+                });
+            }
+
+            const token =
+                createSession(user.id);
+
+            res.json({
+                token,
+                user:
+                    publicUser(user)
+            });
+
+        } catch (error) {
+
+            console.error(error);
+
+            res.status(500).json({
+                error:
+                    "Unable to log in."
+            });
+
+        }
+
+    }
+);
+
+/* =========================
+   LOGOUT
+========================= */
+
+app.post(
+    "/api/auth/logout",
+    authenticated,
+    (req, res) => {
+
+        sessions.delete(req.token);
+
+        res.json({
+            message:
+                "Logged out successfully."
+        });
+
+    }
+);
+
+/* =========================
+   AVATAR
+========================= */
+
+app.post(
+    "/api/auth/avatar",
+    authenticated,
+    (req, res) => {
+
+        const {
+            image
+        } = req.body;
+
+        if (!image) {
+            return res.status(400).json({
+                error:
+                    "No image received."
+            });
+        }
+
+        if (image.length > 4_000_000) {
+            return res.status(400).json({
+                error:
+                    "Image is too large."
+            });
+        }
+
+        const users = loadUsers();
+
+        const user =
+            users.find(
+                u =>
+                    u.id ===
+                    req.user.id
+            );
+
+        user.profileImage = image;
+
+        saveUsers(users);
+
+        res.json({
+            user:
+                publicUser(user)
+        });
+
+    }
+);
+
+/* =========================
+   SHOP
+========================= */
+
+const products = {
+    ring: 30,
+    spark: 45,
+    crown: 70
+};
+
+app.post(
+    "/api/shop/buy",
+    authenticated,
+    (req, res) => {
+
+        const {
+            id
+        } = req.body;
+
+        if (!products[id]) {
+            return res.status(400).json({
+                error:
+                    "Unable to buy product"
+            });
+        }
+
+        const users = loadUsers();
+
+        const user =
+            users.find(
+                u =>
+                    u.id ===
+                    req.user.id
+            );
+
+        user.ownedEffects =
+            user.ownedEffects || [];
+
+        /*
+          Already owned:
+          don't charge again.
+        */
+
+        if (
+            user.ownedEffects.includes(id)
+        ) {
+
+            user.equippedEffect = id;
+
+            saveUsers(users);
+
+            return res.json({
+                user:
+                    publicUser(user)
+            });
+
+        }
+
+        if (
+            (user.tickets || 0) <
+            products[id]
+        ) {
+            return res.status(400).json({
+                error:
+                    "Unable to buy product"
+            });
+        }
+
+        user.tickets -= products[id];
+
+        user.ownedEffects.push(id);
+
+        user.equippedEffect = id;
+
+        saveUsers(users);
+
+        res.json({
+            user:
+                publicUser(user)
+        });
+
+    }
+);
+
+/* =========================
+   EQUIP
+========================= */
+
+app.post(
+    "/api/shop/equip",
+    authenticated,
+    (req, res) => {
+
+        const {
+            id
+        } = req.body;
+
+        const users = loadUsers();
+
+        const user =
+            users.find(
+                u =>
+                    u.id ===
+                    req.user.id
+            );
+
+        if (
+            !user.ownedEffects?.includes(id)
+        ) {
+            return res.status(400).json({
+                error:
+                    "You do not own this effect."
+            });
+        }
+
+        user.equippedEffect = id;
+
+        saveUsers(users);
+
+        res.json({
+            user:
+                publicUser(user)
+        });
+
+    }
+);
+
+/* =========================
    AI
-===================================================== */
+========================= */
 
 let openai = null;
 
-
-if (
-    process.env.OPENAI_API_KEY
-) {
-
-    openai =
-        new OpenAI({
-            apiKey:
-                process.env.OPENAI_API_KEY
-        });
-
+if (process.env.OPENAI_API_KEY) {
+    openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
+    });
 }
-
 
 app.post(
     "/api/ai",
@@ -290,49 +687,29 @@ app.post(
                 lesson
             } = req.body;
 
-
-            if (
-                !message ||
-                !String(message).trim()
-            ) {
-
+            if (!message || !String(message).trim()) {
                 return res.status(400).json({
-                    error:
-                        "Please enter a question."
+                    error: "Please enter a question."
                 });
-
             }
-
 
             if (!openai) {
-
                 return res.status(500).json({
-                    error:
-                        "AI is not configured yet. Check OPENAI_API_KEY in Render."
+                    error: "AI is not configured yet. Check OPENAI_API_KEY in Render."
                 });
-
             }
 
-
             const lessonTitle =
-                lesson?.title ||
-                "General learning";
-
+                lesson?.title || "General learning";
 
             const lessonCategory =
-                lesson?.category ||
-                "General";
-
+                lesson?.category || "General";
 
             const lessonDescription =
-                lesson?.description ||
-                "";
-
+                lesson?.description || "";
 
             const lessonContent =
-                lesson?.content ||
-                "";
-
+                lesson?.content || "";
 
             const response =
                 await openai.responses.create({
@@ -341,13 +718,10 @@ app.post(
                         process.env.OPENAI_MODEL ||
                         "gpt-5.6-luna",
 
-
                     instructions: `
+You are Teachly AI Teacher, a friendly educational tutor.
 
-You are Teachly AI Teacher,
-a friendly educational tutor.
-
-The learner is currently studying:
+The learner is studying this lesson:
 
 TITLE:
 ${lessonTitle}
@@ -361,61 +735,31 @@ ${lessonDescription}
 LESSON MATERIAL:
 ${lessonContent}
 
-
-Your job is to help the learner understand
-the subject.
-
 Rules:
-
-- Explain things clearly.
-- Base your answer on the selected lesson
-  whenever possible.
-- If the learner asks a related question,
-  explain the connection.
-- If the learner asks something unrelated,
-  you may still help them.
+- Answer the learner's question clearly.
+- Base your explanation on the current lesson whenever possible.
+- If the question is related to another subject, you may still answer it.
 - Explain difficult ideas step by step.
 - Give simple examples.
-- Use headings and bullet points when useful.
-- Help the learner understand instead of
-  simply dumping an answer.
-- Keep explanations appropriate for a
-  school learner.
+- Do not just give an answer when explaining schoolwork; help the learner understand it.
+- Use headings and bullet points when helpful.
+- Keep answers appropriate for a school learner.
 - Never pretend to be a real human.
-- Do not claim to know things that are not
-  supported by the question or lesson.
-- If the learner is confused, explain it
-  in a simpler way.
-
 `,
 
-
                     input:
-                        String(
-                            message
-                        ).trim()
-
+                        String(message).trim()
                 });
-
-
-            const answer =
-                response.output_text ||
-                "I couldn't generate an answer right now.";
-
 
             res.json({
                 answer:
-                    answer
+                    response.output_text ||
+                    "I couldn't generate an answer right now."
             });
-
 
         } catch (error) {
 
-            console.error(
-                "AI ERROR:",
-                error
-            );
-
+            console.error("AI ERROR:", error);
 
             res.status(500).json({
                 error:
@@ -428,479 +772,351 @@ Rules:
     }
 );
 
+/* =========================
+   MULTIPLAYER MATCHING
+========================= */
 
-/* =====================================================
-   SIMPLE REGISTER
-   ===================================================== */
+const waitingUsers = new Map();
+const rooms = new Map();
 
-app.post(
-    "/api/register",
-    async (req, res) => {
+function topicsMatch(a, b) {
 
-        try {
+    const first =
+        a.toLowerCase().trim();
 
-            const {
-                username,
-                password,
-                email
-            } = req.body;
+    const second =
+        b.toLowerCase().trim();
 
-
-            if (
-                !username ||
-                !password
-            ) {
-
-                return res.status(400).json({
-                    error:
-                        "Username and password are required."
-                });
-
-            }
-
-
-            const users =
-                readUsers();
-
-
-            const usernameTaken =
-                users.some(
-                    user =>
-                        String(
-                            user.username || ""
-                        ).toLowerCase() ===
-                        String(
-                            username
-                        ).toLowerCase()
-                );
-
-
-            if (usernameTaken) {
-
-                return res.status(409).json({
-                    error:
-                        "Username already taken."
-                });
-
-            }
-
-
-            const passwordHash =
-                await bcrypt.hash(
-                    password,
-                    10
-                );
-
-
-            const user = {
-
-                id:
-                    crypto.randomUUID(),
-
-                username:
-                    String(username).trim(),
-
-                email:
-                    email || "",
-
-                password:
-                    passwordHash,
-
-                verified:
-                    true,
-
-                role:
-                    "",
-
-                profileImage:
-                    "",
-
-                tickets:
-                    0,
-
-                sessions:
-                    0,
-
-                streak:
-                    0,
-
-                earnedBadges:
-                    [],
-
-                ownedEffects:
-                    [],
-
-                equippedEffect:
-                    "",
-
-                createdAt:
-                    new Date().toISOString()
-
-            };
-
-
-            users.push(
-                user
-            );
-
-
-            saveUsers(
-                users
-            );
-
-
-            res.json({
-                success:
-                    true,
-
-                user:
-                    publicUser(user)
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                "REGISTER ERROR:",
-                error
-            );
-
-            res.status(500).json({
-                error:
-                    "Registration failed."
-            });
-
-        }
-
-    }
-);
-
-
-/* =====================================================
-   SAVE USER ROLE
-===================================================== */
-
-app.post(
-    "/api/profile/role",
-    (req, res) => {
-
-        try {
-
-            const {
-                username,
-                role
-            } = req.body;
-
-
-            if (
-                !username ||
-                ![
-                    "teacher",
-                    "learner"
-                ].includes(role)
-            ) {
-
-                return res.status(400).json({
-                    error:
-                        "Valid username and role are required."
-                });
-
-            }
-
-
-            const users =
-                readUsers();
-
-
-            const user =
-                users.find(
-                    item =>
-                        String(
-                            item.username || ""
-                        ).toLowerCase() ===
-                        String(
-                            username
-                        ).toLowerCase()
-                );
-
-
-            if (!user) {
-
-                return res.status(404).json({
-                    error:
-                        "User not found."
-                });
-
-            }
-
-
-            user.role =
-                role;
-
-
-            saveUsers(
-                users
-            );
-
-
-            res.json({
-                success:
-                    true,
-
-                user:
-                    publicUser(user)
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                "ROLE ERROR:",
-                error
-            );
-
-            res.status(500).json({
-                error:
-                    "Could not update role."
-            });
-
-        }
-
-    }
-);
-
-
-/* =====================================================
-   SOCKET.IO
-===================================================== */
-
-const io =
-    new Server(
-        server,
-        {
-            cors: {
-                origin: true,
-                credentials: true
-            }
-        }
+    return (
+        first === second ||
+        first.includes(second) ||
+        second.includes(first)
     );
 
+}
 
-const waitingUsers =
-    new Map();
+function removeFromWaiting(socketId) {
 
-const rooms =
-    new Map();
+    for (
+        const [id, person]
+        of waitingUsers
+    ) {
 
+        if (id === socketId) {
+            waitingUsers.delete(id);
+        }
+
+    }
+
+}
 
 io.on(
     "connection",
     socket => {
 
-        console.log(
-            "Socket connected:",
-            socket.id
-        );
+        socket.on(
+            "authSession",
+            () => {
 
+                const token =
+                    socket.handshake.auth?.token;
+
+                const user =
+                    getUserFromToken(token);
+
+                if (!user || !user.verified) {
+
+                    socket.emit(
+                        "serverMessage",
+                        "Please log in with a verified account."
+                    );
+
+                    socket.disconnect();
+
+                    return;
+
+                }
+
+                socket.userId =
+                    user.id;
+
+                socket.username =
+                    user.username;
+
+            }
+        );
 
         socket.on(
             "findUser",
-            data => {
+            ({ role, topic }) => {
 
-                const role =
-                    data?.role || "";
+                if (!socket.userId) {
+                    return;
+                }
 
-                const topic =
-                    data?.topic || "";
-
+                removeFromWaiting(
+                    socket.id
+                );
 
                 const oppositeRole =
-                    role === "learner"
-                        ? "teacher"
-                        : "learner";
-
-
-                let match = null;
-
+                    role === "teacher"
+                        ? "learner"
+                        : "teacher";
 
                 for (
                     const [
-                        waitingSocketId,
-                        waitingUser
-                    ]
-                    of waitingUsers
+                        otherId,
+                        other
+                    ] of waitingUsers
                 ) {
 
                     if (
-                        waitingSocketId ===
-                        socket.id
+                        other.role ===
+                            oppositeRole &&
+                        topicsMatch(
+                            topic,
+                            other.topic
+                        )
                     ) {
-                        continue;
+
+                        waitingUsers.delete(
+                            otherId
+                        );
+
+                        const room =
+                            crypto.randomUUID();
+
+                        rooms.set(
+                            room,
+                            {
+                                users: [
+                                    socket.id,
+                                    other.socketId
+                                ],
+                                topic
+                            }
+                        );
+
+                        socket.join(room);
+
+                        io.sockets.sockets
+                            .get(other.socketId)
+                            ?.join(room);
+
+                        const users =
+                            loadUsers();
+
+                        const current =
+                            users.find(
+                                u =>
+                                    u.id ===
+                                    socket.userId
+                            );
+
+                        const partner =
+                            users.find(
+                                u =>
+                                    u.id ===
+                                    other.userId
+                            );
+
+                        socket.emit(
+                            "matchFound",
+                            {
+                                room,
+                                topic,
+                                partner:
+                                    publicUser(
+                                        partner
+                                    )
+                            }
+                        );
+
+                        io.to(
+                            other.socketId
+                        ).emit(
+                            "matchFound",
+                            {
+                                room,
+                                topic,
+                                partner:
+                                    publicUser(
+                                        current
+                                    )
+                            }
+                        );
+
+                        return;
+
                     }
-
-
-                    if (
-                        waitingUser.role !==
-                        oppositeRole
-                    ) {
-                        continue;
-                    }
-
-
-                    if (
-                        topic &&
-                        waitingUser.topic &&
-                        waitingUser.topic !== topic
-                    ) {
-                        continue;
-                    }
-
-
-                    match = {
-                        socketId:
-                            waitingSocketId,
-
-                        user:
-                            waitingUser
-                    };
-
-                    break;
-                }
-
-
-                if (!match) {
-
-                    waitingUsers.set(
-                        socket.id,
-                        {
-                            role,
-                            topic
-                        }
-                    );
-
-
-                    socket.emit(
-                        "searching"
-                    );
-
-                    return;
-                }
-
-
-                waitingUsers.delete(
-                    match.socketId
-                );
-
-
-                const roomId =
-                    crypto.randomUUID();
-
-
-                rooms.set(
-                    roomId,
-                    [
-                        socket.id,
-                        match.socketId
-                    ]
-                );
-
-
-                socket.join(
-                    roomId
-                );
-
-
-                const matchedSocket =
-                    io.sockets.sockets.get(
-                        match.socketId
-                    );
-
-
-                if (matchedSocket) {
-
-                    matchedSocket.join(
-                        roomId
-                    );
 
                 }
 
-
-                io.to(
-                    roomId
-                ).emit(
-                    "matched",
+                waitingUsers.set(
+                    socket.id,
                     {
-                        roomId
+                        socketId:
+                            socket.id,
+
+                        userId:
+                            socket.userId,
+
+                        username:
+                            socket.username,
+
+                        role,
+
+                        topic,
+
+                        startedAt:
+                            Date.now()
                     }
+                );
+
+                socket.emit(
+                    "serverMessage",
+                    "Searching for a real person..."
+                );
+
+                setTimeout(
+                    () => {
+
+                        const waiting =
+                            waitingUsers.get(
+                                socket.id
+                            );
+
+                        if (waiting) {
+
+                            waitingUsers.delete(
+                                socket.id
+                            );
+
+                            socket.emit(
+                                "noUsersFound"
+                            );
+
+                        }
+
+                    },
+                    30000
                 );
 
             }
         );
-
 
         socket.on(
-            "chatMessage",
-            data => {
-
-                const roomId =
-                    data?.roomId;
-
-                const message =
-                    data?.message;
-
+            "sessionMessage",
+            ({ room, message }) => {
 
                 if (
-                    !roomId ||
-                    !message
+                    !room ||
+                    !message ||
+                    !rooms.has(room)
                 ) {
                     return;
                 }
 
+                const session =
+                    rooms.get(room);
 
-                io.to(
-                    roomId
-                ).emit(
-                    "chatMessage",
+                if (
+                    !session.users.includes(
+                        socket.id
+                    )
+                ) {
+                    return;
+                }
+
+                io.to(room).emit(
+                    "sessionMessage",
                     {
+                        username:
+                            socket.username,
+
                         message:
-                            String(
-                                message
-                            )
+                            String(message)
+                                .slice(0, 2000)
                     }
                 );
 
             }
         );
 
+        socket.on(
+            "leaveSession",
+            ({ room }) => {
+
+                if (!room) return;
+
+                const session =
+                    rooms.get(room);
+
+                if (!session) return;
+
+                socket.leave(room);
+
+                const partner =
+                    session.users.find(
+                        id =>
+                            id !== socket.id
+                    );
+
+                if (partner) {
+
+                    io.to(
+                        partner
+                    ).emit(
+                        "partnerLeft"
+                    );
+
+                }
+
+                rooms.delete(room);
+
+            }
+        );
 
         socket.on(
             "disconnect",
             () => {
 
-                waitingUsers.delete(
+                removeFromWaiting(
                     socket.id
                 );
 
-
                 for (
                     const [
-                        roomId,
-                        socketIds
-                    ]
-                    of rooms
+                        room,
+                        session
+                    ] of rooms
                 ) {
 
                     if (
-                        socketIds.includes(
+                        session.users.includes(
                             socket.id
                         )
                     ) {
 
-                        rooms.delete(
-                            roomId
-                        );
+                        const partner =
+                            session.users.find(
+                                id =>
+                                    id !==
+                                    socket.id
+                            );
 
-                        break;
+                        if (partner) {
+
+                            io.to(
+                                partner
+                            ).emit(
+                                "partnerLeft"
+                            );
+
+                        }
+
+                        rooms.delete(room);
+
                     }
 
                 }
@@ -911,28 +1127,9 @@ io.on(
     }
 );
 
-
-/* =====================================================
-   STATIC FRONTEND
-   IMPORTANT:
-   APIs are above this.
-===================================================== */
-
-app.use(
-    express.static(
-        __dirname
-    )
-);
-
-
-/* =====================================================
+/* =========================
    START
-===================================================== */
-
-const PORT =
-    process.env.PORT ||
-    3000;
-
+========================= */
 
 server.listen(
     PORT,
