@@ -1,918 +1,522 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teachly</title>
+  <link rel="stylesheet" href="style.css">
 
-    <title>Teachly</title>
-
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    >
-
-    <link rel="stylesheet" href="style.css">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
 </head>
 
 <body>
 
-<!-- =========================
-     TOP BAR
-========================= -->
+<div id="app">
 
-<header class="topbar">
+  <!-- USERNAME -->
+  <section id="namePage" class="page active">
+    <div class="welcome">
+      <div class="logo">TEACHLY</div>
+      <h1>Welcome 👋</h1>
+      <p>Enter your username to begin</p>
 
-    <div class="logo">
-        📚 Teachly
+      <input id="usernameInput" type="text" maxlength="20"
+             placeholder="Your username">
+
+      <button onclick="startTeachly()">CONTINUE</button>
+    </div>
+  </section>
+
+
+  <!-- HOME -->
+  <section id="homePage" class="page">
+
+    <header>
+      <div>
+        <h1>TEACHLY</h1>
+        <p id="welcomeText"></p>
+      </div>
+
+      <button class="profileBtn" onclick="openPage('profilePage')">
+        👤
+      </button>
+    </header>
+
+    <main>
+
+      <div class="cloudArea">
+
+        <div class="cloud learnCloud" onclick="chooseRole('learner')">
+          <span>LEARNER</span>
+          <small>Find a teacher</small>
+        </div>
+
+        <div class="cloud teachCloud" onclick="chooseRole('teacher')">
+          <span>TEACHER</span>
+          <small>Find a learner</small>
+        </div>
+
+      </div>
+
+
+      <!-- AI TEACHER / LESSONS -->
+      <div class="featureCard aiCard" onclick="openAITeacher()">
+        <div class="featureIcon">🤖</div>
+        <div>
+          <h2>AI TEACHER</h2>
+          <p>Choose a lesson, learn it, take a quiz and clear your doubts</p>
+        </div>
+      </div>
+
+
+      <!-- MYSTERY -->
+      <div class="featureCard mysteryCard" onclick="mysteryTopic()">
+        <div class="featureIcon">❓</div>
+        <div>
+          <h2>MYSTERY TOPIC</h2>
+          <p>Discover a random topic</p>
+        </div>
+      </div>
+
+
+      <!-- FIND PEOPLE -->
+      <div class="featureCard" onclick="openPage('peoplePage')">
+        <div class="featureIcon">🌎</div>
+        <div>
+          <h2>SKILLMATCH</h2>
+          <p>Find people with different skills</p>
+        </div>
+      </div>
+
+
+      <!-- QUIZ -->
+      <div class="featureCard" onclick="startQuiz()">
+        <div class="featureIcon">🧠</div>
+        <div>
+          <h2>MINDCHECK</h2>
+          <p>Test what you learned from a lesson</p>
+        </div>
+      </div>
+
+
+      <!-- BADGES -->
+      <div class="sectionTitle">🏆 BADGES</div>
+
+      <div id="badgesHome" class="badgeGrid"></div>
+
+
+      <!-- SHOP -->
+      <div class="sectionTitle">🛒 SHOP</div>
+
+      <div class="coinsBox">
+        🪙 <span id="homeCoins">0</span> TeachCoins
+      </div>
+
+      <div id="shopHome" class="shopGrid"></div>
+
+
+      <!-- LEARNSPHERE -->
+      <div class="featureCard mapCard" onclick="openPage('mapPage')">
+        <div class="featureIcon">🌍</div>
+        <div>
+          <h2>LEARNSPHERE</h2>
+          <p>Explore countries around the world</p>
+        </div>
+      </div>
+
+    </main>
+  </section>
+
+
+  <!-- SEARCHING -->
+  <section id="searchPage" class="page">
+    <div class="centerBox">
+      <div class="loadingCircle"></div>
+      <h2 id="searchTitle">Searching...</h2>
+      <p id="searchText"></p>
+    </div>
+  </section>
+
+
+  <!-- CHAT -->
+  <section id="chatPage" class="page">
+    <header>
+      <button onclick="goHome()">←</button>
+      <h2 id="chatTitle">CHAT</h2>
+    </header>
+
+    <div id="chatMessages" class="chatMessages"></div>
+
+    <div class="chatInput">
+      <input id="messageInput" placeholder="Type a message...">
+      <button onclick="sendMessage()">SEND</button>
     </div>
 
-    <div class="topStats">
-        <div class="coinDisplay">
-            💰 <span id="homeCoins">0</span>
+    <div class="emojiBar">
+      <button onclick="addEmoji('👍')">👍</button>
+      <button onclick="addEmoji('😊')">😊</button>
+      <button onclick="addEmoji('🎉')">🎉</button>
+      <button onclick="addEmoji('📚')">📚</button>
+      <button onclick="addEmoji('⭐')">⭐</button>
+    </div>
+  </section>
+
+
+  <!-- AI TEACHER / LESSON LIBRARY -->
+  <section id="aiPage" class="page">
+
+    <header>
+      <button onclick="goHome()">←</button>
+      <h2>TUTORBOT</h2>
+    </header>
+
+    <div class="lessonLibrary">
+
+      <div class="lessonHeader">
+        <div>
+          <h1>📚 Lesson Library</h1>
+          <p>Choose something you want to learn.</p>
         </div>
+
+        <div class="lessonCount">
+          <span id="lessonCount">0</span>
+          lessons
+        </div>
+      </div>
+
+      <div id="lessonCategories" class="lessonCategories"></div>
+
+      <div id="lessonGrid" class="lessonGrid"></div>
+
     </div>
 
-</header>
 
+    <!-- SELECTED LESSON -->
+    <div id="selectedLessonBox" class="selectedLessonBox hidden">
 
-<!-- =========================
-     START PAGE
-========================= -->
-
-<section id="namePage" class="page active">
-
-    <div class="welcomeCard">
-
-        <div class="bigLogo">
-            📚
+      <div class="selectedLessonTop">
+        <div>
+          <span id="selectedLessonCategory" class="lessonPill"></span>
+          <h1 id="selectedLessonTitle"></h1>
         </div>
 
-        <h1>Welcome to Teachly</h1>
+        <button onclick="startSelectedLessonQuiz()">
+          START QUIZ 🧠
+        </button>
+      </div>
 
-        <p>
-            Learn. Teach. Connect.
-        </p>
+      <p id="selectedLessonDescription"></p>
 
-        <input
-            id="usernameInput"
-            type="text"
-            placeholder="Enter your username"
-            maxlength="30"
-        >
+      <div id="selectedLessonContent" class="lessonContent"></div>
 
-        <button onclick="startTeachly()">
-            START LEARNING 🚀
+      <div class="lessonActions">
+        <button onclick="startSelectedLessonQuiz()" class="lessonPrimary">
+          LEARNED IT — TAKE QUIZ
+        </button>
+      </div>
+
+    </div>
+
+
+    <!-- OLD TEACHER MODE KEPT -->
+    <div class="teacherAIMode">
+
+      <h2>👨‍🏫 TEACHER AI MODE</h2>
+
+      <p>
+        Teacher mode helps prepare lesson explanations,
+        questions and activities.
+      </p>
+
+      <button onclick="teacherAIHelp()">
+        OPEN TEACHER AI
+      </button>
+
+      <div id="teacherAIResult"></div>
+
+    </div>
+
+  </section>
+
+
+  <!-- MYSTERY -->
+  <section id="mysteryPage" class="page">
+
+    <header>
+      <button onclick="goHome()">←</button>
+      <h2>MYSTERY TOPIC</h2>
+    </header>
+
+    <div class="mysteryBox">
+      <div>🎲</div>
+      <h1 id="mysteryTitle"></h1>
+      <p id="mysteryDescription"></p>
+
+      <button onclick="mysteryTopic()">ANOTHER TOPIC</button>
+    </div>
+
+  </section>
+
+
+  <!-- PEOPLE -->
+  <section id="peoplePage" class="page">
+
+    <header>
+      <button onclick="goHome()">←</button>
+      <h2>SKILLMATCH</h2>
+    </header>
+
+    <div id="peopleList"></div>
+
+  </section>
+
+
+  <!-- QUIZ -->
+  <section id="quizPage" class="page">
+
+    <header>
+      <button onclick="goHome()">←</button>
+      <h2>MINDCHECK</h2>
+    </header>
+
+    <div class="quizBox">
+
+      <div id="quizLessonName" class="quizLessonName"></div>
+
+      <div id="quizQuestion"></div>
+
+      <textarea
+        id="quizAnswer"
+        placeholder="Write your complete answer..."
+      ></textarea>
+
+      <button onclick="checkQuiz()">
+        CHECK ANSWER
+      </button>
+
+      <div id="quizResult"></div>
+
+    </div>
+
+
+    <!-- REAL AI TEACHER DIRECTLY BELOW QUIZ -->
+    <div id="lessonAITeacher" class="lessonAITeacher">
+
+      <div class="aiTeacherHeader">
+
+        <div class="aiTeacherRobot">
+          🤖
+        </div>
+
+        <div>
+          <h2>AI TEACHER</h2>
+          <p id="aiTeacherLessonLabel">
+            Choose a lesson first.
+          </p>
+        </div>
+
+      </div>
+
+
+      <div id="aiTeacherMessages" class="aiTeacherMessages">
+
+        <div class="aiBubble">
+
+          <b>👋 Hi! I'm your AI Teacher.</b>
+
+          <p>
+            Ask me anything about your selected lesson.
+            I can explain difficult ideas in simpler ways,
+            give examples and help you understand your mistakes.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="aiQuickQuestions">
+
+        <button onclick="askAIQuick('Explain this lesson simply.')">
+          Explain simply
         </button>
 
-    </div>
+        <button onclick="askAIQuick('Give me a real-life example.')">
+          Real-life example
+        </button>
 
-</section>
+        <button onclick="askAIQuick('What are the most important things I should remember?')">
+          Key points
+        </button>
 
-
-<!-- =========================
-     HOME
-========================= -->
-
-<section id="homePage" class="page">
-
-    <div class="pageContainer">
-
-        <div class="hero">
-
-            <h1 id="welcomeText">
-                Welcome to Teachly!
-            </h1>
-
-            <p>
-                Learn from people, teach what you know,
-                or ask the AI Teacher.
-            </p>
-
-        </div>
+      </div>
 
 
-        <div class="cardGrid">
+      <div class="aiTeacherInput">
 
-            <div class="featureCard">
+        <textarea
+          id="aiTeacherInput"
+          placeholder="Ask your doubt about this lesson..."
+          rows="3"
+        ></textarea>
 
-                <div class="featureIcon">👨‍🏫</div>
+        <button onclick="askAITeacher()">
+          ASK AI 🤖
+        </button>
 
-                <h2>Find a Teacher</h2>
-
-                <p>
-                    Find a real Teachly user who can help you.
-                </p>
-
-                <button onclick="chooseRole('learner')">
-                    FIND TEACHER
-                </button>
-
-            </div>
-
-
-            <div class="featureCard">
-
-                <div class="featureIcon">🧑‍🎓</div>
-
-                <h2>Teach Someone</h2>
-
-                <p>
-                    Help another real learner.
-                </p>
-
-                <button onclick="chooseRole('teacher')">
-                    FIND LEARNER
-                </button>
-
-            </div>
-
-
-            <div class="featureCard">
-
-                <div class="featureIcon">🤖</div>
-
-                <h2>AI Teacher</h2>
-
-                <p>
-                    Ask your AI Teacher anything.
-                </p>
-
-                <button onclick="openAITeacher()">
-                    OPEN AI TEACHER
-                </button>
-
-            </div>
-
-
-            <div class="featureCard">
-
-                <div class="featureIcon">🌎</div>
-
-                <h2>Explore World</h2>
-
-                <p>
-                    Explore countries and geography.
-                </p>
-
-                <button onclick="openPage('mapPage')">
-                    EXPLORE MAP
-                </button>
-
-            </div>
-
-        </div>
-
-
-        <!-- BADGES -->
-
-        <div class="sectionCard">
-
-            <div class="sectionHeader">
-
-                <div>
-                    <h2>🏆 Your Badges</h2>
-                    <p>Keep learning to unlock more.</p>
-                </div>
-
-                <button onclick="openPage('badgesPage')">
-                    VIEW ALL
-                </button>
-
-            </div>
-
-            <div id="badgesHome"></div>
-
-        </div>
-
-
-        <!-- SHOP -->
-
-        <div class="sectionCard">
-
-            <div class="sectionHeader">
-
-                <div>
-                    <h2>🛍️ Teachly Shop</h2>
-                    <p>Spend your TeachCoins.</p>
-                </div>
-
-                <div>
-                    💰 <span id="shopCoins">0</span>
-                </div>
-
-            </div>
-
-            <div id="shopHome"></div>
-
-        </div>
+      </div>
 
     </div>
 
-</section>
+  </section>
 
 
-<!-- =========================
-     SEARCH
-========================= -->
+  <!-- BADGES -->
+  <section id="badgesPage" class="page">
 
-<section id="searchPage" class="page">
+    <header>
+      <button onclick="goHome()">←</button>
+      <h2>ACHIEVEMENT VAULT</h2>
+    </header>
 
-    <div class="centerCard">
+    <div id="allBadges" class="badgeGrid"></div>
 
-        <div class="loadingIcon">
-            🔎
+  </section>
+
+
+  <!-- SHOP -->
+  <section id="shopPage" class="page">
+
+    <header>
+      <button onclick="goHome()">←</button>
+      <h2>COINCRAFT</h2>
+    </header>
+
+    <div class="coinsBox">
+      🪙 <span id="shopCoins">0</span> TeachCoins
+    </div>
+
+    <div id="shopList" class="shopGrid"></div>
+
+  </section>
+
+
+  <!-- PROFILE -->
+  <section id="profilePage" class="page">
+
+    <header>
+      <button onclick="goHome()">←</button>
+      <h2>PROFILE</h2>
+    </header>
+
+    <div class="profileBox">
+
+      <div class="bigAvatar">👤</div>
+
+      <h1 id="profileName"></h1>
+
+      <div class="stats">
+
+        <div>
+          <b id="profileSessions">0</b>
+          <span>Sessions</span>
         </div>
 
-        <h1 id="searchTitle">
-            Finding a teacher...
-        </h1>
-
-        <p id="searchText">
-            Looking for a teacher volunteer
-        </p>
-
-        <div class="loadingDots">
-            <span></span>
-            <span></span>
-            <span></span>
+        <div>
+          <b id="profileCoins">0</b>
+          <span>Coins</span>
         </div>
+
+        <div>
+          <b id="profileBadges">0</b>
+          <span>Badges</span>
+        </div>
+
+      </div>
 
     </div>
 
-</section>
+  </section>
 
 
-<!-- =========================
-     CHAT
-========================= -->
+  <!-- REAL MAP -->
+  <section id="mapPage" class="page">
 
-<section id="chatPage" class="page">
+    <header>
+      <button onclick="goHome()">←</button>
+      <h2>LEARNSPHERE</h2>
+    </header>
 
-    <div class="chatContainer">
+    <div class="mapIntro">
 
-        <div class="chatHeader">
+      <h2>🌍 Explore the World</h2>
 
-            <button onclick="goHome()">
-                ←
-            </button>
-
-            <h2 id="chatTitle">
-                Chat
-            </h2>
-
-        </div>
-
-        <div id="chatMessages" class="chatMessages"></div>
-
-        <div class="chatInputArea">
-
-            <button onclick="addEmoji('😊')">
-                😊
-            </button>
-
-            <button onclick="addEmoji('👍')">
-                👍
-            </button>
-
-            <input
-                id="messageInput"
-                type="text"
-                placeholder="Type a message..."
-                maxlength="2000"
-            >
-
-            <button onclick="sendMessage()">
-                SEND
-            </button>
-
-        </div>
+      <p>
+        Tap countries to discover their information.
+      </p>
 
     </div>
 
-</section>
+    <div id="worldMap"></div>
 
+    <div id="countryInfo" class="countryInfo">
 
-<!-- =====================================================
-     AI TEACHER
-====================================================== -->
+      <h2>🌎 Select a country</h2>
 
-<section id="aiPage" class="page">
-
-    <div class="pageContainer">
-
-        <div class="pageTitle">
-
-            <button onclick="goHome()">
-                ← Home
-            </button>
-
-            <h1>🤖 AI Teacher</h1>
-
-            <p>
-                Select a lesson, study it, take the quiz,
-                then ask the AI about anything you don't understand.
-            </p>
-
-        </div>
-
-
-        <!-- LESSON LIBRARY -->
-
-        <div class="sectionCard">
-
-            <div class="sectionHeader">
-
-                <div>
-                    <h2>📚 Lesson Library</h2>
-
-                    <p>
-                        <span id="lessonCount">0</span>
-                        lessons available
-                    </p>
-                </div>
-
-            </div>
-
-            <div
-                id="lessonCategories"
-                class="lessonCategories"
-            ></div>
-
-            <div
-                id="lessonGrid"
-                class="lessonGrid"
-            ></div>
-
-        </div>
-
-
-        <!-- SELECTED LESSON -->
-
-        <div
-            id="selectedLessonBox"
-            class="sectionCard hidden"
-        >
-
-            <div class="selectedLessonHeader">
-
-                <div>
-
-                    <span
-                        id="selectedLessonCategory"
-                        class="lessonMiniTag"
-                    ></span>
-
-                    <h2 id="selectedLessonTitle">
-                        Lesson
-                    </h2>
-
-                    <p id="selectedLessonDescription"></p>
-
-                </div>
-
-            </div>
-
-
-            <div
-                id="selectedLessonContent"
-                class="selectedLessonContent"
-            ></div>
-
-
-            <div class="lessonActions">
-
-                <button onclick="startSelectedLessonQuiz()">
-                    📝 START QUIZ
-                </button>
-
-                <button onclick="prepareAITeacherForLesson()">
-                    🤖 ASK AI TEACHER
-                </button>
-
-            </div>
-
-        </div>
-
-
-        <!-- AI ACTIVITY -->
-
-        <div class="sectionCard">
-
-            <div class="sectionHeader">
-
-                <div>
-
-                    <h2>🧑‍🏫 AI Learning Activity</h2>
-
-                    <p>
-                        Generate a learning activity from
-                        the selected lesson.
-                    </p>
-
-                </div>
-
-            </div>
-
-            <button onclick="teacherAIHelp()">
-                ✨ CREATE ACTIVITY
-            </button>
-
-            <div
-                id="teacherAIResult"
-                class="teacherAIResult"
-            ></div>
-
-        </div>
-
-
-        <!-- REAL AI -->
-
-        <div class="sectionCard aiTeacherCard">
-
-            <div class="aiTeacherHeader">
-
-                <div>
-
-                    <h2>🤖 Real AI Teacher</h2>
-
-                    <p id="aiTeacherLessonLabel">
-                        Choose a lesson to begin.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div
-                id="aiTeacherMessages"
-                class="aiTeacherMessages"
-            >
-
-                <div class="aiBubble">
-
-                    <strong>👋 Hi!</strong>
-
-                    <p>
-                        Choose a lesson above and ask me
-                        anything you don't understand.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="quickQuestions">
-
-                <button onclick="askAIQuick('Explain this lesson simply.')">
-                    Explain simply
-                </button>
-
-                <button onclick="askAIQuick('Give me an example.')">
-                    Give an example
-                </button>
-
-                <button onclick="askAIQuick('What are the most important things to remember?')">
-                    Important points
-                </button>
-
-                <button onclick="askAIQuick('Give me a practice question.')">
-                    Practice question
-                </button>
-
-            </div>
-
-
-            <div class="aiInputArea">
-
-                <input
-                    id="aiTeacherInput"
-                    type="text"
-                    placeholder="Ask your doubt..."
-                    maxlength="3000"
-                >
-
-                <button onclick="askAITeacher()">
-                    ASK 🤖
-                </button>
-
-            </div>
-
-        </div>
+      <p>
+        Tap a country on the map to see its details.
+      </p>
 
     </div>
 
-</section>
+    <div class="continentButtons">
 
-
-<!-- =========================
-     QUIZ
-========================= -->
-
-<section id="quizPage" class="page">
-
-    <div class="pageContainer">
-
-        <div class="pageTitle">
-
-            <button onclick="openAITeacher()">
-                ← Lessons
-            </button>
-
-            <h1>📝 Lesson Quiz</h1>
-
-            <p id="quizLessonName">
-                Choose a lesson
-            </p>
-
-        </div>
-
-
-        <div class="quizCard">
-
-            <div
-                id="quizQuestion"
-                class="quizQuestion"
-            ></div>
-
-            <textarea
-                id="quizAnswer"
-                placeholder="Write your answer here..."
-                rows="6"
-            ></textarea>
-
-            <button onclick="checkQuiz()">
-                CHECK ANSWER
-            </button>
-
-            <div
-                id="quizResult"
-                class="quizResult"
-            ></div>
-
-        </div>
-
-
-        <!-- AI BELOW QUIZ -->
-
-        <div class="sectionCard aiTeacherCard">
-
-            <div class="aiTeacherHeader">
-
-                <div>
-                    <h2>🤖 AI Teacher</h2>
-
-                    <p id="quizAITeacherLesson">
-                        Ask about this lesson.
-                    </p>
-                </div>
-
-            </div>
-
-            <div
-                id="quizAIMessages"
-                class="aiTeacherMessages"
-            >
-
-                <div class="aiBubble">
-
-                    <strong>👋 I'm ready to help.</strong>
-
-                    <p>
-                        Ask me about the lesson if you're stuck.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="quickQuestions">
-
-                <button onclick="askAIQuick('Explain this lesson simply.')">
-                    Explain simply
-                </button>
-
-                <button onclick="askAIQuick('Why is this important?')">
-                    Why important?
-                </button>
-
-                <button onclick="askAIQuick('Give me an example.')">
-                    Give example
-                </button>
-
-                <button onclick="askAIQuick('Give me a practice question.')">
-                    Practice
-                </button>
-
-            </div>
-
-
-            <div class="aiInputArea">
-
-                <input
-                    id="quizAIInput"
-                    type="text"
-                    placeholder="Ask your doubt..."
-                    maxlength="3000"
-                >
-
-                <button onclick="askAITeacher()">
-                    ASK 🤖
-                </button>
-
-            </div>
-
-        </div>
+      <button onclick="showCountry('India')">🇮🇳 India</button>
+      <button onclick="showCountry('Japan')">🇯🇵 Japan</button>
+      <button onclick="showCountry('United States')">🇺🇸 USA</button>
+      <button onclick="showCountry('Brazil')">🇧🇷 Brazil</button>
+      <button onclick="showCountry('Australia')">🇦🇺 Australia</button>
+      <button onclick="showCountry('Egypt')">🇪🇬 Egypt</button>
+      <button onclick="showCountry('Antarctica')">🧊 Antarctica</button>
 
     </div>
 
-</section>
+  </section>
 
+</div>
 
-<!-- =========================
-     PEOPLE
-========================= -->
 
-<section id="peoplePage" class="page">
-
-    <div class="pageContainer">
-
-        <div class="pageTitle">
-
-            <button onclick="goHome()">
-                ← Home
-            </button>
-
-            <h1>👥 Teachly People</h1>
-
-            <p>
-                Real registered Teachly users.
-            </p>
-
-        </div>
-
-        <div
-            id="peopleList"
-            class="peopleList"
-        ></div>
-
-    </div>
-
-</section>
-
-
-<!-- =========================
-     BADGES
-========================= -->
-
-<section id="badgesPage" class="page">
-
-    <div class="pageContainer">
-
-        <div class="pageTitle">
-
-            <button onclick="goHome()">
-                ← Home
-            </button>
-
-            <h1>🏆 Badges</h1>
-
-        </div>
-
-        <div
-            id="allBadges"
-            class="badgeGrid"
-        ></div>
-
-    </div>
-
-</section>
-
-
-<!-- =========================
-     SHOP
-========================= -->
-
-<section id="shopPage" class="page">
-
-    <div class="pageContainer">
-
-        <div class="pageTitle">
-
-            <button onclick="goHome()">
-                ← Home
-            </button>
-
-            <h1>🛍️ Teachly Shop</h1>
-
-            <p>
-                Your TeachCoins:
-                💰 <span id="shopPageCoins">0</span>
-            </p>
-
-        </div>
-
-        <div
-            id="shopList"
-            class="shopGrid"
-        ></div>
-
-    </div>
-
-</section>
-
-
-<!-- =========================
-     PROFILE
-========================= -->
-
-<section id="profilePage" class="page">
-
-    <div class="pageContainer">
-
-        <div class="pageTitle">
-
-            <button onclick="goHome()">
-                ← Home
-            </button>
-
-            <h1>👤 Profile</h1>
-
-        </div>
-
-        <div class="profileCard">
-
-            <div class="profileAvatar">
-                👤
-            </div>
-
-            <h2 id="profileName">
-                User
-            </h2>
-
-            <div class="profileStats">
-
-                <div>
-                    <strong id="profileSessions">0</strong>
-                    <span>Sessions</span>
-                </div>
-
-                <div>
-                    <strong id="profileCoins">0</strong>
-                    <span>Coins</span>
-                </div>
-
-                <div>
-                    <strong id="profileBadges">0</strong>
-                    <span>Badges</span>
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-<!-- =========================
-     MAP
-========================= -->
-
-<section id="mapPage" class="page">
-
-    <div class="pageContainer">
-
-        <div class="pageTitle">
-
-            <button onclick="goHome()">
-                ← Home
-            </button>
-
-            <h1>🌎 Explore the World</h1>
-
-            <p>
-                Click a location to learn.
-            </p>
-
-        </div>
-
-        <div
-            id="worldMap"
-            class="worldMap"
-        ></div>
-
-        <div
-            id="countryInfo"
-            class="countryInfo"
-        >
-
-            <h2>🌎 Explore a country</h2>
-
-            <p>
-                Click a marker on the map.
-            </p>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-<!-- =========================
-     MYSTERY
-========================= -->
-
-<section id="mysteryPage" class="page">
-
-    <div class="pageContainer">
-
-        <div class="pageTitle">
-
-            <button onclick="goHome()">
-                ← Home
-            </button>
-
-            <h1>🕵️ Mystery Topic</h1>
-
-        </div>
-
-        <div class="mysteryCard">
-
-            <div class="mysteryIcon">
-                🔮
-            </div>
-
-            <h2 id="mysteryTitle">
-                Mystery
-            </h2>
-
-            <p id="mysteryDescription">
-                Discover something interesting.
-            </p>
-
-            <button onclick="mysteryTopic()">
-                🔄 ANOTHER TOPIC
-            </button>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-<!-- =========================
-     BOTTOM NAV
-========================= -->
-
-<nav class="bottomNav">
-
-    <button onclick="goHome()">
-        🏠
-        <span>Home</span>
-    </button>
-
-    <button onclick="openPage('peoplePage')">
-        👥
-        <span>People</span>
-    </button>
-
-    <button onclick="openAITeacher()">
-        🤖
-        <span>AI</span>
-    </button>
-
-    <button onclick="openPage('mapPage')">
-        🌎
-        <span>World</span>
-    </button>
-
-    <button onclick="openPage('profilePage')">
-        👤
-        <span>Profile</span>
-    </button>
-
-</nav>
-
-
-<!-- TOAST -->
-
-<div
-    id="toast"
-    class="toast"
-></div>
+<div id="toast"></div>
 
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<script src="/socket.io/socket.io.js"></script>
-
 <script src="script.js"></script>
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
