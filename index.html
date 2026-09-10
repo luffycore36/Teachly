@@ -64,41 +64,46 @@
 
       <!-- AI TEACHER / LESSONS -->
       <div class="featureCard aiCard" onclick="openAITeacher()">
+
         <div class="featureIcon">🤖</div>
+
         <div>
           <h2>AI TEACHER</h2>
-          <p>Choose a lesson, learn it, take a quiz and clear your doubts</p>
+          <p>
+            Choose a lesson, learn it, take a quiz and clear your doubts
+          </p>
         </div>
+
       </div>
 
 
       <!-- MYSTERY -->
       <div class="featureCard mysteryCard" onclick="mysteryTopic()">
+
         <div class="featureIcon">❓</div>
+
         <div>
           <h2>MYSTERY TOPIC</h2>
           <p>Discover a random topic</p>
         </div>
+
       </div>
 
 
-      <!-- FIND PEOPLE -->
-      <div class="featureCard" onclick="openPage('peoplePage')">
-        <div class="featureIcon">🌎</div>
-        <div>
-          <h2>SKILLMATCH</h2>
-          <p>Find people with different skills</p>
-        </div>
-      </div>
+      <!-- SKILLMATCH REMOVED -->
+      <!-- The old SkillMatch home card has been removed. -->
 
 
       <!-- QUIZ -->
       <div class="featureCard" onclick="startQuiz()">
+
         <div class="featureIcon">🧠</div>
+
         <div>
           <h2>MINDCHECK</h2>
           <p>Test what you learned from a lesson</p>
         </div>
+
       </div>
 
 
@@ -120,48 +125,74 @@
 
       <!-- LEARNSPHERE -->
       <div class="featureCard mapCard" onclick="openPage('mapPage')">
+
         <div class="featureIcon">🌍</div>
+
         <div>
           <h2>LEARNSPHERE</h2>
           <p>Explore countries around the world</p>
         </div>
+
       </div>
 
     </main>
+
   </section>
 
 
   <!-- SEARCHING -->
   <section id="searchPage" class="page">
+
     <div class="centerBox">
+
       <div class="loadingCircle"></div>
+
       <h2 id="searchTitle">Searching...</h2>
+
       <p id="searchText"></p>
+
     </div>
+
   </section>
 
 
   <!-- CHAT -->
   <section id="chatPage" class="page">
+
     <header>
+
       <button onclick="goHome()">←</button>
+
       <h2 id="chatTitle">CHAT</h2>
+
     </header>
+
 
     <div id="chatMessages" class="chatMessages"></div>
 
+
     <div class="chatInput">
-      <input id="messageInput" placeholder="Type a message...">
+
+      <input
+        id="messageInput"
+        placeholder="Type a message..."
+      >
+
       <button onclick="sendMessage()">SEND</button>
+
     </div>
 
+
     <div class="emojiBar">
+
       <button onclick="addEmoji('👍')">👍</button>
       <button onclick="addEmoji('😊')">😊</button>
       <button onclick="addEmoji('🎉')">🎉</button>
       <button onclick="addEmoji('📚')">📚</button>
       <button onclick="addEmoji('⭐')">⭐</button>
+
     </div>
+
   </section>
 
 
@@ -169,53 +200,96 @@
   <section id="aiPage" class="page">
 
     <header>
+
       <button onclick="goHome()">←</button>
+
       <h2>TUTORBOT</h2>
+
     </header>
+
 
     <div class="lessonLibrary">
 
       <div class="lessonHeader">
+
         <div>
+
           <h1>📚 Lesson Library</h1>
+
           <p>Choose something you want to learn.</p>
+
         </div>
+
 
         <div class="lessonCount">
+
           <span id="lessonCount">0</span>
           lessons
+
         </div>
+
       </div>
 
-      <div id="lessonCategories" class="lessonCategories"></div>
 
-      <div id="lessonGrid" class="lessonGrid"></div>
+      <div
+        id="lessonCategories"
+        class="lessonCategories"
+      ></div>
+
+
+      <div
+        id="lessonGrid"
+        class="lessonGrid"
+      ></div>
 
     </div>
 
 
     <!-- SELECTED LESSON -->
-    <div id="selectedLessonBox" class="selectedLessonBox hidden">
+    <div
+      id="selectedLessonBox"
+      class="selectedLessonBox hidden"
+    >
 
       <div class="selectedLessonTop">
+
         <div>
-          <span id="selectedLessonCategory" class="lessonPill"></span>
+
+          <span
+            id="selectedLessonCategory"
+            class="lessonPill"
+          ></span>
+
           <h1 id="selectedLessonTitle"></h1>
+
         </div>
+
 
         <button onclick="startSelectedLessonQuiz()">
           START QUIZ 🧠
         </button>
+
       </div>
+
 
       <p id="selectedLessonDescription"></p>
 
-      <div id="selectedLessonContent" class="lessonContent"></div>
+
+      <div
+        id="selectedLessonContent"
+        class="lessonContent"
+      ></div>
+
 
       <div class="lessonActions">
-        <button onclick="startSelectedLessonQuiz()" class="lessonPrimary">
+
+        <button
+          onclick="startSelectedLessonQuiz()"
+          class="lessonPrimary"
+        >
           LEARNED IT — TAKE QUIZ
         </button>
+
       </div>
 
     </div>
@@ -246,16 +320,26 @@
   <section id="mysteryPage" class="page">
 
     <header>
+
       <button onclick="goHome()">←</button>
+
       <h2>MYSTERY TOPIC</h2>
+
     </header>
 
+
     <div class="mysteryBox">
+
       <div>🎲</div>
+
       <h1 id="mysteryTitle"></h1>
+
       <p id="mysteryDescription"></p>
 
-      <button onclick="mysteryTopic()">ANOTHER TOPIC</button>
+      <button onclick="mysteryTopic()">
+        ANOTHER TOPIC
+      </button>
+
     </div>
 
   </section>
@@ -265,11 +349,14 @@
   <section id="peoplePage" class="page">
 
     <header>
+
       <button onclick="goHome()">←</button>
-      <h2>SKILLMATCH</h2>
+
+      <h2>PEOPLE</h2>
+
     </header>
 
-    <!-- REAL REGISTERED USERS WILL BE LOADED HERE -->
+
     <div id="peopleList"></div>
 
   </section>
@@ -279,24 +366,35 @@
   <section id="quizPage" class="page">
 
     <header>
+
       <button onclick="goHome()">←</button>
+
       <h2>MINDCHECK</h2>
+
     </header>
+
 
     <div class="quizBox">
 
-      <div id="quizLessonName" class="quizLessonName"></div>
+      <div
+        id="quizLessonName"
+        class="quizLessonName"
+      ></div>
+
 
       <div id="quizQuestion"></div>
+
 
       <textarea
         id="quizAnswer"
         placeholder="Write your complete answer..."
       ></textarea>
 
+
       <button onclick="checkQuiz()">
         CHECK ANSWER
       </button>
+
 
       <div id="quizResult"></div>
 
@@ -304,7 +402,10 @@
 
 
     <!-- REAL AI TEACHER DIRECTLY BELOW QUIZ -->
-    <div id="lessonAITeacher" class="lessonAITeacher">
+    <div
+      id="lessonAITeacher"
+      class="lessonAITeacher"
+    >
 
       <div class="aiTeacherHeader">
 
@@ -312,17 +413,24 @@
           🤖
         </div>
 
+
         <div>
+
           <h2>AI TEACHER</h2>
+
           <p id="aiTeacherLessonLabel">
             Choose a lesson first.
           </p>
+
         </div>
 
       </div>
 
 
-      <div id="aiTeacherMessages" class="aiTeacherMessages">
+      <div
+        id="aiTeacherMessages"
+        class="aiTeacherMessages"
+      >
 
         <div class="aiBubble">
 
@@ -341,15 +449,23 @@
 
       <div class="aiQuickQuestions">
 
-        <button onclick="askAIQuick('Explain this lesson simply.')">
+        <button
+          onclick="askAIQuick('Explain this lesson simply.')"
+        >
           Explain simply
         </button>
 
-        <button onclick="askAIQuick('Give me a real-life example.')">
+
+        <button
+          onclick="askAIQuick('Give me a real-life example.')"
+        >
           Real-life example
         </button>
 
-        <button onclick="askAIQuick('What are the most important things I should remember?')">
+
+        <button
+          onclick="askAIQuick('What are the most important things I should remember?')"
+        >
           Key points
         </button>
 
@@ -363,6 +479,7 @@
           placeholder="Ask your doubt about this lesson..."
           rows="3"
         ></textarea>
+
 
         <button onclick="askAITeacher()">
           ASK AI 🤖
@@ -379,11 +496,18 @@
   <section id="badgesPage" class="page">
 
     <header>
+
       <button onclick="goHome()">←</button>
+
       <h2>ACHIEVEMENT VAULT</h2>
+
     </header>
 
-    <div id="allBadges" class="badgeGrid"></div>
+
+    <div
+      id="allBadges"
+      class="badgeGrid"
+    ></div>
 
   </section>
 
@@ -392,15 +516,25 @@
   <section id="shopPage" class="page">
 
     <header>
+
       <button onclick="goHome()">←</button>
+
       <h2>COINCRAFT</h2>
+
     </header>
 
+
     <div class="coinsBox">
+
       💰 <span id="shopCoins">0</span> TeachCoins
+
     </div>
 
-    <div id="shopList" class="shopGrid"></div>
+
+    <div
+      id="shopList"
+      class="shopGrid"
+    ></div>
 
   </section>
 
@@ -409,31 +543,50 @@
   <section id="profilePage" class="page">
 
     <header>
+
       <button onclick="goHome()">←</button>
+
       <h2>PROFILE</h2>
+
     </header>
+
 
     <div class="profileBox">
 
-      <div class="bigAvatar">👤</div>
+      <div class="bigAvatar">
+        👤
+      </div>
+
 
       <h1 id="profileName"></h1>
+
 
       <div class="stats">
 
         <div>
+
           <b id="profileSessions">0</b>
+
           <span>Sessions</span>
+
         </div>
 
+
         <div>
+
           <b id="profileCoins">0</b>
+
           <span>Coins</span>
+
         </div>
 
+
         <div>
+
           <b id="profileBadges">0</b>
+
           <span>Badges</span>
+
         </div>
 
       </div>
@@ -447,9 +600,13 @@
   <section id="mapPage" class="page">
 
     <header>
+
       <button onclick="goHome()">←</button>
+
       <h2>LEARNSPHERE</h2>
+
     </header>
+
 
     <div class="mapIntro">
 
@@ -461,9 +618,14 @@
 
     </div>
 
+
     <div id="worldMap"></div>
 
-    <div id="countryInfo" class="countryInfo">
+
+    <div
+      id="countryInfo"
+      class="countryInfo"
+    >
 
       <h2>🌎 Select a country</h2>
 
@@ -473,15 +635,36 @@
 
     </div>
 
+
     <div class="continentButtons">
 
-      <button onclick="showCountry('India')">🇮🇳 India</button>
-      <button onclick="showCountry('Japan')">🇯🇵 Japan</button>
-      <button onclick="showCountry('United States')">🇺🇸 USA</button>
-      <button onclick="showCountry('Brazil')">🇧🇷 Brazil</button>
-      <button onclick="showCountry('Australia')">🇦🇺 Australia</button>
-      <button onclick="showCountry('Egypt')">🇪🇬 Egypt</button>
-      <button onclick="showCountry('Antarctica')">🧊 Antarctica</button>
+      <button onclick="showCountry('India')">
+        🇮🇳 India
+      </button>
+
+      <button onclick="showCountry('Japan')">
+        🇯🇵 Japan
+      </button>
+
+      <button onclick="showCountry('United States')">
+        🇺🇸 USA
+      </button>
+
+      <button onclick="showCountry('Brazil')">
+        🇧🇷 Brazil
+      </button>
+
+      <button onclick="showCountry('Australia')">
+        🇦🇺 Australia
+      </button>
+
+      <button onclick="showCountry('Egypt')">
+        🇪🇬 Egypt
+      </button>
+
+      <button onclick="showCountry('Antarctica')">
+        🧊 Antarctica
+      </button>
 
     </div>
 
