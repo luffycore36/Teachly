@@ -117,6 +117,53 @@ function save() {
   );
 }
 
+/* =========================
+   START TEACHLY
+========================= */
+
+function startTeachly() {
+
+    const input =
+        document.getElementById("usernameInput");
+
+    if (!input) {
+        return;
+    }
+
+    const name =
+        input.value.trim();
+
+    if (!name) {
+
+        showToast(
+            "Please enter your username."
+        );
+
+        return;
+    }
+
+    state.name = name;
+
+    state.loggedIn = true;
+
+    save();
+
+    const welcome =
+        document.getElementById(
+            "welcomeText"
+        );
+
+    if (welcome) {
+
+        welcome.textContent =
+            "Welcome, " + state.name + "!";
+    }
+
+    openPage("homePage");
+
+    updateHome();
+}
+
 
 function load() {
 
