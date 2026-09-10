@@ -12,6 +12,7 @@ const nodemailer = require("nodemailer");
 dotenv.config();
 
 const app = express();
+
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
@@ -23,13 +24,13 @@ app.use((req, res, next) => {
 
     next();
 });
+
 const server = http.createServer(app);
 const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json({ limit: "5mb" }));
-app.use(express.static(__dirname));
 
 /* =========================
    DATA STORAGE
@@ -48,7 +49,9 @@ if (!fs.existsSync(usersFile)) {
 
 function loadUsers() {
     try {
-        return JSON.parse(fs.readFileSync(usersFile, "utf8"));
+        return JSON.parse(
+            fs.readFileSync(usersFile, "utf8")
+        );
     } catch {
         return [];
     }
@@ -68,7 +71,8 @@ function saveUsers(users) {
 const sessions = new Map();
 
 function createSession(userId) {
-    const token = crypto.randomBytes(32).toString("hex");
+    const token =
+        crypto.randomBytes(32).toString("hex");
 
     sessions.set(token, {
         userId,
@@ -81,7 +85,8 @@ function createSession(userId) {
 function getUserFromToken(token) {
     if (!token) return null;
 
-    const session = sessions.get(token);
+    const session =
+        sessions.get(token);
 
     if (!session) return null;
 
@@ -117,7 +122,8 @@ function authenticated(req, res, next) {
             ""
         );
 
-    const user = getUserFromToken(token);
+    const user =
+        getUserFromToken(token);
 
     if (!user) {
         return res.status(401).json({
@@ -160,7 +166,8 @@ app.post(
             const {
                 username,
                 email,
-                password
+                password,
+                role
             } = req.body;
 
             if (!username || !email || !password) {
@@ -170,8 +177,16 @@ app.post(
                 });
             }
 
+            const cleanUsername =
+                username.trim();
+
             const cleanEmail =
                 email.trim().toLowerCase();
+
+            const cleanRole =
+                role === "teacher"
+                    ? "teacher"
+                    : "learner";
 
             if (
                 !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
@@ -188,6 +203,13 @@ app.post(
                 return res.status(400).json({
                     error:
                         "Password must contain at least 8 characters."
+                });
+            }
+
+            if (!cleanUsername) {
+                return res.status(400).json({
+                    error:
+                        "Please choose a username."
                 });
             }
 
@@ -211,7 +233,7 @@ app.post(
                 users.find(
                     user =>
                         user.username.toLowerCase() ===
-                        username.trim().toLowerCase()
+                        cleanUsername.toLowerCase()
                 );
 
             if (existingUsername) {
@@ -237,10 +259,11 @@ app.post(
                 );
 
             const user = {
-                id: crypto.randomUUID(),
+                id:
+                    crypto.randomUUID(),
 
                 username:
-                    username.trim(),
+                    cleanUsername,
 
                 email:
                     cleanEmail,
@@ -248,7 +271,8 @@ app.post(
                 password:
                     hashedPassword,
 
-                verified: false,
+                verified:
+                    false,
 
                 verificationCode,
 
@@ -256,21 +280,32 @@ app.post(
                     Date.now() +
                     10 * 60 * 1000,
 
-                profileImage: "",
+                profileImage:
+                    "",
 
-                role: "",
+                /*
+                 * REAL REGISTERED USER ROLE
+                 */
+                role:
+                    cleanRole,
 
-                tickets: 0,
+                tickets:
+                    0,
 
-                sessions: 0,
+                sessions:
+                    0,
 
-                streak: 0,
+                streak:
+                    0,
 
-                earnedBadges: [],
+                earnedBadges:
+                    [],
 
-                ownedEffects: [],
+                ownedEffects:
+                    [],
 
-                equippedEffect: ""
+                equippedEffect:
+                    ""
             };
 
             users.push(user);
@@ -334,7 +369,8 @@ app.post(
             code
         } = req.body;
 
-        const users = loadUsers();
+        const users =
+            loadUsers();
 
         const user =
             users.find(
@@ -377,7 +413,8 @@ app.post(
             });
         }
 
-        user.verified = true;
+        user.verified =
+            true;
 
         delete user.verificationCode;
         delete user.verificationExpires;
@@ -411,7 +448,8 @@ app.post(
                 password
             } = req.body;
 
-            const users = loadUsers();
+            const users =
+                loadUsers();
 
             const user =
                 users.find(
@@ -479,12 +517,77 @@ app.post(
     authenticated,
     (req, res) => {
 
-        sessions.delete(req.token);
+        sessions.delete(
+            req.token
+        );
 
         res.json({
             message:
                 "Logged out successfully."
         });
+
+    }
+);
+
+/* =========================
+   REAL REGISTERED PEOPLE
+========================= */
+
+app.get(
+    "/api/people",
+    (req, res) => {
+
+        try {
+
+            const users =
+                loadUsers();
+
+            /*
+             * Only verified real users.
+             * Passwords, verification codes,
+             * and other private information
+             * are never returned.
+             */
+
+            const people =
+                users
+                    .filter(
+                        user =>
+                            user.verified === true
+                    )
+                    .map(
+                        user => ({
+                            id:
+                                user.id,
+
+                            username:
+                                user.username,
+
+                            profileImage:
+                                user.profileImage || "",
+
+                            role:
+                                user.role || ""
+                        })
+                    );
+
+            res.json({
+                people
+            });
+
+        } catch (error) {
+
+            console.error(
+                "PEOPLE ERROR:",
+                error
+            );
+
+            res.status(500).json({
+                error:
+                    "Unable to load registered users."
+            });
+
+        }
 
     }
 );
@@ -516,7 +619,8 @@ app.post(
             });
         }
 
-        const users = loadUsers();
+        const users =
+            loadUsers();
 
         const user =
             users.find(
@@ -525,7 +629,15 @@ app.post(
                     req.user.id
             );
 
-        user.profileImage = image;
+        if (!user) {
+            return res.status(404).json({
+                error:
+                    "User not found."
+            });
+        }
+
+        user.profileImage =
+            image;
 
         saveUsers(users);
 
@@ -563,7 +675,8 @@ app.post(
             });
         }
 
-        const users = loadUsers();
+        const users =
+            loadUsers();
 
         const user =
             users.find(
@@ -572,19 +685,22 @@ app.post(
                     req.user.id
             );
 
+        if (!user) {
+            return res.status(404).json({
+                error:
+                    "User not found."
+            });
+        }
+
         user.ownedEffects =
             user.ownedEffects || [];
-
-        /*
-          Already owned:
-          don't charge again.
-        */
 
         if (
             user.ownedEffects.includes(id)
         ) {
 
-            user.equippedEffect = id;
+            user.equippedEffect =
+                id;
 
             saveUsers(users);
 
@@ -605,11 +721,13 @@ app.post(
             });
         }
 
-        user.tickets -= products[id];
+        user.tickets -=
+            products[id];
 
         user.ownedEffects.push(id);
 
-        user.equippedEffect = id;
+        user.equippedEffect =
+            id;
 
         saveUsers(users);
 
@@ -634,7 +752,8 @@ app.post(
             id
         } = req.body;
 
-        const users = loadUsers();
+        const users =
+            loadUsers();
 
         const user =
             users.find(
@@ -642,6 +761,13 @@ app.post(
                     u.id ===
                     req.user.id
             );
+
+        if (!user) {
+            return res.status(404).json({
+                error:
+                    "User not found."
+            });
+        }
 
         if (
             !user.ownedEffects?.includes(id)
@@ -652,7 +778,8 @@ app.post(
             });
         }
 
-        user.equippedEffect = id;
+        user.equippedEffect =
+            id;
 
         saveUsers(users);
 
@@ -671,9 +798,13 @@ app.post(
 let openai = null;
 
 if (process.env.OPENAI_API_KEY) {
-    openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY
-    });
+
+    openai =
+        new OpenAI({
+            apiKey:
+                process.env.OPENAI_API_KEY
+        });
+
 }
 
 app.post(
@@ -687,29 +818,38 @@ app.post(
                 lesson
             } = req.body;
 
-            if (!message || !String(message).trim()) {
+            if (
+                !message ||
+                !String(message).trim()
+            ) {
                 return res.status(400).json({
-                    error: "Please enter a question."
+                    error:
+                        "Please enter a question."
                 });
             }
 
             if (!openai) {
                 return res.status(500).json({
-                    error: "AI is not configured yet. Check OPENAI_API_KEY in Render."
+                    error:
+                        "AI is not configured yet. Check OPENAI_API_KEY in Render."
                 });
             }
 
             const lessonTitle =
-                lesson?.title || "General learning";
+                lesson?.title ||
+                "General learning";
 
             const lessonCategory =
-                lesson?.category || "General";
+                lesson?.category ||
+                "General";
 
             const lessonDescription =
-                lesson?.description || "";
+                lesson?.description ||
+                "";
 
             const lessonContent =
-                lesson?.content || "";
+                lesson?.content ||
+                "";
 
             const response =
                 await openai.responses.create({
@@ -748,7 +888,9 @@ Rules:
 `,
 
                     input:
-                        String(message).trim()
+                        String(
+                            message
+                        ).trim()
                 });
 
             res.json({
@@ -759,7 +901,10 @@ Rules:
 
         } catch (error) {
 
-            console.error("AI ERROR:", error);
+            console.error(
+                "AI ERROR:",
+                error
+            );
 
             res.status(500).json({
                 error:
@@ -776,16 +921,23 @@ Rules:
    MULTIPLAYER MATCHING
 ========================= */
 
-const waitingUsers = new Map();
-const rooms = new Map();
+const waitingUsers =
+    new Map();
+
+const rooms =
+    new Map();
 
 function topicsMatch(a, b) {
 
     const first =
-        a.toLowerCase().trim();
+        String(a || "")
+            .toLowerCase()
+            .trim();
 
     const second =
-        b.toLowerCase().trim();
+        String(b || "")
+            .toLowerCase()
+            .trim();
 
     return (
         first === second ||
@@ -798,7 +950,7 @@ function topicsMatch(a, b) {
 function removeFromWaiting(socketId) {
 
     for (
-        const [id, person]
+        const [id]
         of waitingUsers
     ) {
 
@@ -824,7 +976,10 @@ io.on(
                 const user =
                     getUserFromToken(token);
 
-                if (!user || !user.verified) {
+                if (
+                    !user ||
+                    !user.verified
+                ) {
 
                     socket.emit(
                         "serverMessage",
@@ -897,10 +1052,14 @@ io.on(
                             }
                         );
 
-                        socket.join(room);
+                        socket.join(
+                            room
+                        );
 
                         io.sockets.sockets
-                            .get(other.socketId)
+                            .get(
+                                other.socketId
+                            )
                             ?.join(room);
 
                         const users =
@@ -1036,7 +1195,10 @@ io.on(
 
                         message:
                             String(message)
-                                .slice(0, 2000)
+                                .slice(
+                                    0,
+                                    2000
+                                )
                     }
                 );
 
@@ -1054,12 +1216,15 @@ io.on(
 
                 if (!session) return;
 
-                socket.leave(room);
+                socket.leave(
+                    room
+                );
 
                 const partner =
                     session.users.find(
                         id =>
-                            id !== socket.id
+                            id !==
+                            socket.id
                     );
 
                 if (partner) {
@@ -1072,7 +1237,9 @@ io.on(
 
                 }
 
-                rooms.delete(room);
+                rooms.delete(
+                    room
+                );
 
             }
         );
@@ -1115,7 +1282,9 @@ io.on(
 
                         }
 
-                        rooms.delete(room);
+                        rooms.delete(
+                            room
+                        );
 
                     }
 
@@ -1125,6 +1294,22 @@ io.on(
         );
 
     }
+);
+
+/* =========================
+   STATIC FRONTEND
+========================= */
+
+/*
+ * IMPORTANT:
+ * Keep this AFTER the API routes.
+ * This prevents the frontend/static
+ * handler from interfering with API
+ * requests.
+ */
+
+app.use(
+    express.static(__dirname)
 );
 
 /* =========================
