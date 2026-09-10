@@ -1,2256 +1,2161 @@
-/* =====================================================
-   TEACHLY
-   MAIN FRONTEND SCRIPT
-===================================================== */
+/* =========================
+   TEACHLY DATA
+========================= */
 
-const API_URL = "https://teachly-nmxh.onrender.com";
+let state = JSON.parse(localStorage.getItem("teachlyState")) || {
+  name: "",
+  coins: 0,
+  sessions: 0,
+  badges: [],
+  owned: []
+};
 
 let currentRole = "";
 let currentPerson = "";
-let currentUser = null;
-let selectedLesson = null;
-let currentQuiz = null;
-let currentLessonCategory = "All";
-
-
-/* =====================================================
-   STATE
-===================================================== */
-
-let state = JSON.parse(
-    localStorage.getItem("teachlyState") || "{}"
-);
-
-state.name = state.name || "";
-state.coins = Number(state.coins || 0);
-state.sessions = Number(state.sessions || 0);
-state.badges = state.badges || [];
-state.owned = state.owned || [];
 
 function save() {
-    localStorage.setItem(
-        "teachlyState",
-        JSON.stringify(state)
-    );
-
-    updateUI();
+  localStorage.setItem(
+    "teachlyState",
+    JSON.stringify(state)
+  );
 }
 
 
-/* =====================================================
-   HELPERS
-===================================================== */
-
-function $(id) {
-    return document.getElementById(id);
-}
-
-function escapeHTML(value) {
-
-    return String(value || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
-
-function showToast(message) {
-
-    const toast = $("toast");
-
-    if (!toast) return;
-
-    toast.textContent = message;
-
-    toast.classList.add("show");
-
-    setTimeout(() => {
-        toast.classList.remove("show");
-    }, 2500);
-}
-
-
-/* =====================================================
-   PAGE NAVIGATION
-===================================================== */
-
-function openPage(pageId) {
-
-    document
-        .querySelectorAll(".page")
-        .forEach(page => {
-            page.classList.remove("active");
-        });
-
-    const page = $(pageId);
-
-    if (page) {
-        page.classList.add("active");
-    }
-
-    if (pageId === "peoplePage") {
-        loadPeople();
-    }
-
-    if (pageId === "badgesPage") {
-        loadBadges();
-    }
-
-    if (pageId === "shopPage") {
-        loadShop();
-    }
-
-    if (pageId === "profilePage") {
-        loadProfile();
-    }
-
-    if (pageId === "mapPage") {
-        loadMap();
-    }
-}
-
-
-function goHome() {
-    openPage("homePage");
-}
-
-
-/* =====================================================
-   START
-===================================================== */
-
-function startTeachly() {
-
-    const input = $("usernameInput");
-
-    const name = input?.value.trim();
-
-    if (!name) {
-        showToast("Please enter a username.");
-        return;
-    }
-
-    state.name = name;
-
-    save();
-
-    if ($("welcomeText")) {
-        $("welcomeText").textContent =
-            `Welcome, ${name}! 👋`;
-    }
-
-    openPage("homePage");
-
-    loadLessons();
-}
-
-
-/* =====================================================
-   UI
-===================================================== */
-
-function updateUI() {
-
-    const coinElements = [
-        $("homeCoins"),
-        $("shopCoins"),
-        $("shopPageCoins"),
-        $("profileCoins")
-    ];
-
-    coinElements.forEach(element => {
-
-        if (element) {
-            element.textContent = state.coins;
-        }
-
-    });
-
-    if ($("profileName")) {
-        $("profileName").textContent =
-            state.name || "User";
-    }
-
-    if ($("profileSessions")) {
-        $("profileSessions").textContent =
-            state.sessions;
-    }
-
-    if ($("profileBadges")) {
-        $("profileBadges").textContent =
-            state.badges.length;
-    }
-
-    if ($("welcomeText") && state.name) {
-        $("welcomeText").textContent =
-            `Welcome, ${state.name}! 👋`;
-    }
-}
-
-
-/* =====================================================
+/* =========================
    LESSON LIBRARY
-===================================================== */
+========================= */
 
 const lessons = [
 
-    {
-        id: "math-basics",
-        title: "Mathematics Basics",
-        category: "Mathematics",
-        emoji: "➗",
-        description: "Numbers, operations and basic mathematical thinking.",
-        content: `
-<h3>What is Mathematics?</h3>
-
-<p>
-Mathematics is the study of numbers, quantities,
-patterns, shapes and logical relationships.
-</p>
-
-<h3>Basic Operations</h3>
-
-<ul>
-<li>Addition combines quantities.</li>
-<li>Subtraction finds the difference.</li>
-<li>Multiplication is repeated addition.</li>
-<li>Division splits a quantity into equal parts.</li>
-</ul>
-
-<h3>Example</h3>
-
-<p>
-If you have 4 apples and receive 3 more:
-4 + 3 = 7.
-</p>
-
-<h3>Remember</h3>
-
-<p>
-Always follow the correct order of operations
-when an expression contains multiple operations.
-</p>
-`
-    },
-
-
-    {
-        id: "fractions",
-        title: "Fractions",
-        category: "Mathematics",
-        emoji: "🍕",
-        description: "Understand numerators, denominators and equivalent fractions.",
-        content: `
-<h3>What is a Fraction?</h3>
-
-<p>
-A fraction represents part of a whole.
-</p>
-
-<p>
-In 3/4, the 3 is the numerator and the 4 is
-the denominator.
-</p>
-
-<h3>Equivalent Fractions</h3>
-
-<p>
-Fractions can look different while representing
-the same amount.
-</p>
-
-<p>
-For example, 1/2 and 2/4 represent the same value.
-</p>
-`
-    },
-
-
-    {
-        id: "algebra",
-        title: "Introduction to Algebra",
-        category: "Mathematics",
-        emoji: "🔢",
-        description: "Learn variables, expressions and simple equations.",
-        content: `
-<h3>Variables</h3>
-
-<p>
-A variable is a symbol used to represent an unknown value.
-</p>
-
-<p>
-For example:
-x + 5 = 12
-</p>
-
-<p>
-Here x represents the unknown number.
-</p>
-
-<h3>Solving</h3>
-
-<p>
-To solve x + 5 = 12, subtract 5 from both sides:
-x = 7.
-</p>
-`
-    },
-
-
-    {
-        id: "physics",
-        title: "Force and Motion",
-        category: "Physics",
-        emoji: "🚀",
-        description: "Learn how forces affect objects and motion.",
-        content: `
-<h3>Force</h3>
-
-<p>
-A force is a push or pull that can change an object's motion.
-</p>
-
-<h3>Motion</h3>
-
-<p>
-Motion describes a change in an object's position over time.
-</p>
-
-<h3>Newton's Laws</h3>
-
-<p>
-Newton's laws describe relationships between force,
-mass and motion.
-</p>
-
-<p>
-A simple form of Newton's second law is:
-F = ma.
-</p>
-`
-    },
-
-
-    {
-        id: "gravity",
-        title: "Gravity",
-        category: "Physics",
-        emoji: "🌍",
-        description: "Understand gravitational attraction.",
-        content: `
-<h3>What is Gravity?</h3>
-
-<p>
-Gravity is an attractive force between objects that have mass.
-</p>
-
-<p>
-Earth's gravity pulls objects toward Earth's center.
-</p>
-
-<h3>Example</h3>
-
-<p>
-When you drop a ball, Earth's gravity causes it to
-accelerate downward.
-</p>
-`
-    },
-
-
-    {
-        id: "biology-cells",
-        title: "Cells",
-        category: "Biology",
-        emoji: "🔬",
-        description: "Learn about the basic unit of life.",
-        content: `
-<h3>Cells</h3>
-
-<p>
-A cell is the basic structural and functional unit
-of living organisms.
-</p>
-
-<h3>Important Parts</h3>
-
-<ul>
-<li>Cell membrane</li>
-<li>Cytoplasm</li>
-<li>Nucleus</li>
-<li>Mitochondria</li>
-</ul>
-
-<h3>Plant Cells</h3>
-
-<p>
-Plant cells also have structures such as a cell wall,
-chloroplasts and a large central vacuole.
-</p>
-`
-    },
-
-
-    {
-        id: "photosynthesis",
-        title: "Photosynthesis",
-        category: "Biology",
-        emoji: "🌱",
-        description: "How plants use light energy to make food.",
-        content: `
-<h3>Photosynthesis</h3>
-
-<p>
-Photosynthesis is the process by which plants use
-light energy to make chemical energy stored in food.
-</p>
-
-<h3>Main Ingredients</h3>
-
-<ul>
-<li>Carbon dioxide</li>
-<li>Water</li>
-<li>Light energy</li>
-</ul>
-
-<p>
-Chlorophyll helps plants capture light energy.
-</p>
-`
-    },
-
-
-    {
-        id: "chemistry-atoms",
-        title: "Atoms",
-        category: "Chemistry",
-        emoji: "⚛️",
-        description: "Learn about protons, neutrons and electrons.",
-        content: `
-<h3>Atoms</h3>
-
-<p>
-Atoms are the basic units of ordinary matter.
-</p>
-
-<h3>Subatomic Particles</h3>
-
-<ul>
-<li>Protons have positive charge.</li>
-<li>Neutrons have no electrical charge.</li>
-<li>Electrons have negative charge.</li>
-</ul>
-
-<p>
-The nucleus contains protons and neutrons.
-Electrons occupy regions around the nucleus.
-</p>
-`
-    },
-
-
-    {
-        id: "chemical-reactions",
-        title: "Chemical Reactions",
-        category: "Chemistry",
-        emoji: "🧪",
-        description: "Understand reactants, products and chemical change.",
-        content: `
-<h3>Chemical Reactions</h3>
-
-<p>
-A chemical reaction changes substances into new substances.
-</p>
-
-<h3>Reactants</h3>
-
-<p>
-Reactants are the substances present at the beginning.
-</p>
-
-<h3>Products</h3>
-
-<p>
-Products are the substances formed by the reaction.
-</p>
-`
-    },
-
-
-    {
-        id: "english-grammar",
-        title: "English Grammar",
-        category: "English",
-        emoji: "📖",
-        description: "Learn sentence structure and parts of speech.",
-        content: `
-<h3>Parts of Speech</h3>
-
-<ul>
-<li>Nouns name people, places, things or ideas.</li>
-<li>Verbs describe actions or states.</li>
-<li>Adjectives describe nouns.</li>
-<li>Adverbs modify verbs, adjectives or other adverbs.</li>
-</ul>
-
-<h3>Sentence</h3>
-
-<p>
-A complete sentence normally expresses a complete thought.
-</p>
-`
-    },
-
-
-    {
-        id: "computer-science",
-        title: "Computer Science Basics",
-        category: "Computer Science",
-        emoji: "💻",
-        description: "Learn algorithms, programs and computational thinking.",
-        content: `
-<h3>Computer Science</h3>
-
-<p>
-Computer science studies computation, algorithms,
-data and computer systems.
-</p>
-
-<h3>Algorithms</h3>
-
-<p>
-An algorithm is a step-by-step procedure for solving a problem.
-</p>
-
-<h3>Programming</h3>
-
-<p>
-Programming means writing instructions that a computer
-can execute.
-</p>
-`
-    },
-
-
-    {
-        id: "javascript",
-        title: "JavaScript Basics",
-        category: "Programming",
-        emoji: "🟨",
-        description: "Variables, functions and basic JavaScript.",
-        content: `
-<h3>JavaScript</h3>
-
-<p>
-JavaScript is a programming language commonly used
-to make web pages interactive.
-</p>
-
-<h3>Variables</h3>
-
-<p>
-Variables store values that a program can use.
-</p>
-
-<h3>Functions</h3>
-
-<p>
-Functions group instructions that can be called when needed.
-</p>
-`
-    },
-
-
-    {
-        id: "python",
-        title: "Python Basics",
-        category: "Programming",
-        emoji: "🐍",
-        description: "Learn Python variables, conditions and loops.",
-        content: `
-<h3>Python</h3>
-
-<p>
-Python is a general-purpose programming language
-known for readable syntax.
-</p>
-
-<h3>Variables</h3>
-
-<p>
-A variable can store a value such as a number or text.
-</p>
-
-<h3>Conditions</h3>
-
-<p>
-An if statement lets a program make decisions.
-</p>
-
-<h3>Loops</h3>
-
-<p>
-Loops repeat instructions.
-</p>
-`
-    },
-
-
-    {
-        id: "astronomy",
-        title: "The Solar System",
-        category: "Astronomy",
-        emoji: "🪐",
-        description: "Explore the Sun, planets and other objects.",
-        content: `
-<h3>The Solar System</h3>
-
-<p>
-Our Solar System contains the Sun and the objects
-that orbit it.
-</p>
-
-<h3>Planets</h3>
-
-<p>
-The eight planets orbit the Sun.
-They are divided broadly into terrestrial planets
-and giant planets.
-</p>
-
-<h3>Gravity</h3>
-
-<p>
-Gravity plays a major role in keeping planets
-in orbit around the Sun.
-</p>
-`
-    },
-
-
-    {
-        id: "geography",
-        title: "Geography Basics",
-        category: "Geography",
-        emoji: "🗺️",
-        description: "Learn continents, countries, maps and physical geography.",
-        content: `
-<h3>Geography</h3>
-
-<p>
-Geography studies Earth's places, environments,
-people and spatial relationships.
-</p>
-
-<h3>Physical Geography</h3>
-
-<p>
-Physical geography includes landforms, climate,
-water and natural processes.
-</p>
-
-<h3>Human Geography</h3>
-
-<p>
-Human geography studies people and their relationship
-with places and environments.
-</p>
-`
+  {
+    id: "python-basics",
+    category: "Computer Science",
+    icon: "🐍",
+    title: "Python Basics",
+    description: "Learn variables, data types, conditions and the basic structure of Python programs.",
+    blocks: [
+      {
+        title: "What is Python?",
+        text: "Python is a general-purpose programming language designed to be readable and useful for many kinds of tasks."
+      },
+      {
+        title: "Variables",
+        text: "A variable is a name that refers to a value. For example, age = 15 stores the number 15 under the name age."
+      },
+      {
+        title: "Conditions",
+        text: "An if statement allows a program to make a decision. The code inside it runs when its condition is true."
+      },
+      {
+        title: "Remember",
+        list: [
+          "Python uses readable syntax.",
+          "Variables store or refer to values.",
+          "if statements allow decisions.",
+          "Programs can combine many small instructions."
+        ]
+      }
+    ],
+    quiz: {
+      question: "What is a variable in Python, and why is it useful?",
+      groups: [
+        ["name", "identifier"],
+        ["store", "hold", "refer"],
+        ["value", "data"]
+      ],
+      answer: "A variable is a name used to store or refer to a value or piece of data."
     }
+  },
+
+  {
+    id: "ai-basics",
+    category: "Computer Science",
+    icon: "🤖",
+    title: "Artificial Intelligence",
+    description: "Understand what AI is, how models learn patterns and where AI is used.",
+    blocks: [
+      {
+        title: "What is AI?",
+        text: "Artificial intelligence is a field of computing that builds systems capable of performing tasks that can involve learning, reasoning, recognizing patterns or making predictions."
+      },
+      {
+        title: "How does AI learn?",
+        text: "Many AI systems learn patterns from examples. During training, a model adjusts internal parameters so that its outputs become more useful for the task."
+      },
+      {
+        title: "AI is not magic",
+        text: "An AI system does not automatically know everything. Its abilities depend on its model, training, instructions, available information and tools."
+      },
+      {
+        title: "Remember",
+        list: [
+          "AI is a field of computing.",
+          "Many AI systems learn patterns from examples.",
+          "AI can make mistakes.",
+          "Good questions and context help an AI give better answers."
+        ]
+      }
+    ],
+    quiz: {
+      question: "What is artificial intelligence and how can an AI system learn patterns?",
+      groups: [
+        ["artificial intelligence", "ai"],
+        ["computer", "system", "machine"],
+        ["patterns", "examples", "data"]
+      ],
+      answer: "Artificial intelligence is a field of computing. Many AI systems learn patterns from examples or data."
+    }
+  },
+
+  {
+    id: "physics-motion",
+    category: "Physics",
+    icon: "⚡",
+    title: "Motion and Forces",
+    description: "Learn about motion, forces, mass and acceleration.",
+    blocks: [
+      {
+        title: "Motion",
+        text: "Motion describes a change in an object's position over time."
+      },
+      {
+        title: "Force",
+        text: "A force is a push or pull that can change an object's motion."
+      },
+      {
+        title: "Newton's Second Law",
+        text: "Newton's second law connects force, mass and acceleration. It is commonly written as F = ma."
+      },
+      {
+        title: "Remember",
+        list: [
+          "Motion means position changes over time.",
+          "Force is a push or pull.",
+          "Mass describes how much matter an object has.",
+          "More net force generally produces more acceleration for the same mass."
+        ]
+      }
+    ],
+    quiz: {
+      question: "What is a force and how are force, mass and acceleration related?",
+      groups: [
+        ["push", "pull"],
+        ["force", "f"],
+        ["mass", "m"],
+        ["acceleration", "a"]
+      ],
+      answer: "A force is a push or pull. Newton's second law relates force, mass and acceleration with F = ma."
+    }
+  },
+
+  {
+    id: "biology-cells",
+    category: "Biology",
+    icon: "🧬",
+    title: "Cells",
+    description: "Learn why cells are important and the basic roles of common cell structures.",
+    blocks: [
+      {
+        title: "What is a cell?",
+        text: "A cell is the basic structural and functional unit of life."
+      },
+      {
+        title: "Cell membrane",
+        text: "The cell membrane surrounds the cell and helps control what enters and leaves it."
+      },
+      {
+        title: "Nucleus",
+        text: "In many eukaryotic cells, the nucleus contains most of the cell's genetic material and helps control cell activities."
+      },
+      {
+        title: "Remember",
+        list: [
+          "Cells are fundamental units of living organisms.",
+          "The membrane controls movement into and out of the cell.",
+          "The nucleus contains genetic material in eukaryotic cells."
+        ]
+      }
+    ],
+    quiz: {
+      question: "What is a cell and what are two important roles of the cell membrane and nucleus?",
+      groups: [
+        ["basic", "unit"],
+        ["life", "living"],
+        ["membrane", "membrane controls"],
+        ["nucleus", "genetic", "dna"]
+      ],
+      answer: "A cell is a basic unit of life. The membrane controls movement into and out of the cell, while the nucleus contains genetic material in eukaryotic cells."
+    }
+  },
+
+  {
+    id: "chemistry-matter",
+    category: "Chemistry",
+    icon: "🧪",
+    title: "Matter and Atoms",
+    description: "Understand atoms, elements and the three familiar states of matter.",
+    blocks: [
+      {
+        title: "Matter",
+        text: "Matter is anything that has mass and occupies space."
+      },
+      {
+        title: "Atoms",
+        text: "Atoms are basic units of chemical elements. They contain a nucleus surrounded by electrons."
+      },
+      {
+        title: "States of Matter",
+        text: "Common states include solids, liquids and gases. Their particles have different arrangements and amounts of freedom of movement."
+      },
+      {
+        title: "Remember",
+        list: [
+          "Matter has mass and occupies space.",
+          "Atoms make up elements.",
+          "Solids keep a definite shape.",
+          "Liquids take the shape of their container.",
+          "Gases spread to fill available space."
+        ]
+      }
+    ],
+    quiz: {
+      question: "What is matter, what is an atom, and name three common states of matter.",
+      groups: [
+        ["mass"],
+        ["space", "occupies"],
+        ["atom"],
+        ["solid", "liquid"],
+        ["gas", "gases"]
+      ],
+      answer: "Matter has mass and occupies space. An atom is a basic unit of an element. Common states of matter are solid, liquid and gas."
+    }
+  },
+
+  {
+    id: "math-algebra",
+    category: "Mathematics",
+    icon: "➗",
+    title: "Algebra Basics",
+    description: "Learn variables, expressions and simple equations.",
+    blocks: [
+      {
+        title: "Variables",
+        text: "A variable represents an unknown or changing value, often written with a letter such as x."
+      },
+      {
+        title: "Expressions",
+        text: "An algebraic expression combines numbers, variables and operations, such as 3x + 5."
+      },
+      {
+        title: "Equations",
+        text: "An equation states that two expressions are equal. Solving an equation means finding the value that makes the statement true."
+      },
+      {
+        title: "Example",
+        text: "For x + 4 = 10, subtract 4 from both sides to get x = 6."
+      }
+    ],
+    quiz: {
+      question: "What is a variable and how would you solve x + 4 = 10?",
+      groups: [
+        ["variable", "unknown"],
+        ["x"],
+        ["subtract", "minus"],
+        ["6"]
+      ],
+      answer: "A variable can represent an unknown value. To solve x + 4 = 10, subtract 4 from both sides, giving x = 6."
+    }
+  },
+
+  {
+    id: "astronomy-solar",
+    category: "Space",
+    icon: "🌌",
+    title: "Our Solar System",
+    description: "Explore the Sun, planets and the structure of our solar system.",
+    blocks: [
+      {
+        title: "The Solar System",
+        text: "Our solar system consists of the Sun and the objects gravitationally bound to it, including planets, dwarf planets, moons, asteroids and comets."
+      },
+      {
+        title: "The Sun",
+        text: "The Sun is a star at the center of our solar system. Its gravity plays a major role in keeping the solar system together."
+      },
+      {
+        title: "Planets",
+        text: "The eight planets orbit the Sun. The inner planets are rocky, while the outer planets are much larger and include gas and ice giants."
+      },
+      {
+        title: "Remember",
+        list: [
+          "The Sun is a star.",
+          "Planets orbit the Sun.",
+          "Earth is one of eight planets.",
+          "Gravity is important to orbital motion."
+        ]
+      }
+    ],
+    quiz: {
+      question: "What is the Solar System and what role does the Sun play in it?",
+      groups: [
+        ["sun"],
+        ["star"],
+        ["planets", "planet"],
+        ["orbit", "gravity"]
+      ],
+      answer: "The Solar System contains the Sun and objects orbiting it. The Sun is a star whose gravity plays a major role in the system."
+    }
+  },
+
+  {
+    id: "cybersecurity-basics",
+    category: "Technology",
+    icon: "🔐",
+    title: "Cybersecurity Basics",
+    description: "Learn the basics of protecting accounts, devices and information.",
+    blocks: [
+      {
+        title: "What is cybersecurity?",
+        text: "Cybersecurity is the practice of protecting systems, networks and information from unauthorized access, disruption or misuse."
+      },
+      {
+        title: "Strong passwords",
+        text: "Use long, unique passwords or passphrases and avoid reusing the same password across important accounts."
+      },
+      {
+        title: "Phishing",
+        text: "Phishing is a social-engineering technique where someone tries to trick a person into revealing information or clicking something unsafe."
+      },
+      {
+        title: "Remember",
+        list: [
+          "Use unique passwords.",
+          "Be careful with unexpected links and messages.",
+          "Keep software updated.",
+          "Use multi-factor authentication when available."
+        ]
+      }
+    ],
+    quiz: {
+      question: "What is cybersecurity and name two ways to protect an account?",
+      groups: [
+        ["protect", "protection"],
+        ["systems", "information", "account"],
+        ["password"],
+        ["multi-factor", "mfa", "two-factor"]
+      ],
+      answer: "Cybersecurity protects systems and information. Unique strong passwords and multi-factor authentication are two ways to protect an account."
+    }
+  },
+
+  {
+    id: "history-civilization",
+    category: "History",
+    icon: "🏛️",
+    title: "Early Civilizations",
+    description: "Discover why early civilizations developed around rivers and how societies became organized.",
+    blocks: [
+      {
+        title: "Why rivers mattered",
+        text: "Many early civilizations developed near rivers because rivers provided water, fertile land, transportation and resources."
+      },
+      {
+        title: "Growing communities",
+        text: "As agriculture became more productive, some communities grew into towns and cities."
+      },
+      {
+        title: "Organization",
+        text: "Larger societies developed systems for government, trade, writing, construction and managing resources."
+      },
+      {
+        title: "Remember",
+        list: [
+          "Rivers supplied important resources.",
+          "Agriculture supported larger populations.",
+          "Cities developed as communities grew.",
+          "Different civilizations developed their own institutions and cultures."
+        ]
+      }
+    ],
+    quiz: {
+      question: "Why did many early civilizations develop near rivers?",
+      groups: [
+        ["water"],
+        ["fertile", "soil", "land"],
+        ["transport", "transportation"],
+        ["resources", "agriculture", "farming"]
+      ],
+      answer: "Rivers provided water, fertile land, transportation and resources, which helped agriculture and growing communities."
+    }
+  },
+
+  {
+    id: "english-grammar",
+    category: "English",
+    icon: "📖",
+    title: "Grammar Foundations",
+    description: "Understand nouns, verbs, adjectives and how they work in sentences.",
+    blocks: [
+      {
+        title: "Nouns",
+        text: "A noun names a person, place, thing or idea."
+      },
+      {
+        title: "Verbs",
+        text: "A verb expresses an action, occurrence or state of being."
+      },
+      {
+        title: "Adjectives",
+        text: "An adjective describes or gives more information about a noun."
+      },
+      {
+        title: "Example",
+        text: "In the sentence 'The bright student solved the problem,' 'student' is a noun, 'bright' is an adjective and 'solved' is a verb."
+      }
+    ],
+    quiz: {
+      question: "What are a noun, a verb and an adjective?",
+      groups: [
+        ["noun", "person", "place", "thing"],
+        ["verb", "action", "being"],
+        ["adjective", "describe", "describes"]
+      ],
+      answer: "A noun names a person, place, thing or idea. A verb expresses an action or state. An adjective describes a noun."
+    }
+  },
+
+  {
+    id: "robotics-intro",
+    category: "Technology",
+    icon: "🦾",
+    title: "Introduction to Robotics",
+    description: "Learn how robots combine sensors, control systems, software and mechanical parts.",
+    blocks: [
+      {
+        title: "What is a robot?",
+        text: "A robot is a machine designed to carry out tasks, often using sensors, computation and actuators."
+      },
+      {
+        title: "Sensors",
+        text: "Sensors collect information about the robot's surroundings or internal state."
+      },
+      {
+        title: "Actuators",
+        text: "Actuators create physical movement, such as turning a wheel or moving a robotic arm."
+      },
+      {
+        title: "Remember",
+        list: [
+          "Sensors collect information.",
+          "Software can process sensor information.",
+          "Actuators create movement.",
+          "Robots combine hardware and software."
+        ]
+      }
+    ],
+    quiz: {
+      question: "What are sensors and actuators in a robot?",
+      groups: [
+        ["sensor", "sensors"],
+        ["information", "data"],
+        ["actuator", "actuators"],
+        ["movement", "move"]
+      ],
+      answer: "Sensors collect information, while actuators create physical movement."
+    }
+  },
+
+  {
+    id: "geography-earth",
+    category: "Geography",
+    icon: "🌍",
+    title: "Earth's Continents",
+    description: "Learn about continents, oceans and how Earth's land is organized.",
+    blocks: [
+      {
+        title: "Continents",
+        text: "A continent is one of Earth's large land areas. Different educational systems group and name continents somewhat differently."
+      },
+      {
+        title: "Oceans",
+        text: "Oceans cover most of Earth's surface and strongly influence climate, ecosystems and human activity."
+      },
+      {
+        title: "Maps",
+        text: "Maps represent locations and geographic features using symbols, scales and coordinates."
+      },
+      {
+        title: "Remember",
+        list: [
+          "Earth has large land areas called continents.",
+          "Oceans cover most of the planet.",
+          "Maps help represent geographic information."
+        ]
+      }
+    ],
+    quiz: {
+      question: "What is a continent and why are oceans important to Earth?",
+      groups: [
+        ["large", "land"],
+        ["continent"],
+        ["ocean", "oceans"],
+        ["climate", "ecosystem", "life"]
+      ],
+      answer: "A continent is a large land area. Oceans influence climate and support many ecosystems and forms of life."
+    }
+  }
 
 ];
 
+let selectedLesson = null;
+let activeLessonCategory = "All";
 
-/* =====================================================
-   LESSON LOADING
-===================================================== */
 
-function loadLessons() {
+/* =========================
+   START
+========================= */
 
-    const grid = $("lessonGrid");
-    const categories = $("lessonCategories");
+function startTeachly() {
 
-    if (!grid || !categories) return;
+  const name = document
+    .getElementById("usernameInput")
+    .value
+    .trim();
 
-    $("lessonCount").textContent = lessons.length;
+  if (!name) {
+    showToast("Please enter your username");
+    return;
+  }
 
-    const categoryNames = [
-        "All",
-        ...new Set(
-            lessons.map(lesson => lesson.category)
-        )
-    ];
+  state.name = name;
+  save();
 
-    categories.innerHTML = categoryNames
-        .map(category => `
-            <button
-                class="lessonCategoryButton"
-                onclick="filterLessons('${escapeHTML(category)}')"
-            >
-                ${escapeHTML(category)}
-            </button>
-        `)
-        .join("");
+  document.getElementById("welcomeText").textContent =
+    "Welcome, " + state.name + "!";
 
-    renderLessons();
+  openPage("homePage");
+  updateAll();
 }
 
 
-function filterLessons(category) {
+/* =========================
+   PAGE SYSTEM
+========================= */
 
-    currentLessonCategory = category;
+function openPage(id) {
 
-    renderLessons();
-}
+  document.querySelectorAll(".page").forEach(page => {
+    page.classList.remove("active");
+  });
 
+  const page = document.getElementById(id);
 
-function renderLessons() {
+  if (page) {
+    page.classList.add("active");
+  }
 
-    const grid = $("lessonGrid");
+  updateAll();
 
-    if (!grid) return;
-
-    const visibleLessons =
-        currentLessonCategory === "All"
-            ? lessons
-            : lessons.filter(
-                lesson =>
-                    lesson.category === currentLessonCategory
-            );
-
-    grid.innerHTML = visibleLessons
-        .map(lesson => `
-
-            <div
-                class="lessonCard"
-                onclick="selectLesson('${lesson.id}')"
-            >
-
-                <div class="lessonEmoji">
-                    ${lesson.emoji}
-                </div>
-
-                <span class="lessonMiniTag">
-                    ${escapeHTML(lesson.category)}
-                </span>
-
-                <h3>
-                    ${escapeHTML(lesson.title)}
-                </h3>
-
-                <p>
-                    ${escapeHTML(lesson.description)}
-                </p>
-
-            </div>
-
-        `)
-        .join("");
-}
-
-
-/* =====================================================
-   SELECT LESSON
-===================================================== */
-
-function selectLesson(id) {
-
-    selectedLesson =
-        lessons.find(
-            lesson => lesson.id === id
-        );
-
-    if (!selectedLesson) return;
-
-    const box = $("selectedLessonBox");
-
-    box.classList.remove("hidden");
-
-    $("selectedLessonCategory").textContent =
-        selectedLesson.category;
-
-    $("selectedLessonTitle").textContent =
-        `${selectedLesson.emoji} ${selectedLesson.title}`;
-
-    $("selectedLessonDescription").textContent =
-        selectedLesson.description;
-
-    $("selectedLessonContent").innerHTML =
-        selectedLesson.content;
-
-    $("aiTeacherLessonLabel").textContent =
-        `Current lesson: ${selectedLesson.title}`;
-
-    const quizLabel = $("quizAITeacherLesson");
-
-    if (quizLabel) {
-        quizLabel.textContent =
-            `Current lesson: ${selectedLesson.title}`;
-    }
-
-    showToast(
-        `${selectedLesson.title} selected!`
-    );
-
-    box.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-    });
-}
-
-
-function openAITeacher() {
-
-    openPage("aiPage");
-
-    if (!selectedLesson) {
-        loadLessons();
-    }
-
-}
-
-
-function prepareAITeacherForLesson() {
-
-    if (!selectedLesson) {
-
-        showToast(
-            "Choose a lesson first."
-        );
-
-        return;
-    }
-
-    openAITeacher();
-
+  if (id === "mapPage") {
     setTimeout(() => {
+      initMap();
 
-        const input =
-            $("aiTeacherInput");
+      if (map) {
+        map.invalidateSize();
+      }
+    }, 150);
+  }
 
-        if (input) {
-            input.focus();
-        }
+  if (id === "aiPage") {
+    renderLessonLibrary();
+  }
+}
 
-    }, 100);
+function goHome() {
+  openPage("homePage");
 }
 
 
-/* =====================================================
-   QUIZ
-===================================================== */
+/* =========================
+   TEACHER / LEARNER
+========================= */
 
-function startSelectedLessonQuiz() {
+function chooseRole(role) {
 
-    if (!selectedLesson) {
+  currentRole = role;
 
-        showToast(
-            "Choose a lesson first."
-        );
+  openPage("searchPage");
 
-        return;
-    }
+  if (role === "learner") {
 
-    const quizQuestions = {
+    document.getElementById("searchTitle").textContent =
+      "Finding a teacher...";
 
-        "math-basics":
-            "What are the four basic arithmetic operations?",
+    document.getElementById("searchText").textContent =
+      "Looking for a teacher volunteer";
 
-        "fractions":
-            "In the fraction 3/4, what do the numerator and denominator represent?",
+  } else {
 
-        "algebra":
-            "Solve x + 5 = 12.",
+    document.getElementById("searchTitle").textContent =
+      "Finding a learner...";
 
-        "physics":
-            "What is a force?",
+    document.getElementById("searchText").textContent =
+      "Looking for a learner volunteer";
+  }
 
-        "gravity":
-            "Why does a dropped object move toward Earth?",
+  setTimeout(() => {
 
-        "biology-cells":
-            "What is a cell?",
+    const found = Math.random() > 0.5;
 
-        "photosynthesis":
-            "What is photosynthesis?",
+    if (found) {
 
-        "chemistry-atoms":
-            "Name the three main subatomic particles.",
+      currentPerson =
+        role === "learner"
+          ? "Arjun • Java Teacher"
+          : "Meera • Science Learner";
 
-        "chemical-reactions":
-            "What are reactants and products?",
+      state.sessions++;
+      save();
 
-        "english-grammar":
-            "What is a verb?",
-
-        "computer-science":
-            "What is an algorithm?",
-
-        "javascript":
-            "What is a JavaScript function?",
-
-        "python":
-            "What is a loop used for?",
-
-        "astronomy":
-            "What does the Solar System contain?",
-
-        "geography":
-            "What is geography?"
-    };
-
-    currentQuiz = {
-        question:
-            quizQuestions[selectedLesson.id] ||
-            `Explain one important idea from ${selectedLesson.title}.`
-    };
-
-    $("quizLessonName").textContent =
-        selectedLesson.title;
-
-    $("quizQuestion").innerHTML = `
-        <h2>
-            ${escapeHTML(currentQuiz.question)}
-        </h2>
-    `;
-
-    $("quizAnswer").value = "";
-
-    $("quizResult").innerHTML = "";
-
-    openPage("quizPage");
-}
-
-
-function checkQuiz() {
-
-    if (!selectedLesson || !currentQuiz) {
-
-        showToast(
-            "Please choose a lesson first."
-        );
-
-        return;
-    }
-
-    const answer =
-        $("quizAnswer").value.trim();
-
-    if (!answer) {
-
-        showToast(
-            "Write an answer first."
-        );
-
-        return;
-    }
-
-    const lower =
-        answer.toLowerCase();
-
-    let correct = false;
-
-    if (selectedLesson.id === "algebra") {
-
-        correct =
-            lower.includes("7");
-
-    } else if (
-        selectedLesson.id === "math-basics"
-    ) {
-
-        correct =
-            lower.includes("addition") &&
-            lower.includes("subtraction") &&
-            lower.includes("multiplication") &&
-            lower.includes("division");
-
-    } else if (
-        selectedLesson.id === "fractions"
-    ) {
-
-        correct =
-            lower.includes("numerator") &&
-            lower.includes("denominator");
-
-    } else if (
-        selectedLesson.id === "physics"
-    ) {
-
-        correct =
-            lower.includes("push") ||
-            lower.includes("pull") ||
-            lower.includes("force");
-
-    } else if (
-        selectedLesson.id === "gravity"
-    ) {
-
-        correct =
-            lower.includes("gravity");
-
-    } else if (
-        selectedLesson.id === "biology-cells"
-    ) {
-
-        correct =
-            lower.includes("unit") &&
-            lower.includes("life");
-
-    } else if (
-        selectedLesson.id === "photosynthesis"
-    ) {
-
-        correct =
-            lower.includes("light") &&
-            (
-                lower.includes("food") ||
-                lower.includes("energy")
-            );
-
-    } else if (
-        selectedLesson.id === "chemistry-atoms"
-    ) {
-
-        correct =
-            lower.includes("proton") &&
-            lower.includes("neutron") &&
-            lower.includes("electron");
-
-    } else if (
-        selectedLesson.id === "chemical-reactions"
-    ) {
-
-        correct =
-            lower.includes("reactant") &&
-            lower.includes("product");
-
-    } else if (
-        selectedLesson.id === "english-grammar"
-    ) {
-
-        correct =
-            lower.includes("action") ||
-            lower.includes("verb");
-
-    } else if (
-        selectedLesson.id === "computer-science"
-    ) {
-
-        correct =
-            lower.includes("step") &&
-            lower.includes("problem");
-
-    } else if (
-        selectedLesson.id === "javascript"
-    ) {
-
-        correct =
-            lower.includes("function");
-
-    } else if (
-        selectedLesson.id === "python"
-    ) {
-
-        correct =
-            lower.includes("repeat");
-
-    } else if (
-        selectedLesson.id === "astronomy"
-    ) {
-
-        correct =
-            lower.includes("sun") &&
-            lower.includes("planet");
-
-    } else if (
-        selectedLesson.id === "geography"
-    ) {
-
-        correct =
-            lower.includes("earth") ||
-            lower.includes("place");
+      openChat(currentPerson);
 
     } else {
 
-        correct = answer.length >= 10;
-    }
+      if (role === "learner") {
 
-
-    if (correct) {
-
-        state.coins += 10;
-
-        state.sessions += 1;
-
-        save();
-
-        $("quizResult").innerHTML = `
-            <div class="successResult">
-                🎉 Correct!
-                <br>
-                💰 +10 TeachCoins
-            </div>
-        `;
-
-        showToast(
-            "Correct! You earned 10 coins."
-        );
-
-    } else {
-
-        $("quizResult").innerHTML = `
-            <div class="retryResult">
-                🤔 Not quite.
-
-                <br><br>
-
-                Try explaining the idea again,
-                or ask the AI Teacher below for help.
-            </div>
-        `;
-
-    }
-}
-
-
-/* =====================================================
-   AI MESSAGE UI
-===================================================== */
-
-function addAIMessage(
-    text,
-    sender = "ai"
-) {
-
-    const containers = [
-        $("aiTeacherMessages"),
-        $("quizAIMessages")
-    ];
-
-    containers.forEach(container => {
-
-        if (!container) return;
-
-        const bubble =
-            document.createElement("div");
-
-        bubble.className =
-            sender === "user"
-                ? "userBubble"
-                : "aiBubble";
-
-        const strong =
-            sender === "user"
-                ? "You"
-                : "🤖 AI Teacher";
-
-        bubble.innerHTML = `
-            <strong>${strong}</strong>
-            <p>${escapeHTML(text)}</p>
-        `;
-
-        container.appendChild(bubble);
-
-        container.scrollTop =
-            container.scrollHeight;
-    });
-}
-
-
-/* =====================================================
-   REAL AI
-===================================================== */
-
-async function askAITeacher(customMessage = null) {
-
-    let input =
-        $("aiTeacherInput");
-
-    if (!input) {
-        input = $("quizAIInput");
-    }
-
-    let message =
-        customMessage ||
-        input?.value.trim();
-
-    if (!message) {
-
-        showToast(
-            "Type a question first."
-        );
-
-        return;
-    }
-
-    if (!selectedLesson) {
-
-        showToast(
-            "Choose a lesson first."
-        );
-
-        return;
-    }
-
-    if (input) {
-        input.value = "";
-    }
-
-    addAIMessage(
-        message,
-        "user"
-    );
-
-    addAIMessage(
-        "Thinking... 🤔",
-        "ai"
-    );
-
-    try {
-
-        const response =
-            await fetch(
-                `${API_URL}/api/ai`,
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body: JSON.stringify({
-
-                        message: message,
-
-                        lesson: {
-                            id:
-                                selectedLesson.id,
-
-                            title:
-                                selectedLesson.title,
-
-                            category:
-                                selectedLesson.category,
-
-                            description:
-                                selectedLesson.description,
-
-                            content:
-                                selectedLesson.content
-                        }
-
-                    })
-                }
-            );
-
-
-        const contentType =
-            response.headers.get(
-                "content-type"
-            ) || "";
-
-
-        if (!response.ok) {
-
-            let errorMessage =
-                `AI server error (${response.status}).`;
-
-            if (
-                contentType.includes(
-                    "application/json"
-                )
-            ) {
-
-                const data =
-                    await response.json();
-
-                errorMessage =
-                    data.error ||
-                    errorMessage;
-            }
-
-            throw new Error(
-                errorMessage
-            );
-        }
-
-
-        if (
-            !contentType.includes(
-                "application/json"
-            )
-        ) {
-
-            const text =
-                await response.text();
-
-            console.error(
-                "Expected JSON but received:",
-                text.substring(0, 500)
-            );
-
-            throw new Error(
-                "The AI server returned HTML instead of JSON. Check the Render API URL."
-            );
-        }
-
-
-        const data =
-            await response.json();
-
-
-        if (!data.answer) {
-            throw new Error(
-                "AI returned no answer."
-            );
-        }
-
-
-        // Remove "Thinking..."
-        document
-            .querySelectorAll(".aiBubble")
-            .forEach(bubble => {
-
-                if (
-                    bubble.textContent.includes(
-                        "Thinking..."
-                    )
-                ) {
-                    bubble.remove();
-                }
-
-            });
-
-
-        addAIMessage(
-            data.answer,
-            "ai"
-        );
-
-    } catch (error) {
-
-        console.error(
-            "AI ERROR:",
-            error
-        );
-
-        document
-            .querySelectorAll(".aiBubble")
-            .forEach(bubble => {
-
-                if (
-                    bubble.textContent.includes(
-                        "Thinking..."
-                    )
-                ) {
-                    bubble.remove();
-                }
-
-            });
-
-        addAIMessage(
-            `Sorry, I couldn't reach the AI right now.\n\n${error.message}`,
-            "ai"
-        );
-
-    }
-}
-
-
-function askAIQuick(question) {
-    askAITeacher(question);
-}
-
-
-/* =====================================================
-   AI ACTIVITY
-===================================================== */
-
-async function teacherAIHelp() {
-
-    if (!selectedLesson) {
-
-        showToast(
-            "Choose a lesson first."
-        );
-
-        return;
-    }
-
-    const result =
-        $("teacherAIResult");
-
-    result.textContent =
-        "Creating activity... 🤖";
-
-    try {
-
-        const response =
-            await fetch(
-                `${API_URL}/api/ai`,
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body: JSON.stringify({
-
-                        message:
-                            `Create a short interactive learning activity for this lesson.
-
-Lesson: ${selectedLesson.title}
-
-Make it suitable for a school learner.
-Include one question and explain what the learner should do.`,
-
-                        lesson: selectedLesson
-
-                    })
-                }
-            );
-
-
-        const contentType =
-            response.headers.get(
-                "content-type"
-            ) || "";
-
-
-        if (
-            !response.ok ||
-            !contentType.includes("application/json")
-        ) {
-
-            throw new Error(
-                "AI server did not return a valid response."
-            );
-        }
-
-
-        const data =
-            await response.json();
-
-        result.textContent =
-            data.answer ||
-            "No activity was generated.";
-
-    } catch (error) {
-
-        console.error(
-            "ACTIVITY ERROR:",
-            error
-        );
-
-        result.textContent =
-            `Could not create the activity.\n\n${error.message}`;
-    }
-}
-
-
-/* =====================================================
-   REAL REGISTERED USERS
-===================================================== */
-
-async function getRealUsers() {
-
-    const response =
-        await fetch(
-            `${API_URL}/api/people`,
-            {
-                method: "GET",
-                headers: {
-                    "Accept":
-                        "application/json"
-                }
-            }
-        );
-
-    const contentType =
-        response.headers.get(
-            "content-type"
-        ) || "";
-
-    if (!response.ok) {
-
-        throw new Error(
-            `People API error: ${response.status}`
-        );
-    }
-
-    if (
-        !contentType.includes(
-            "application/json"
-        )
-    ) {
-
-        throw new Error(
-            "People API returned HTML instead of JSON."
-        );
-    }
-
-    return await response.json();
-}
-
-
-/* =====================================================
-   REAL MATCHING
-===================================================== */
-
-async function chooseRole(role) {
-
-    currentRole = role;
-
-    openPage("searchPage");
-
-    if (role === "learner") {
-
-        $("searchTitle").textContent =
-            "Finding a teacher...";
-
-        $("searchText").textContent =
-            "Looking for a real teacher volunteer";
-
-    } else {
-
-        $("searchTitle").textContent =
-            "Finding a learner...";
-
-        $("searchText").textContent =
-            "Looking for a real learner volunteer";
-    }
-
-
-    try {
-
-        const users =
-            await getRealUsers();
-
-
-        const myName =
-            state.name.toLowerCase();
-
-
-        let available =
-            users.filter(user => {
-
-                if (
-                    !user.username ||
-                    user.username.toLowerCase() === myName
-                ) {
-                    return false;
-                }
-
-                if (role === "learner") {
-
-                    return (
-                        user.role === "teacher" ||
-                        user.role === "Teacher"
-                    );
-
-                }
-
-                return (
-                    user.role === "learner" ||
-                    user.role === "Learner"
-                );
-
-            });
-
-
-        /*
-         * If users exist but their role has not been
-         * configured yet, don't invent a fake person.
-         */
-
-        if (!available.length) {
-
-            setTimeout(() => {
-
-                if (role === "learner") {
-
-                    showToast(
-                        "No teacher volunteers are available right now."
-                    );
-
-                    const useAI =
-                        confirm(
-                            "No real teacher is available right now.\n\nWould you like the AI Teacher to help you?"
-                        );
-
-                    if (useAI) {
-                        openAITeacher();
-                    } else {
-                        goHome();
-                    }
-
-                } else {
-
-                    showToast(
-                        "No learner volunteers are available right now."
-                    );
-
-                    setTimeout(
-                        goHome,
-                        1000
-                    );
-
-                }
-
-            }, 800);
-
-            return;
-        }
-
-
-        /*
-         * Choose a real registered user.
-         */
-
-        const person =
-            available[
-                Math.floor(
-                    Math.random() *
-                    available.length
-                )
-            ];
-
-
-        currentPerson =
-            person.username;
-
-
-        state.sessions++;
-
-        save();
-
+        showToast("Can't find teacher volunteer");
 
         setTimeout(() => {
 
-            openChat(
-                person.username
-            );
+          const useAI = confirm(
+            "Can't find teacher volunteer.\n\nDo you want AI to teach you?"
+          );
 
-        }, 800);
+          if (useAI) {
+            openAITeacher();
+          } else {
+            goHome();
+          }
 
+        }, 500);
 
-    } catch (error) {
+      } else {
 
-        console.error(
-            "MATCHING ERROR:",
-            error
-        );
+        showToast("Can't find learner volunteer");
 
-        showToast(
-            "Could not check real users."
-        );
+        setTimeout(goHome, 1200);
+      }
 
-        setTimeout(
-            goHome,
-            1200
-        );
     }
+
+  }, 1800);
 }
 
 
-/* =====================================================
-   PEOPLE LIST
-===================================================== */
+/* =========================
+   CHAT
+========================= */
 
-async function loadPeople() {
+function openChat(person) {
 
-    const container =
-        $("peopleList");
+  document.getElementById("chatTitle").textContent =
+    person;
 
-    if (!container) return;
+  document.getElementById("chatMessages").innerHTML = 
+    <div class="message">
+      👋 You are connected with <b>${escapeHTML(person)}</b>
+    </div>
 
-    container.innerHTML = `
-        <div class="noPeople">
-            🔎 Loading real Teachly users...
+    <div class="message">
+      Please introduce yourself!
+    </div>
+  ;
+
+  openPage("chatPage");
+}
+
+function sendMessage() {
+
+  const input =
+    document.getElementById("messageInput");
+
+  const text = input.value.trim();
+
+  if (!text) return;
+
+  const box =
+    document.getElementById("chatMessages");
+
+  box.innerHTML += 
+    <div class="message me">
+      ${escapeHTML(text)}
+    </div>
+  ;
+
+  input.value = "";
+
+  box.scrollTop = box.scrollHeight;
+}
+
+function addEmoji(emoji) {
+
+  document.getElementById("messageInput").value += emoji;
+}
+
+function escapeHTML(text) {
+
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+
+/* =========================
+   AI TEACHER / LESSONS
+========================= */
+
+function openAITeacher() {
+
+  openPage("aiPage");
+
+  if (!selectedLesson) {
+    renderLessonLibrary();
+  }
+}
+
+function renderLessonLibrary() {
+
+  const count =
+    document.getElementById("lessonCount");
+
+  const categoriesBox =
+    document.getElementById("lessonCategories");
+
+  const grid =
+    document.getElementById("lessonGrid");
+
+  if (!count || !categoriesBox || !grid) {
+    return;
+  }
+
+  count.textContent = lessons.length;
+
+  const categories = [
+    "All",
+    ...new Set(
+      lessons.map(lesson => lesson.category)
+    )
+  ];
+
+  categoriesBox.innerHTML =
+    categories.map(category => 
+      <button
+        class="lessonCategoryButton ${
+          activeLessonCategory === category
+            ? "active"
+            : ""
+        }"
+        onclick="filterLessons('${escapeHTML(category)}')"
+      >
+        ${escapeHTML(category)}
+      </button>
+    ).join("");
+
+  const visibleLessons =
+    activeLessonCategory === "All"
+      ? lessons
+      : lessons.filter(
+          lesson =>
+            lesson.category ===
+            activeLessonCategory
+        );
+
+  grid.innerHTML =
+    visibleLessons.map(lesson => 
+
+      <div
+        class="lessonCard"
+        onclick="selectLesson('${lesson.id}')"
+      >
+
+        <div class="lessonIcon">
+          ${lesson.icon}
         </div>
-    `;
 
+        <h3>
+          ${escapeHTML(lesson.title)}
+        </h3>
 
-    try {
+        <p>
+          ${escapeHTML(lesson.description)}
+        </p>
 
-        const users =
-            await getRealUsers();
+        <span class="lessonMiniTag">
+          ${escapeHTML(lesson.category)}
+        </span>
 
+      </div>
 
-        if (!users.length) {
+    ).join("");
+}
 
-            container.innerHTML = `
-                <div class="noPeople">
+function filterLessons(category) {
 
-                    <h2>
-                        👥 No users yet
-                    </h2>
+  activeLessonCategory = category;
 
-                    <p>
-                        You're one of the first Teachly users!
-                    </p>
+  renderLessonLibrary();
+}
 
-                </div>
-            `;
+function selectLesson(id) {
 
-            return;
-        }
+  const lesson =
+    lessons.find(item => item.id === id);
 
+  if (!lesson) return;
 
-        container.innerHTML =
-            users.map(user => {
+  selectedLesson = lesson;
 
-                const avatar =
-                    user.profileImage
-                        ? `
-                            <img
-                                src="${escapeHTML(user.profileImage)}"
-                                alt="Profile"
-                            >
-                          `
-                        : "👤";
+  document
+    .getElementById("selectedLessonBox")
+    .classList.remove("hidden");
 
+  document.getElementById(
+    "selectedLessonCategory"
+  ).textContent = lesson.category;
 
-                return `
+  document.getElementById(
+    "selectedLessonTitle"
+  ).textContent =
+    ${lesson.icon} ${lesson.title};
 
-                    <div class="realPersonCard">
+  document.getElementById(
+    "selectedLessonDescription"
+  ).textContent =
+    lesson.description;
 
-                        <div class="realPersonAvatar">
-                            ${avatar}
-                        </div>
+  document.getElementById(
+    "selectedLessonContent"
+  ).innerHTML =
+    lesson.blocks.map(block => {
 
-                        <h3>
-                            ${escapeHTML(user.username)}
-                        </h3>
+      if (block.list) {
 
-                        <p>
-                            ${
-                                user.role
-                                    ? escapeHTML(user.role)
-                                    : "Teachly member"
-                            }
-                        </p>
+        return 
+          <div class="lessonBlock">
 
-                        <p>
-                            📚 Sessions:
-                            ${Number(user.sessions || 0)}
-                        </p>
+            <h3>${escapeHTML(block.title)}</h3>
 
-                        <button
-                            onclick="connectPerson('${escapeHTML(user.username)}')"
-                        >
-                            CONNECT
-                        </button>
+            <ul>
+              ${block.list.map(item =>
+                <li>${escapeHTML(item)}</li>
+              ).join("")}
+            </ul>
 
-                    </div>
+          </div>
+        ;
+      }
 
-                `;
+      return 
+        <div class="lessonBlock">
 
-            }).join("");
+          <h3>${escapeHTML(block.title)}</h3>
 
-    } catch (error) {
+          <p>${escapeHTML(block.text)}</p>
 
-        console.error(
-            "PEOPLE ERROR:",
-            error
-        );
+        </div>
+      ;
 
-        container.innerHTML = `
-            <div class="noPeople">
+    }).join("");
 
-                <h2>
-                    ⚠️ Couldn't load users
-                </h2>
+  document
+    .getElementById("selectedLessonBox")
+    .scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+}
 
-                <p>
-                    Please try again.
-                </p>
+function startSelectedLessonQuiz() {
 
-            </div>
-        `;
-    }
+  if (!selectedLesson) {
+    showToast("Choose a lesson first.");
+    return;
+  }
+
+  startQuizForLesson(selectedLesson);
 }
 
 
-function connectPerson(username) {
+/* =========================
+   OLD TEACHER AI MODE
+========================= */
 
-    currentPerson =
-        username;
+async function teacherAIHelp() {
 
+  const topic =
+    selectedLesson || lessons[0];
+
+  const result =
+    document.getElementById("teacherAIResult");
+
+  result.innerHTML =
+    "<p>🤖 Preparing a teacher activity...</p>";
+
+  try {
+
+    const response =
+      await fetch("https://teachly-nmxh.onrender.com/api/ai", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message:
+            Create a short classroom activity for this lesson.
+
+Lesson:
+${topic.title}
+
+Lesson description:
+${topic.description}
+
+Lesson content:
+${topic.blocks.map(block =>
+  ${block.title}: ${block.text || block.list?.join(", ")}
+).join("\n")}
+
+Give:
+1. A simple explanation.
+2. One question.
+3. One small activity.
+4. One challenge.
+        })
+      });
+
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        "AI could not respond."
+      );
+    }
+
+    result.innerHTML = 
+      <h3>🤖 Teacher AI Assistant</h3>
+      <p>${formatAIText(data.answer)}</p>
+    ;
+
+  } catch (error) {
+
+    result.innerHTML = 
+      <p>
+        ❌ ${escapeHTML(error.message)}
+      </p>
+    ;
+  }
+}
+
+
+/* =========================
+   REAL AI TEACHER
+========================= */
+
+function renderAIMessage(text, type = "ai") {
+
+  const box =
+    document.getElementById(
+      "aiTeacherMessages"
+    );
+
+  if (!box) return;
+
+  const message =
+    document.createElement("div");
+
+  message.className =
+    aiBubble ${
+      type === "user"
+        ? "userBubble"
+        : ""
+    };
+
+  if (type === "ai") {
+
+    message.innerHTML =
+      formatAIText(text);
+
+  } else {
+
+    message.textContent = text;
+  }
+
+  box.appendChild(message);
+
+  box.scrollTop =
+    box.scrollHeight;
+}
+
+function formatAIText(text) {
+
+  const safe =
+    escapeHTML(text || "");
+
+  return safe
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\n\n/g, "<br><br>")
+    .replace(/\n/g, "<br>");
+}
+
+function prepareAITeacherForLesson() {
+
+  if (!selectedLesson) return;
+
+  const label =
+    document.getElementById(
+      "aiTeacherLessonLabel"
+    );
+
+  if (label) {
+
+    label.textContent =
+      Lesson: ${selectedLesson.title};
+  }
+
+  const messages =
+    document.getElementById(
+      "aiTeacherMessages"
+    );
+
+  if (messages) {
+
+    messages.innerHTML = 
+      <div class="aiBubble">
+
+        <b>👋 I'm ready to help.</b>
+
+        <p>
+          We're studying
+          <b>${escapeHTML(selectedLesson.title)}</b>.
+          Ask me any doubt about it and I'll explain it
+          step by step.
+        </p>
+
+      </div>
+    ;
+  }
+}
+
+async function askAITeacher() {
+
+  if (!selectedLesson) {
+
+    showToast(
+      "Choose a lesson before asking the AI."
+    );
+
+    return;
+  }
+
+  const input =
+    document.getElementById(
+      "aiTeacherInput"
+    );
+
+  const question =
+    input.value.trim();
+
+  if (!question) {
+
+    showToast("Type your doubt first.");
+
+    return;
+  }
+
+  input.value = "";
+
+  renderAIMessage(
+    question,
+    "user"
+  );
+
+  const messages =
+    document.getElementById(
+      "aiTeacherMessages"
+    );
+
+  const thinking =
+    document.createElement("div");
+
+  thinking.className =
+    "aiBubble aiThinking";
+
+  thinking.textContent =
+    "🤖 Thinking about your question...";
+
+  messages.appendChild(thinking);
+
+  messages.scrollTop =
+    messages.scrollHeight;
+
+  try {
+
+    const lessonContext =
+      selectedLesson.blocks.map(
+        block => {
+
+          const content =
+            block.text ||
+            (block.list
+              ? block.list.join("; ")
+              : "");
+
+          return ${block.title}: ${content};
+
+        }
+      ).join("\n");
+
+    const response =
+      await fetch("https://teachly-nmxh.onrender.com/api/ai", {
+
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+
+          message: question,
+
+          lesson: {
+            title:
+              selectedLesson.title,
+
+            category:
+              selectedLesson.category,
+
+            description:
+              selectedLesson.description,
+
+            content:
+              lessonContext
+          }
+
+        })
+
+      });
+
+    const data =
+      await response.json();
+
+    thinking.remove();
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.error ||
+        "AI could not respond."
+      );
+    }
+
+    renderAIMessage(
+      data.answer,
+      "ai"
+    );
+
+  } catch (error) {
+
+    thinking.remove();
+
+    renderAIMessage(
+      "Sorry, I couldn't reach the AI right now. " +
+      error.message
+    );
+  }
+}
+
+function askAIQuick(question) {
+
+  const input =
+    document.getElementById(
+      "aiTeacherInput"
+    );
+
+  input.value = question;
+
+  askAITeacher();
+}
+
+
+/* =========================
+   MYSTERY TOPIC
+========================= */
+
+const mysteryTopics = [
+
+  [
+    "Black Holes",
+    "Extremely dense astronomical objects with gravity so strong that light cannot escape from within the event horizon."
+  ],
+
+  [
+    "Deep Ocean",
+    "The deep ocean is a huge environment with unusual animals, pressure and almost no sunlight."
+  ],
+
+  [
+    "Antarctica",
+    "Antarctica is Earth's southernmost continent and contains most of the planet's ice."
+  ],
+
+  [
+    "Quantum Physics",
+    "Quantum physics describes nature at very small scales such as atoms and particles."
+  ],
+
+  [
+    "Volcanoes",
+    "Volcanoes form when magma and gases reach Earth's surface."
+  ],
+
+  [
+    "Human Brain",
+    "The brain coordinates many functions including movement, senses, memory and thinking."
+  ],
+
+  [
+    "Robotics",
+    "Robotics combines engineering and computing to design machines that can perform tasks."
+  ],
+
+  [
+    "Ocean Currents",
+    "Large movements of seawater help distribute heat around Earth's oceans."
+  ]
+
+];
+
+function mysteryTopic() {
+
+  const item =
+    mysteryTopics[
+      Math.floor(
+        Math.random() *
+        mysteryTopics.length
+      )
+    ];
+
+  document.getElementById(
+    "mysteryTitle"
+  ).textContent = item[0];
+
+  document.getElementById(
+    "mysteryDescription"
+  ).textContent = item[1];
+
+  openPage("mysteryPage");
+}
+
+
+/* =========================
+   QUIZ
+========================= */
+
+let quizIndex = 0;
+let quizAnswered = false;
+let quizLesson = null;
+
+function startQuiz() {
+
+  if (!selectedLesson) {
+
+    openAITeacher();
+
+    showToast(
+      "Choose a lesson first!"
+    );
+
+    return;
+  }
+
+  startQuizForLesson(selectedLesson);
+}
+
+function startQuizForLesson(lesson) {
+
+  selectedLesson = lesson;
+  quizLesson = lesson;
+  quizAnswered = false;
+
+  openPage("quizPage");
+
+  setupQuiz();
+
+  prepareAITeacherForLesson();
+}
+
+function setupQuiz() {
+
+  if (!quizLesson) {
+
+    document.getElementById(
+      "quizQuestion"
+    ).innerHTML = 
+      <h2>Choose a lesson first.</h2>
+    ;
+
+    return;
+  }
+
+  quizAnswered = false;
+
+  document.getElementById(
+    "quizLessonName"
+  ).textContent =
+    ${quizLesson.icon} ${quizLesson.title};
+
+  document.getElementById(
+    "quizQuestion"
+  ).innerHTML = 
+    <h2>${escapeHTML(
+      quizLesson.quiz.question
+    )}</h2>
+
+    <p>
+      Give a complete answer, not just one keyword.
+    </p>
+  ;
+
+  document.getElementById(
+    "quizAnswer"
+  ).value = "";
+
+  document.getElementById(
+    "quizResult"
+  ).innerHTML = "";
+
+  prepareAITeacherForLesson();
+}
+
+function normalize(text) {
+
+  return String(text)
+    .toLowerCase()
+    .replace(/[.,!?;:()]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function checkQuiz() {
+
+  if (quizAnswered) {
+
+    showToast(
+      "This question has already been checked."
+    );
+
+    return;
+  }
+
+  if (!quizLesson) {
+
+    showToast(
+      "Choose a lesson first."
+    );
+
+    return;
+  }
+
+  const userAnswer =
+    normalize(
+      document.getElementById(
+        "quizAnswer"
+      ).value
+    );
+
+  if (userAnswer.length < 10) {
+
+    document.getElementById(
+      "quizResult"
+    ).innerHTML = 
+      <p>❌ Your answer is too short.</p>
+      <p>Please explain your answer completely.</p>
+    ;
+
+    return;
+  }
+
+  const question =
+    quizLesson.quiz;
+
+  let conceptsFound = 0;
+
+  question.groups.forEach(
+    group => {
+
+      const found =
+        group.some(
+          word =>
+            userAnswer.includes(
+              word
+            )
+        );
+
+      if (found) {
+        conceptsFound++;
+      }
+
+    }
+  );
+
+  const required =
+    question.groups.length;
+
+  if (conceptsFound === required) {
+
+    quizAnswered = true;
+
+    state.coins += 10;
     state.sessions++;
 
     save();
 
-    openChat(username);
+    document.getElementById(
+      "quizResult"
+    ).innerHTML = 
+      <h3>✅ Correct!</h3>
+
+      <p>
+        Your answer contains the important concepts.
+      </p>
+
+      <p>
+        🪙 +10 TeachCoins
+      </p>
+
+      <p>
+        🤖 Still confused?
+        Ask the AI Teacher below.
+      </p>
+    ;
+
+    updateAll();
+
+  } else {
+
+    const missing =
+      required - conceptsFound;
+
+    document.getElementById(
+      "quizResult"
+    ).innerHTML = 
+      <h3>❌ Not complete yet.</h3>
+
+      <p>
+        Your answer is missing
+        ${missing}
+        important concept
+        ${missing === 1 ? "" : "s"}.
+      </p>
+
+      <p>
+        You can ask the AI Teacher below
+        to explain the part you're confused about.
+      </p>
+    ;
+  }
 }
 
 
-/* =====================================================
-   CHAT
-===================================================== */
+/* =========================
+   PEOPLE
+========================= */
 
-function openChat(person) {
+const people = [
 
-    currentPerson =
-        person;
+  ["Arjun", "Java", "👨‍💻"],
+  ["Meera", "Biology", "👩‍🔬"],
+  ["Kavin", "Python", "🧑‍💻"],
+  ["Ananya", "Physics", "👩‍🚀"],
+  ["Rohan", "Mathematics", "🧠"],
+  ["Sara", "English", "📖"],
+  ["Vikram", "Robotics", "🤖"],
+  ["Diya", "Chemistry", "🧪"],
+  ["Rahul", "Astronomy", "🔭"],
+  ["Ishita", "AI", "🤖"]
 
-    $("chatTitle").textContent =
-        `Chat with ${person}`;
-
-    $("chatMessages").innerHTML = `
-        <div class="aiBubble">
-            👋 You are connected with
-            ${escapeHTML(person)}.
-        </div>
-    `;
-
-    openPage("chatPage");
-}
-
-
-function sendMessage() {
-
-    const input =
-        $("messageInput");
-
-    const message =
-        input?.value.trim();
-
-    if (!message) return;
-
-    const messages =
-        $("chatMessages");
-
-    const bubble =
-        document.createElement("div");
-
-    bubble.className =
-        "userBubble";
-
-    bubble.innerHTML =
-        `<p>${escapeHTML(message)}</p>`;
-
-    messages.appendChild(bubble);
-
-    input.value = "";
-
-    messages.scrollTop =
-        messages.scrollHeight;
-}
-
-
-function addEmoji(emoji) {
-
-    const input =
-        $("messageInput");
-
-    if (!input) return;
-
-    input.value += emoji;
-
-    input.focus();
-}
-
-
-/* =====================================================
-   BADGES
-===================================================== */
-
-const badges = [
-    ["first", "🌟", "First Step", 1],
-    ["learner", "📚", "Learner", 5],
-    ["teacher", "🧑‍🏫", "Teacher", 10],
-    ["expert", "🏆", "Expert", 25],
-    ["master", "👑", "Teachly Master", 50]
 ];
 
+function loadPeople() {
 
-function loadBadges() {
+  const box =
+    document.getElementById(
+      "peopleList"
+    );
 
-    const container =
-        $("allBadges");
+  if (!box) return;
 
-    const home =
-        $("badgesHome");
+  box.innerHTML =
+    people.map(
+      person => 
 
-    const html =
-        badges.map(badge => {
+        <div class="person">
 
-            const unlocked =
-                state.sessions >= badge[3];
+          <div>
 
-            return `
-                <div class="badgeCard ${unlocked ? "" : "locked"}">
+            <div style="font-size:35px">
+              ${person[2]}
+            </div>
 
-                    <div class="badgeIcon">
-                        ${badge[1]}
-                    </div>
+            <h3>
+              ${escapeHTML(person[0])}
+            </h3>
 
-                    <h3>
-                        ${badge[2]}
-                    </h3>
+            <p>
+              Teaches:
+              ${escapeHTML(person[1])}
+            </p>
 
-                    <p>
-                        ${badge[3]} session(s)
-                    </p>
+          </div>
 
-                    <span>
-                        ${
-                            unlocked
-                                ? "Unlocked ✓"
-                                : "Locked 🔒"
-                        }
-                    </span>
+          <button
+            onclick="connectPerson('${escapeHTML(
+              person[0]
+            )} • ${escapeHTML(
+              person[1]
+            )}')"
+          >
+            CONNECT
+          </button>
 
-                </div>
-            `;
+        </div>
 
-        }).join("");
+      
+    ).join("");
+}
 
+function connectPerson(person) {
 
-    if (container) {
-        container.innerHTML = html;
-    }
+  currentPerson = person;
 
-    if (home) {
-        home.innerHTML =
-            html.substring(0, 1200);
-    }
+  state.sessions++;
+
+  save();
+
+  openChat(person);
 }
 
 
-/* =====================================================
+/* =========================
+   BADGES
+========================= */
+
+const badgeRequirements = [
+  5,
+  10,
+  25,
+  50,
+  100,
+  200,
+  300,
+  500,
+  750,
+  1000
+];
+
+const badgeNames = [
+  "First Step",
+  "Learner",
+  "Explorer",
+  "Knowledge Seeker",
+  "Smart Mind",
+  "Expert",
+  "Master",
+  "Legend",
+  "Grand Master",
+  "Teachly Champion"
+];
+
+const badgeIcons = [
+  "🌱",
+  "📚",
+  "🔎",
+  "🧠",
+  "⭐",
+  "🏅",
+  "🏆",
+  "👑",
+  "💎",
+  "🌟"
+];
+
+function renderBadges() {
+
+  let unlocked = 0;
+
+  const html =
+    badgeRequirements.map(
+      (req, i) => {
+
+        const isUnlocked =
+          state.sessions >= req;
+
+        if (isUnlocked) unlocked++;
+
+        return 
+          <div class="badge ${
+            isUnlocked ? "" : "locked"
+          }">
+
+            <div class="badgeIcon">
+              ${
+                isUnlocked
+                  ? badgeIcons[i]
+                  : "🔒"
+              }
+            </div>
+
+            <h3>
+              ${badgeNames[i]}
+            </h3>
+
+            <p>
+              ${req} sessions
+            </p>
+
+          </div>
+        ;
+
+      }
+    ).join("");
+
+  document.getElementById(
+    "allBadges"
+  ).innerHTML = html;
+
+  document.getElementById(
+    "badgesHome"
+  ).innerHTML =
+    html.slice(0, 1200);
+
+  document.getElementById(
+    "profileBadges"
+  ).textContent =
+    unlocked;
+}
+
+
+/* =========================
    SHOP
-===================================================== */
+========================= */
 
 const shopItems = [
-    ["blue", "🔵", "Blue Profile Effect", 20],
-    ["star", "⭐", "Star Effect", 30],
-    ["fire", "🔥", "Fire Effect", 50],
-    ["crown", "👑", "Crown Effect", 100]
+
+  ["Galaxy Theme", 30, "🌌"],
+  ["Spark Badge", 50, "⚡"],
+  ["Rocket Avatar", 75, "🚀"],
+  ["Scholar Frame", 100, "🎓"],
+  ["Master Crown", 200, "👑"]
+
 ];
 
+function renderShop() {
 
-function loadShop() {
+  const html =
+    shopItems.map(
+      (item, index) => {
 
-    const container =
-        $("shopList");
+        const owned =
+          state.owned.includes(index);
 
-    const home =
-        $("shopHome");
+        const enough =
+          state.coins >= item[1];
 
+        return 
+          <div class="shopItem">
 
-    const html =
-        shopItems.map(item => {
+            <div style="font-size:45px">
+              ${item[2]}
+            </div>
 
-            const owned =
-                state.owned.includes(item[0]);
+            <h3>
+              ${item[0]}
+            </h3>
 
-            return `
-                <div class="shopItem">
+            <div class="price">
+              🪙 ${item[1]}
+            </div>
 
-                    <div class="shopIcon">
-                        ${item[1]}
-                    </div>
+            <button
+              class="${
+                !enough && !owned
+                  ? "notEnough"
+                  : ""
+              }"
+              onclick="buyItem(${index})"
+            >
+              ${
+                owned
+                  ? "OWNED"
+                  : enough
+                    ? "BUY"
+                    : "NOT ENOUGH COINS!"
+              }
+            </button>
 
-                    <h3>
-                        ${item[2]}
-                    </h3>
+          </div>
+        ;
 
-                    <p>
-                        💰 ${item[3]}
-                    </p>
+      }
+    ).join("");
 
-                    <button
-                        onclick="buyShopItem('${item[0]}')"
-                        ${owned ? "disabled" : ""}
-                    >
-                        ${
-                            owned
-                                ? "OWNED ✓"
-                                : "BUY"
-                        }
-                    </button>
+  document.getElementById(
+    "shopList"
+  ).innerHTML = html;
 
-                </div>
-            `;
-
-        }).join("");
-
-
-    if (container) {
-        container.innerHTML = html;
-    }
-
-    if (home) {
-        home.innerHTML = html;
-    }
+  document.getElementById(
+    "shopHome"
+  ).innerHTML = html;
 }
 
+function buyItem(index) {
 
-function buyShopItem(id) {
+  const item =
+    shopItems[index];
 
-    const item =
-        shopItems.find(
-            item => item[0] === id
-        );
-
-    if (!item) return;
-
-    if (state.owned.includes(id)) {
-
-        showToast(
-            "You already own this."
-        );
-
-        return;
-    }
-
-    if (state.coins < item[3]) {
-
-        showToast(
-            "Not enough TeachCoins."
-        );
-
-        return;
-    }
-
-    state.coins -= item[3];
-
-    state.owned.push(id);
-
-    save();
-
-    loadShop();
+  if (
+    state.owned.includes(index)
+  ) {
 
     showToast(
-        `${item[2]} purchased!`
+      "Already owned!"
     );
+
+    return;
+  }
+
+  if (
+    state.coins < item[1]
+  ) {
+
+    showToast(
+      "Not enough coins!"
+    );
+
+    return;
+  }
+
+  state.coins -= item[1];
+
+  state.owned.push(index);
+
+  save();
+
+  showToast(
+    "Purchased!"
+  );
+
+  updateAll();
 }
 
 
-/* =====================================================
+/* =========================
    PROFILE
-===================================================== */
+========================= */
 
-function loadProfile() {
+function updateProfile() {
 
-    updateUI();
+  document.getElementById(
+    "profileName"
+  ).textContent =
+    state.name;
 
-    if ($("profileBadges")) {
-        $("profileBadges").textContent =
-            state.badges.length;
-    }
+  document.getElementById(
+    "profileSessions"
+  ).textContent =
+    state.sessions;
+
+  document.getElementById(
+    "profileCoins"
+  ).textContent =
+    state.coins;
+
+  document.getElementById(
+    "profileBadges"
+  ).textContent =
+    badgeRequirements.filter(
+      x =>
+        state.sessions >= x
+    ).length;
 }
 
 
-/* =====================================================
-   MAP
-===================================================== */
+/* =========================
+   REAL WORLD MAP
+========================= */
 
-let worldMap = null;
+let map;
+let countryLayer;
+
+const countries = {
+
+  "India": {
+    capital: "New Delhi",
+    continent: "Asia",
+    population: "Over 1.4 billion",
+    language: "Hindi, English and many regional languages",
+    currency: "Indian Rupee (INR)",
+    fact: "India is one of the world's most geographically and culturally diverse countries."
+  },
+
+  "Japan": {
+    capital: "Tokyo",
+    continent: "Asia",
+    population: "About 124 million",
+    language: "Japanese",
+    currency: "Japanese Yen (JPY)",
+    fact: "Japan is an island country in East Asia."
+  },
+
+  "United States": {
+    capital: "Washington, D.C.",
+    continent: "North America",
+    population: "Over 300 million",
+    language: "English is the most widely spoken language",
+    currency: "US Dollar (USD)",
+    fact: "The United States contains a wide range of climates and landscapes."
+  },
+
+  "Brazil": {
+    capital: "Brasília",
+    continent: "South America",
+    population: "Over 200 million",
+    language: "Portuguese",
+    currency: "Brazilian Real (BRL)",
+    fact: "Brazil contains a large part of the Amazon rainforest."
+  },
+
+  "Australia": {
+    capital: "Canberra",
+    continent: "Oceania",
+    population: "About 27 million",
+    language: "English is the main language",
+    currency: "Australian Dollar (AUD)",
+    fact: "Australia is both a country and a continent."
+  },
+
+  "Egypt": {
+    capital: "Cairo",
+    continent: "Africa",
+    population: "Over 100 million",
+    language: "Arabic",
+    currency: "Egyptian Pound (EGP)",
+    fact: "Ancient Egypt is famous for its pyramids and civilization along the Nile."
+  },
+
+  "United Kingdom": {
+    capital: "London",
+    continent: "Europe",
+    population: "About 69 million",
+    language: "English",
+    currency: "Pound Sterling (GBP)",
+    fact: "The United Kingdom is made up of four constituent countries."
+  },
+
+  "China": {
+    capital: "Beijing",
+    continent: "Asia",
+    population: "Over 1.4 billion",
+    language: "Mandarin Chinese",
+    currency: "Renminbi / Yuan (CNY)",
+    fact: "China has one of the world's oldest continuous civilizations."
+  },
+
+  "Canada": {
+    capital: "Ottawa",
+    continent: "North America",
+    population: "About 40 million",
+    language: "English and French",
+    currency: "Canadian Dollar (CAD)",
+    fact: "Canada has the longest coastline of any country."
+  },
+
+  "South Africa": {
+    capital: "Pretoria, Cape Town and Bloemfontein",
+    continent: "Africa",
+    population: "About 63 million",
+    language: "Multiple official languages",
+    currency: "South African Rand (ZAR)",
+    fact: "South Africa has three capital cities."
+  },
+
+  "Antarctica": {
+    capital: "No capital",
+    continent: "Antarctica",
+    population: "No permanent population",
+    language: "No official language",
+    currency: "No official currency",
+    fact: "Antarctica is Earth's southernmost continent and contains most of the world's land ice."
+  }
+
+};
 
 
-function loadMap() {
+function initMap() {
 
-    if (
-        worldMap ||
-        !window.L
-    ) {
-        return;
-    }
+  if (map) return;
 
-    const mapElement =
-        $("worldMap");
-
-    if (!mapElement) return;
-
-    worldMap =
-        L.map(
-            mapElement
-        ).setView(
-            [20, 0],
-            2
-        );
-
-
-    L.tileLayer(
-        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        {
-            maxZoom: 18
-        }
-    ).addTo(worldMap);
-
-
-    const locations = [
-        ["India", 20.5937, 78.9629],
-        ["Japan", 36.2048, 138.2529],
-        ["United Kingdom", 55.3781, -3.4360],
-        ["United States", 37.0902, -95.7129],
-        ["Australia", -25.2744, 133.7751]
-    ];
-
-
-    locations.forEach(
-        location => {
-
-            const marker =
-                L.marker([
-                    location[1],
-                    location[2]
-                ]).addTo(worldMap);
-
-            marker.on(
-                "click",
-                () => {
-
-                    $("countryInfo").innerHTML = `
-                        <h2>🌎 ${location[0]}</h2>
-                        <p>
-                            Explore this location
-                            and learn something new.
-                        </p>
-                    `;
-
-                }
-            );
-
-        }
+  map =
+    L.map(
+      "worldMap",
+      {
+        worldCopyJump: true,
+        minZoom: 1.5,
+        maxZoom: 7
+      }
+    ).setView(
+      [20, 0],
+      2
     );
-}
 
+  L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+      attribution:
+        "&copy; OpenStreetMap contributors",
+      maxZoom: 19
+    }
+  ).addTo(map);
 
-/* =====================================================
-   MYSTERY
-===================================================== */
+  const locations = {
 
-const mysteryTopics = [
-    [
-        "Black Holes",
-        "Extremely dense astronomical objects with very strong gravity."
-    ],
-    [
-        "The Human Brain",
-        "The brain is the main organ of the nervous system."
-    ],
-    [
-        "Ocean Life",
-        "Oceans contain an enormous variety of living organisms."
-    ],
-    [
-        "Volcanoes",
-        "Volcanoes are openings through which molten material and gases can reach the surface."
-    ]
-];
+    "India": [22.5, 79],
+    "Japan": [36, 138],
+    "United States": [39, -98],
+    "Brazil": [-10, -52],
+    "Australia": [-25, 134],
+    "Egypt": [26, 30],
+    "United Kingdom": [54, -2],
+    "China": [35, 103],
+    "Canada": [56, -106],
+    "South Africa": [-30, 25],
+    "Antarctica": [-82, 0]
 
+  };
 
-function mysteryTopic() {
+  Object.keys(locations).forEach(
+    name => {
 
-    const topic =
-        mysteryTopics[
-            Math.floor(
-                Math.random() *
-                mysteryTopics.length
-            )
-        ];
+      const marker =
+        L.marker(
+          locations[name]
+        ).addTo(map);
 
+      marker.bindPopup(
+        <b>${name}</b><br>
+        Tap for details
+      );
 
-    $("mysteryTitle").textContent =
-        topic[0];
-
-    $("mysteryDescription").textContent =
-        topic[1];
-}
-
-
-/* =====================================================
-   INITIALIZE
-===================================================== */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        updateUI();
-
-        loadLessons();
-
-        loadBadges();
-
-        loadShop();
-
-
-        const aiInput =
-            $("aiTeacherInput");
-
-        if (aiInput) {
-
-            aiInput.addEventListener(
-                "keydown",
-                event => {
-
-                    if (
-                        event.key === "Enter"
-                    ) {
-                        event.preventDefault();
-                        askAITeacher();
-                    }
-
-                }
-            );
-
+      marker.on(
+        "click",
+        () => {
+          showCountry(name);
         }
-
-
-        const quizAIInput =
-            $("quizAIInput");
-
-        if (quizAIInput) {
-
-            quizAIInput.addEventListener(
-                "keydown",
-                event => {
-
-                    if (
-                        event.key === "Enter"
-                    ) {
-                        event.preventDefault();
-                        askAITeacher();
-                    }
-
-                }
-            );
-
-        }
-
-
-        const messageInput =
-            $("messageInput");
-
-        if (messageInput) {
-
-            messageInput.addEventListener(
-                "keydown",
-                event => {
-
-                    if (
-                        event.key === "Enter"
-                    ) {
-                        event.preventDefault();
-                        sendMessage();
-                    }
-
-                }
-            );
-
-        }
+      );
 
     }
-);
+  );
+}
+
+
+/* =========================
+   COUNTRY DETAILS
+========================= */
+
+function showCountry(name) {
+
+  const country =
+    countries[name];
+
+  if (!country) {
+
+    showToast(
+      "Country information coming soon!"
+    );
+
+    return;
+  }
+
+  document.getElementById(
+    "countryInfo"
+  ).innerHTML = 
+
+    <h2>🌎 ${name}</h2>
+
+    <p>
+      <b>Continent:</b>
+      ${country.continent}
+    </p>
+
+    <p>
+      <b>Capital:</b>
+      ${country.capital}
+    </p>
+
+    <p>
+      <b>Population:</b>
+      ${country.population}
+    </p>
+
+    <p>
+      <b>Language:</b>
+      ${country.language}
+    </p>
+
+    <p>
+      <b>Currency:</b>
+      ${country.currency}
+    </p>
+
+    <p>
+      <b>📚 Teachly Fact:</b>
+      ${country.fact}
+    </p>
+
+  ;
+
+  if (map) {
+
+    const locations = {
+
+      "India": [22.5, 79],
+      "Japan": [36, 138],
+      "United States": [39, -98],
+      "Brazil": [-10, -52],
+      "Australia": [-25, 134],
+      "Egypt": [26, 30],
+      "United Kingdom": [54, -2],
+      "China": [35, 103],
+      "Canada": [56, -106],
+      "South Africa": [-30, 25],
+      "Antarctica": [-82, 0]
+
+    };
+
+    if (locations[name]) {
+
+      map.setView(
+        locations[name],
+        4
+      );
+
+    }
+  }
+}
+
+
+/* =========================
+   UPDATE EVERYTHING
+========================= */
+
+function updateAll() {
+
+  document.getElementById(
+    "homeCoins"
+  ).textContent =
+    state.coins;
+
+  document.getElementById(
+    "shopCoins"
+  ).textContent =
+    state.coins;
+
+  document.getElementById(
+    "welcomeText"
+  ).textContent =
+    state.name
+      ? "Welcome, " + state.name + "!"
+      : "";
+
+  renderBadges();
+  renderShop();
+  updateProfile();
+  loadPeople();
+
+  if (
+    document
+      .getElementById("mapPage")
+      .classList.contains("active")
+  ) {
+
+    setTimeout(
+      initMap,
+      100
+    );
+  }
+}
+
+
+/* =========================
+   TOAST
+========================= */
+
+function showToast(message) {
+
+  const toast =
+    document.getElementById(
+      "toast"
+    );
+
+  toast.textContent =
+    message;
+
+  toast.style.display =
+    "block";
+
+  setTimeout(
+    () => {
+      toast.style.display =
+        "none";
+    },
+    2200
+  );
+}
+
+
+/* =========================
+   INITIAL LOAD
+========================= */
+
+if (state.name) {
+
+  document.getElementById(
+    "usernameInput"
+  ).value =
+    state.name;
+
+  document.getElementById(
+    "welcomeText"
+  ).textContent =
+    "Welcome, " +
+    state.name +
+    "!";
+
+  openPage(
+    "homePage"
+  );
+
+} else {
+
+  openPage(
+    "namePage"
+  );
+}
+
+updateAll();
