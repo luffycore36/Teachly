@@ -2035,3 +2035,1151 @@ function renderShop(){
 
 window.renderShop =
 renderShop;
+
+function buyItem(name,price){
+
+    if(!currentUser)
+        return;
+
+
+    prepareUser();
+
+
+
+    if(
+        currentUser.purchasedItems.includes(name)
+    ){
+
+        currentUser.equippedItem =
+        name;
+
+
+    }
+    else{
+
+
+        if(
+            currentUser.coins < price
+        ){
+
+            alert(
+                "Not enough coins"
+            );
+
+            return;
+
+        }
+
+
+        currentUser.coins -= price;
+
+
+        currentUser.purchasedItems.push(
+            name
+        );
+
+
+        currentUser.equippedItem =
+        name;
+
+
+    }
+
+
+
+    saveUser();
+
+
+    updateHome();
+
+    updateProfile();
+
+    renderShop();
+
+
+}
+
+
+
+window.buyItem =
+buyItem;
+
+
+
+
+
+
+
+
+function previewAvatar(event){
+
+    const file =
+    event.target.files[0];
+
+
+    if(!file)
+        return;
+
+
+
+    const reader =
+    new FileReader();
+
+
+
+    reader.onload =
+    e=>{
+
+
+        const preview =
+        document.getElementById(
+            "avatarPreview"
+        );
+
+
+        if(preview){
+
+            preview.src =
+            e.target.result;
+
+
+            preview.style.display =
+            "block";
+
+        }
+
+
+    };
+
+
+
+    reader.readAsDataURL(file);
+
+
+}
+
+
+
+window.previewAvatar =
+previewAvatar;
+
+
+
+
+
+
+
+function uploadAvatar(){
+
+    const preview =
+    document.getElementById(
+        "avatarPreview"
+    );
+
+
+    if(
+        !preview ||
+        !preview.src
+    )
+        return;
+
+
+
+    if(currentUser){
+
+        currentUser.profileImage =
+        preview.src;
+
+
+        saveUser();
+
+
+        updateProfile();
+
+    }
+
+
+}
+
+
+
+window.uploadAvatar =
+uploadAvatar;
+
+
+
+
+
+
+
+function updateProfile(){
+
+    if(!currentUser)
+        return;
+
+
+
+    const name =
+    document.getElementById(
+        "profileName"
+    );
+
+
+    const lessons =
+    document.getElementById(
+        "profileLessons"
+    );
+
+
+    const sessions =
+    document.getElementById(
+        "profileSessions"
+    );
+
+
+    const coins =
+    document.getElementById(
+        "profileCoins"
+    );
+
+
+
+    if(name)
+        name.textContent =
+        currentUser.username;
+
+
+
+    if(lessons)
+        lessons.textContent =
+        currentUser.completedLessons.length;
+
+
+
+    if(sessions)
+        sessions.textContent =
+        currentUser.sessions;
+
+
+
+    if(coins)
+        coins.textContent =
+        currentUser.coins;
+
+
+
+    const avatar =
+    document.getElementById(
+        "profileAvatar"
+    );
+
+
+
+    if(avatar){
+
+
+        if(currentUser.profileImage){
+
+            avatar.innerHTML = `
+
+            <img 
+            src="${currentUser.profileImage}"
+            class="profileImage">
+
+            `;
+
+        }
+        else{
+
+            avatar.innerHTML =
+            "👤";
+
+        }
+
+
+    }
+
+
+}
+
+
+
+window.updateProfile =
+updateProfile;
+
+
+
+
+
+
+
+
+async function loadPeople(){
+
+    const list =
+    document.getElementById(
+        "peopleList"
+    );
+
+
+    if(!list)
+        return;
+
+
+
+    try{
+
+
+        const response =
+        await fetch(
+            `${API_URL}/api/people`
+        );
+
+
+
+        const users =
+        await response.json();
+
+
+
+        list.innerHTML="";
+
+
+
+        if(
+            !Array.isArray(users) ||
+            users.length===0
+        ){
+
+            list.innerHTML =
+            `
+            <p>
+            No Teachly users found.
+            </p>
+            `;
+
+            return;
+
+        }
+
+
+
+        users.forEach(
+            person=>{
+
+
+                if(
+                    person.username ===
+                    currentUser?.username
+                )
+                    return;
+
+
+
+                list.innerHTML += `
+
+                <div class="personCard">
+
+
+                    <h3>
+                    ${person.username}
+                    </h3>
+
+
+                    <p>
+                    Teachly User
+                    </p>
+
+
+                    <button onclick='connectToPerson(${JSON.stringify(person)})'>
+
+                    Connect
+
+                    </button>
+
+
+                </div>
+
+                `;
+
+
+            }
+        );
+
+
+    }
+
+    catch(error){
+
+        list.innerHTML =
+        `
+        <p>
+        Unable to load users.
+        </p>
+        `;
+
+    }
+
+
+}
+
+
+
+window.loadPeople =
+loadPeople;
+
+
+
+
+
+
+
+
+function connectToPerson(person){
+
+    currentChatUser =
+    person;
+
+
+
+    openPage(
+        "chatPage"
+    );
+
+
+
+    const title =
+    document.getElementById(
+        "chatTitle"
+    );
+
+
+    if(title)
+        title.textContent =
+        person.username;
+
+
+
+    connectSocket();
+
+
+}
+
+
+
+window.connectToPerson =
+connectToPerson;
+
+
+
+
+
+
+
+function connectSocket(){
+
+    if(socket)
+        return;
+
+
+
+    if(typeof io === "undefined")
+        return;
+
+
+
+    socket =
+    io(API_URL);
+
+
+
+    socket.on(
+        "private-message",
+        data=>{
+
+
+            addChatMessage(
+                data.message,
+                false
+            );
+
+
+        }
+    );
+
+
+}
+
+
+
+window.connectSocket =
+connectSocket;
+
+
+
+
+
+
+
+function addChatMessage(text,mine){
+
+    const box =
+    document.getElementById(
+        "chatMessages"
+    );
+
+
+    if(!box)
+        return;
+
+
+
+    box.innerHTML += `
+
+    <div class="message ${mine?"me":""}">
+        ${text}
+    </div>
+
+    `;
+
+
+
+    box.scrollTop =
+    box.scrollHeight;
+
+
+}
+
+
+
+window.addChatMessage =
+addChatMessage;
+
+
+
+
+
+
+
+
+function sendMessage(){
+
+    const input =
+    document.getElementById(
+        "messageInput"
+    );
+
+
+
+    if(!input)
+        return;
+
+
+
+    const message =
+    input.value.trim();
+
+
+
+    if(!message)
+        return;
+
+
+
+    addChatMessage(
+        message,
+        true
+    );
+
+
+
+    if(socket){
+
+        socket.emit(
+            "private-message",
+            {
+                message
+            }
+        );
+
+    }
+
+
+
+    input.value="";
+
+
+}
+
+
+
+window.sendMessage =
+sendMessage;
+
+
+
+
+
+
+
+
+function addEmoji(emoji){
+
+    const input =
+    document.getElementById(
+        "messageInput"
+    );
+
+
+    if(input){
+
+        input.value += emoji;
+
+    }
+
+
+}
+
+
+
+window.addEmoji =
+addEmoji;
+
+function initializeMap(){
+
+    if(typeof L === "undefined")
+        return;
+
+
+    const container =
+    document.getElementById(
+        "worldMap"
+    );
+
+
+    if(!container)
+        return;
+
+
+
+    if(map){
+
+        map.invalidateSize();
+
+        return;
+
+    }
+
+
+
+    map =
+    L.map(
+        "worldMap"
+    )
+    .setView(
+        [20,0],
+        2
+    );
+
+
+
+    L.tileLayer(
+        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+
+            maxZoom:18,
+
+            attribution:
+            "© OpenStreetMap"
+
+        }
+
+    )
+    .addTo(map);
+
+
+
+    const continents = [
+
+        {
+            name:"Asia",
+            lat:34,
+            lng:100
+        },
+
+        {
+            name:"Africa",
+            lat:0,
+            lng:20
+        },
+
+        {
+            name:"Europe",
+            lat:50,
+            lng:10
+        },
+
+        {
+            name:"North America",
+            lat:40,
+            lng:-100
+        },
+
+        {
+            name:"South America",
+            lat:-15,
+            lng:-60
+        },
+
+        {
+            name:"Australia/Oceania",
+            lat:-25,
+            lng:135
+        },
+
+        {
+            name:"Antarctica",
+            lat:-80,
+            lng:0
+        }
+
+    ];
+
+
+
+    continents.forEach(
+        continent=>{
+
+
+            L.marker(
+                [
+                    continent.lat,
+                    continent.lng
+                ]
+            )
+            .addTo(map)
+            .bindPopup(
+                `
+                <h3>
+                ${continent.name}
+                </h3>
+
+                <button onclick="showContinent('${continent.name}')">
+                Explore
+                </button>
+                `
+            );
+
+
+        }
+    );
+
+
+}
+
+
+
+window.initializeMap =
+initializeMap;
+
+
+
+
+
+
+
+
+function showContinent(name){
+
+    const info =
+    document.getElementById(
+        "countryInfo"
+    );
+
+
+    if(!info)
+        return;
+
+
+
+    const data={
+
+
+        "Asia":
+        "Largest continent. Home to diverse cultures, mountains and ancient civilizations.",
+
+
+        "Africa":
+        "Known for wildlife, deserts, and rich history.",
+
+
+        "Europe":
+        "Known for art, science, and historical landmarks.",
+
+
+        "North America":
+        "Contains many climates, cultures, and ecosystems.",
+
+
+        "South America":
+        "Home to the Amazon rainforest and Andes mountains.",
+
+
+        "Australia/Oceania":
+        "Famous for unique animals and island nations.",
+
+
+        "Antarctica":
+        "The coldest continent covered mostly by ice."
+
+    };
+
+
+
+    info.innerHTML = `
+
+    <h2>
+    🌍 ${name}
+    </h2>
+
+
+    <p>
+    ${data[name]}
+    </p>
+
+    `;
+
+
+}
+
+
+
+window.showContinent =
+showContinent;
+
+
+
+
+
+
+
+
+function toggleTheme(){
+
+    document.body.classList.toggle(
+        "darkMode"
+    );
+
+
+    const dark =
+    document.body.classList.contains(
+        "darkMode"
+    );
+
+
+    localStorage.setItem(
+        "teachlyTheme",
+        dark
+    );
+
+
+}
+
+
+
+window.toggleTheme =
+toggleTheme;
+
+
+
+
+
+
+
+
+function loadTheme(){
+
+    const saved =
+    localStorage.getItem(
+        "teachlyTheme"
+    );
+
+
+
+    if(saved==="true"){
+
+        document.body.classList.add(
+            "darkMode"
+        );
+
+    }
+
+
+}
+
+
+
+window.loadTheme =
+loadTheme;
+
+
+
+
+
+
+
+
+function continueFromName(){
+
+    const input =
+    document.getElementById(
+        "usernameInput"
+    );
+
+
+    if(input && input.value.trim()){
+
+        localStorage.setItem(
+            "guestName",
+            input.value.trim()
+        );
+
+    }
+
+
+
+    openPage(
+        "loginPage"
+    );
+
+
+}
+
+
+
+window.continueFromName =
+continueFromName;
+
+
+
+
+
+
+
+
+function goHome(){
+
+    if(currentUser){
+
+        updateHome();
+
+
+        openPage(
+            "homePage"
+        );
+
+    }
+
+    else{
+
+        openPage(
+            "introPage"
+        );
+
+    }
+
+
+}
+
+
+
+window.goHome =
+goHome;
+
+
+
+
+
+
+
+
+function startApplication(){
+
+    try{
+
+
+        loadTheme();
+
+
+        loadUser();
+
+
+        if(currentUser){
+
+            prepareUser();
+
+
+            updateHome();
+
+
+            openPage(
+                "homePage"
+            );
+
+        }
+        else{
+
+            openPage(
+                "introPage"
+            );
+
+        }
+
+
+
+    }
+
+    catch(error){
+
+
+        console.error(
+            "Teachly startup error:",
+            error
+        );
+
+
+        openPage(
+            "introPage"
+        );
+
+
+    }
+
+
+}
+
+
+
+
+
+
+
+
+document.addEventListener(
+"DOMContentLoaded",
+()=>{
+
+
+    startApplication();
+
+
+});
+
+
+
+
+
+
+
+
+window.addEventListener(
+"error",
+event=>{
+
+
+    console.error(
+        "Teachly error:",
+        event.error
+    );
+
+
+});
+
+
+
+
+
+
+
+
+function refreshData(){
+
+    if(!currentUser)
+        return;
+
+
+    prepareUser();
+
+
+    updateHome();
+
+
+    updateProfile();
+
+
+}
+
+
+
+window.refreshData =
+refreshData;
+
+
+
+
+
+
+
+
+function clearBrokenSession(){
+
+    try{
+
+
+        const data =
+        JSON.parse(
+            localStorage.getItem(
+                "teachlyUser"
+            )
+        );
+
+
+
+        if(!data){
+
+            localStorage.removeItem(
+                "teachlyUser"
+            );
+
+        }
+
+
+    }
+
+    catch{
+
+
+        localStorage.removeItem(
+            "teachlyUser"
+        );
+
+
+    }
+
+
+}
+
+
+
+clearBrokenSession();
+
+
+
+
+
+
+
+
+console.log(
+"Teachly loaded successfully 🚀"
+);
