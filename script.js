@@ -1,55 +1,25 @@
-/* =====================================================
-   TEACHLY SCRIPT.JS - PART 1/4
-===================================================== */
-
-
 const API_URL = "https://teachly-nmxh.onrender.com";
 
-
 let currentUser = null;
-
 let currentRole = "learner";
-
 let currentLesson = null;
-
 let currentQuiz = null;
-
 let currentChatUser = null;
-
 let socket = null;
-
 let map = null;
-
-
-
-/* =====================================================
-   LESSON DATA
-===================================================== */
 
 
 const lessons = [
 
 {
 id:1,
-
 title:"Fractions",
-
 category:"Mathematics",
-
 icon:"➗",
-
-description:
-"Understand fractions and their parts.",
-
-
+description:"Understand fractions and their parts.",
 content:`
-
 <h3>What is a fraction?</h3>
-
-<p>
-A fraction represents a part of a whole.
-</p>
-
+<p>A fraction represents a part of a whole.</p>
 
 <p>
 Example:
@@ -57,618 +27,299 @@ Example:
 means one part out of two equal parts.
 </p>
 
-
 <h3>Parts of a fraction</h3>
 
-
 <p>
-The top number is called the
-<strong>numerator</strong>.
+Top number = Numerator
 </p>
 
-
 <p>
-The bottom number is called the
-<strong>denominator</strong>.
+Bottom number = Denominator
 </p>
-
 `,
-
-
 quiz:{
-
-question:
-"What is the numerator in 3/5?",
-
-options:[
-"3",
-"5",
-"8",
-"2"
-],
-
+question:"What is the numerator in 3/5?",
+options:["3","5","8","2"],
 answer:"3"
-
 }
-
 },
-
 
 
 {
 id:2,
-
-title:"Solar System",
-
-category:"Science",
-
-icon:"🪐",
-
-description:
-"Explore planets around our Sun.",
-
-
+title:"Algebra Basics",
+category:"Mathematics",
+icon:"📐",
+description:"Learn variables and equations.",
 content:`
-
-<h3>The Solar System</h3>
+<h3>Algebra</h3>
 
 <p>
-The Solar System contains the Sun and planets orbiting it.
+Algebra uses letters to represent unknown values.
 </p>
 
+<p>
+Example:
+<strong>x + 5 = 10</strong>
+</p>
 
-<ul>
-
-<li>Mercury</li>
-
-<li>Venus</li>
-
-<li>Earth</li>
-
-<li>Mars</li>
-
-<li>Jupiter</li>
-
-<li>Saturn</li>
-
-<li>Uranus</li>
-
-<li>Neptune</li>
-
-</ul>
-
+<p>
+x = 5
+</p>
 `,
-
-
 quiz:{
-
-question:
-"How many planets are in our Solar System?",
-
-options:[
-"7",
-"8",
-"9",
-"10"
-],
-
-answer:"8"
-
+question:"If x + 3 = 8, what is x?",
+options:["3","5","8","11"],
+answer:"5"
 }
-
 },
-
 
 
 {
 id:3,
-
-title:"Photosynthesis",
-
+title:"Solar System",
 category:"Science",
-
-icon:"🌱",
-
-description:
-"Learn how plants create food.",
-
-
+icon:"🪐",
+description:"Explore planets around our Sun.",
 content:`
+<h3>Solar System</h3>
 
+<p>
+The Solar System contains the Sun and planets.
+</p>
+
+<ul>
+<li>Mercury</li>
+<li>Venus</li>
+<li>Earth</li>
+<li>Mars</li>
+<li>Jupiter</li>
+<li>Saturn</li>
+<li>Uranus</li>
+<li>Neptune</li>
+</ul>
+`,
+quiz:{
+question:"How many planets are in our Solar System?",
+options:["7","8","9","10"],
+answer:"8"
+}
+},
+
+
+{
+id:4,
+title:"Photosynthesis",
+category:"Science",
+icon:"🌱",
+description:"Learn how plants make food.",
+content:`
 <h3>Photosynthesis</h3>
 
 <p>
-Plants create food using sunlight energy.
+Plants create food using sunlight.
 </p>
-
-
-<p>
-Plants need:
-</p>
-
 
 <ul>
-
 <li>Sunlight</li>
-
 <li>Water</li>
-
 <li>Carbon dioxide</li>
-
 </ul>
-
-
 `,
-
-
 quiz:{
-
-question:
-"What gas do plants absorb?",
-
+question:"What gas do plants absorb?",
 options:[
 "Oxygen",
 "Carbon dioxide",
 "Hydrogen",
 "Helium"
 ],
-
-answer:
-"Carbon dioxide"
-
+answer:"Carbon dioxide"
 }
+},
 
+
+{
+id:5,
+title:"Grammar Basics",
+category:"English",
+icon:"✍️",
+description:"Learn sentence rules.",
+content:`
+<h3>Grammar</h3>
+
+<p>
+Grammar controls how sentences are formed.
+</p>
+
+<h3>Nouns</h3>
+<p>
+Names of people, places and things.
+</p>
+
+<h3>Verbs</h3>
+<p>
+Actions or states.
+</p>
+`,
+quiz:{
+question:"Which word is a verb in 'Birds fly'?",
+options:[
+"Birds",
+"fly",
+"the",
+"none"
+],
+answer:"fly"
 }
+},
 
+
+{
+id:6,
+title:"Ancient Egypt",
+category:"History",
+icon:"🏺",
+description:"Discover Ancient Egypt.",
+content:`
+<h3>Ancient Egypt</h3>
+
+<p>
+Ancient Egypt developed near the Nile River.
+</p>
+
+<p>
+It is famous for pyramids and pharaohs.
+</p>
+`,
+quiz:{
+question:"Which river was important to Egypt?",
+options:[
+"Nile",
+"Amazon",
+"Ganges",
+"Danube"
+],
+answer:"Nile"
+}
+}
 
 ];
 
-
-
-
-
-/* =====================================================
-   RANDOM TOPICS FIX
-===================================================== */
 
 
 const mysteryTopics=[
 
+[
+"Why is the sky blue?",
+"Light scatters through Earth's atmosphere."
+],
 
-{
-title:"Why is the sky blue?",
+[
+"How do airplanes fly?",
+"Wings create lift by moving air."
+],
 
-text:
-"Sunlight scatters in Earth's atmosphere, making blue light visible."
-},
+[
+"Why do we have seasons?",
+"Earth's tilt changes sunlight angles."
+],
 
-
-
-{
-title:"How do airplanes fly?",
-
-text:
-"Airplane wings create lift by changing airflow pressure."
-},
-
-
-
-{
-title:"What are black holes?",
-
-text:
-"Black holes are regions of space with extremely strong gravity."
-},
-
-
-
-{
-title:"Why do seasons happen?",
-
-text:
-"Earth's tilt changes how sunlight reaches different areas."
-}
-
-
+[
+"What is a black hole?",
+"A region of space with extremely strong gravity."
+]
 
 ];
 
 
-
-
-
-
-/* =====================================================
-   BADGES
-===================================================== */
-
-
-const badges=[
-
-
-{
-id:"first",
-
-icon:"🌱",
-
-title:"First Step",
-
-description:
-"Complete your first lesson.",
-
-requirement:1
-
-},
-
-
-
-{
-id:"quiz",
-
-icon:"🏆",
-
-title:"Quiz Starter",
-
-description:
-"Complete your first quiz.",
-
-requirement:"quiz"
-
-},
-
-
-
-{
-id:"session",
-
-icon:"🤝",
-
-title:"Connection",
-
-description:
-"Connect with another user.",
-
-requirement:"session"
-
-},
-
-
-
-{
-id:"shop",
-
-icon:"🛍️",
-
-title:"Collector",
-
-description:
-"Buy your first item.",
-
-requirement:"shop"
-
-}
-
-
-];
-
-
-
-
-
-
-/* =====================================================
-   SHOP
-===================================================== */
-
-
-const shopItems=[
-
-
-{
-id:"star",
-
-icon:"⭐",
-
-name:"Star",
-
-description:
-"Show a star effect.",
-
-price:50
-
-},
-
-
-
-{
-id:"rocket",
-
-icon:"🚀",
-
-name:"Rocket",
-
-description:
-"Rocket profile effect.",
-
-price:100
-
-},
-
-
-
-{
-id:"crown",
-
-icon:"👑",
-
-name:"Crown",
-
-description:
-"Premium crown effect.",
-
-price:250
-
-}
-
-
-];
-
-
-
-
-
-
-/* =====================================================
-   STARTUP
-===================================================== */
 
 
 document.addEventListener(
 "DOMContentLoaded",
 ()=>{
 
-
 loadTheme();
 
-loadUser();
-
-
-renderLessons();
-
+showStartScreen();
 
 }
 );
 
 
 
+function showStartScreen(){
 
+currentUser=null;
 
-
-/* =====================================================
-   USER SYSTEM
-===================================================== */
-
-
-function saveUser(){
-
-if(!currentUser)
-return;
-
-
-localStorage.setItem(
-"teachlyUser",
-JSON.stringify(currentUser)
-);
-
+openPage("introPage");
 
 }
 
-
-
-
-
-
-function loadUser(){
-
-
-const saved =
-localStorage.getItem(
-"teachlyUser"
-);
-
-
-
-if(!saved)
-return;
-
-
-
-currentUser =
-JSON.parse(saved);
-
-
-
-currentUser.coins =
-Number(
-currentUser.coins ?? 100
-);
-
-
-
-currentUser.completedLessons =
-currentUser.completedLessons || [];
-
-
-
-currentUser.savedLessons =
-currentUser.savedLessons || [];
-
-
-
-currentUser.quizCompleted =
-currentUser.quizCompleted || [];
-
-
-
-currentUser.purchasedItems =
-currentUser.purchasedItems || [];
-
-
-
-currentUser.equippedItem =
-currentUser.equippedItem || null;
-
-
-
-currentUser.sessions =
-currentUser.sessions || 0;
-
-
-
-updateHome();
-
-
-}
-
-
-
-
-
-
-function updateHome(){
-
-
-if(!currentUser)
-return;
-
-
-
-document
-.getElementById(
-"welcomeText"
-)
-?.replaceChildren(
-document.createTextNode(
-`Welcome, ${currentUser.username}`
-)
-);
-
-
-
-const username =
-document.getElementById(
-"homeUsername"
-);
-
-
-
-const coins =
-document.getElementById(
-"coinCount"
-);
-
-
-
-const sessions =
-document.getElementById(
-"sessionCount"
-);
-
-
-
-if(username)
-
-username.textContent =
-currentUser.username;
-
-
-
-if(coins)
-
-coins.textContent =
-currentUser.coins;
-
-
-
-if(sessions)
-
-sessions.textContent =
-currentUser.sessions;
-
-
-
-}
-
-
-
-
-
-
-/* =====================================================
-   PAGE NAVIGATION
-===================================================== */
 
 
 function openPage(id){
 
-
 document
 .querySelectorAll(".page")
-.forEach(
-page =>
-page.classList.remove("active")
-);
+.forEach(page=>{
+
+page.classList.remove("active");
+
+});
 
 
-
-const page =
-document.getElementById(id);
+const page=document.getElementById(id);
 
 
-
-if(!page)
-return;
-
-
+if(page){
 
 page.classList.add("active");
-
-
-
-if(id==="aiPage")
-renderLessons();
-
-
-
-if(id==="savedLessonsPage")
-renderSavedLessons();
-
-
-
-if(id==="profilePage")
-updateProfile();
-
-
-
-if(id==="badgesPage")
-renderBadges();
-
-
-
-if(id==="shopPage")
-renderShop();
-
-
 
 }
 
 
 
-function goHome(){
+if(id==="aiPage"){
 
-openPage(
-"homePage"
-);
+renderLessons();
+
+}
+
+
+if(id==="profilePage"){
+
+updateProfile();
+
+}
+
+
+if(id==="badgesPage"){
+
+renderBadges();
+
+}
+
+
+if(id==="shopPage"){
+
+renderShop();
+
+}
+
+
+if(id==="mapPage"){
+
+initializeMap();
+
+}
+
+
+if(id==="peoplePage"){
+
+loadPeople();
+
+}
 
 }
 
@@ -676,244 +327,78 @@ openPage(
 
 window.openPage=openPage;
 
-window.goHome=goHome;
-
-/* =====================================================
-   AUTH SYSTEM
-===================================================== */
 
 
-async function registerUserAccount(){
+function continueToName(){
 
-const username =
-document.getElementById("registerUsername")
-.value.trim();
-
-
-const email =
-document.getElementById("registerEmail")
-.value.trim();
-
-
-const password =
-document.getElementById("registerPassword")
-.value.trim();
-
-
-const role =
-document.getElementById("registerRole")
-.value;
-
-
-
-const message =
-document.getElementById("registerMessage");
-
-
-
-if(!username || !email || !password){
-
-message.textContent =
-"Please fill all fields.";
-
-return;
+openPage("loginPage");
 
 }
 
 
-
-try{
-
-
-const response =
-await fetch(
-`${API_URL}/api/register`,
-{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-username,
-email,
-password,
-role
-
-})
-
-}
-);
+window.continueToName=continueToName;
 
 
 
-const data =
-await response.json();
+function saveUser(){
 
+if(currentUser){
 
-
-if(!response.ok){
-
-throw new Error(
-data.error ||
-"Registration failed"
+localStorage.setItem(
+"teachlySession",
+JSON.stringify(currentUser)
 );
 
 }
 
-
-
-message.textContent =
-"Account created. Verify your email.";
+}
 
 
 
-document.getElementById(
-"verifyEmail"
-).value=email;
+function loadUser(){
 
-
-
-openPage(
-"verifyPage"
+const saved=
+localStorage.getItem(
+"teachlySession"
 );
 
 
+if(saved){
 
-}catch(error){
+currentUser=
+JSON.parse(saved);
 
+currentRole=
+currentUser.role ||
+"learner";
 
-message.textContent =
-error.message;
-
-
-}
-
-
-
-}
-
-
-
-
-
-async function verifyEmail(){
-
-
-const email =
-document.getElementById(
-"verifyEmail"
-).value.trim();
-
-
-
-const code =
-document.getElementById(
-"verifyCode"
-).value.trim();
-
-
-
-const message =
-document.getElementById(
-"verifyMessage"
-);
-
-
-
-try{
-
-
-const response =
-await fetch(
-`${API_URL}/api/verify`,
-{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-email,
-code
-
-})
-
-}
-);
-
-
-
-const data =
-await response.json();
-
-
-
-if(!response.ok){
-
-throw new Error(
-data.error ||
-"Verification failed"
-);
+return true;
 
 }
 
 
-
-message.textContent =
-"Verified successfully. Login now.";
-
-
-
-openPage(
-"loginPage"
-);
-
-
-
-}catch(error){
-
-
-message.textContent =
-error.message;
-
+return false;
 
 }
-
-
-
-}
-
-
 
 
 
 async function loginUser(){
 
-
-const email =
+const email=
 document.getElementById(
 "loginEmail"
-)
-.value.trim();
+).value.trim();
 
 
-
-const password =
+const password=
 document.getElementById(
 "loginPassword"
-)
-.value.trim();
+).value;
 
 
 
-const message =
+const message=
 document.getElementById(
 "authMessage"
 );
@@ -923,30 +408,24 @@ document.getElementById(
 try{
 
 
-const response =
+const response=
 await fetch(
 `${API_URL}/api/login`,
 {
-
 method:"POST",
-
 headers:{
 "Content-Type":"application/json"
 },
-
 body:JSON.stringify({
-
 email,
 password
-
 })
-
 }
 );
 
 
 
-const data =
+const data=
 await response.json();
 
 
@@ -962,41 +441,7 @@ data.error ||
 
 
 
-currentUser =
-data.user;
-
-
-
-currentUser.coins =
-Number(
-currentUser.coins ?? 100
-);
-
-
-
-currentUser.completedLessons =
-currentUser.completedLessons || [];
-
-
-
-currentUser.savedLessons =
-currentUser.savedLessons || [];
-
-
-
-currentUser.quizCompleted =
-currentUser.quizCompleted || [];
-
-
-
-currentUser.purchasedItems =
-currentUser.purchasedItems || [];
-
-
-
-currentUser.sessions =
-currentUser.sessions || 0;
-
+currentUser=data.user;
 
 
 saveUser();
@@ -1005,19 +450,17 @@ saveUser();
 updateHome();
 
 
-updateProfile();
-
-
 openPage(
 "homePage"
 );
 
 
 
-}catch(error){
+}
+catch(error){
 
 
-message.textContent =
+message.textContent=
 error.message;
 
 
@@ -1029,6 +472,496 @@ error.message;
 
 
 
+window.loginUser=loginUser;
+
+async function loginUser() {
+
+  const email =
+    document.getElementById("loginEmail")?.value.trim();
+
+  const password =
+    document.getElementById("loginPassword")?.value.trim();
+
+  const message =
+    document.getElementById("authMessage");
+
+
+  if (!email || !password) {
+
+    if (message)
+      message.textContent =
+        "Enter email and password.";
+
+    return;
+
+  }
+
+
+  try {
+
+    const response =
+      await fetch(
+        `${API_URL}/api/login`,
+        {
+          method:"POST",
+
+          headers:{
+            "Content-Type":"application/json"
+          },
+
+          body:JSON.stringify({
+            email,
+            password
+          })
+
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok){
+
+      throw new Error(
+        data.error ||
+        "Login failed"
+      );
+
+    }
+
+
+    currentUser =
+      data.user;
+
+
+    currentUser.coins =
+      Number(
+        currentUser.coins ?? 100
+      );
+
+
+    currentUser.completedLessons =
+      currentUser.completedLessons || [];
+
+
+    currentUser.savedLessons =
+      currentUser.savedLessons || [];
+
+
+    currentUser.quizCompleted =
+      currentUser.quizCompleted || [];
+
+
+    currentUser.purchasedItems =
+      currentUser.purchasedItems || [];
+
+
+    currentUser.equippedItem =
+      currentUser.equippedItem || null;
+
+
+    saveUser();
+
+
+    updateHome();
+
+    updateProfile();
+
+
+    openPage("homePage");
+
+
+  }
+
+  catch(error){
+
+    if(message)
+      message.textContent =
+        error.message;
+
+  }
+
+}
+
+
+
+
+async function registerUserAccount(){
+
+  const username =
+    document.getElementById(
+      "registerUsername"
+    )?.value.trim();
+
+
+  const email =
+    document.getElementById(
+      "registerEmail"
+    )?.value.trim();
+
+
+  const password =
+    document.getElementById(
+      "registerPassword"
+    )?.value.trim();
+
+
+  const role =
+    document.getElementById(
+      "registerRole"
+    )?.value;
+
+
+
+  const message =
+    document.getElementById(
+      "registerMessage"
+    );
+
+
+
+  if(
+    !username ||
+    !email ||
+    !password
+  ){
+
+    if(message)
+      message.textContent =
+        "Fill all fields.";
+
+    return;
+
+  }
+
+
+
+  try{
+
+
+    const response =
+      await fetch(
+        `${API_URL}/api/register`,
+        {
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
+
+          body:
+            JSON.stringify({
+              username,
+              email,
+              password,
+              role
+            })
+
+        }
+      );
+
+
+
+    const data =
+      await response.json();
+
+
+
+    if(!response.ok){
+
+      throw new Error(
+        data.error ||
+        "Registration failed"
+      );
+
+    }
+
+
+
+    document.getElementById(
+      "verifyEmail"
+    ).value =
+      email;
+
+
+
+    openPage(
+      "verifyPage"
+    );
+
+
+
+  }
+
+
+  catch(error){
+
+    if(message)
+      message.textContent =
+        error.message;
+
+  }
+
+
+}
+
+
+
+
+async function verifyEmail(){
+
+  const email =
+    document.getElementById(
+      "verifyEmail"
+    )?.value.trim();
+
+
+  const code =
+    document.getElementById(
+      "verifyCode"
+    )?.value.trim();
+
+
+  const message =
+    document.getElementById(
+      "verifyMessage"
+    );
+
+
+
+  try{
+
+
+    const response =
+      await fetch(
+        `${API_URL}/api/verify`,
+        {
+
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
+
+
+          body:
+            JSON.stringify({
+              email,
+              code
+            })
+
+        }
+      );
+
+
+
+    const data =
+      await response.json();
+
+
+
+    if(!response.ok){
+
+      throw new Error(
+        data.error ||
+        "Verification failed"
+      );
+
+    }
+
+
+
+    if(message)
+      message.textContent =
+        "Verified! Login now.";
+
+
+
+    openPage(
+      "loginPage"
+    );
+
+
+  }
+
+
+  catch(error){
+
+    if(message)
+      message.textContent =
+        error.message;
+
+  }
+
+}
+
+
+
+
+function saveUser(){
+
+  if(!currentUser)
+    return;
+
+
+  localStorage.setItem(
+    "teachlyUser",
+    JSON.stringify(
+      currentUser
+    )
+  );
+
+}
+
+
+
+
+function loadUser(){
+
+  const saved =
+    localStorage.getItem(
+      "teachlyUser"
+    );
+
+
+  if(!saved)
+    return;
+
+
+
+  try{
+
+
+    currentUser =
+      JSON.parse(
+        saved
+      );
+
+
+    updateHome();
+
+    updateProfile();
+
+
+  }
+
+  catch{
+
+    localStorage.removeItem(
+      "teachlyUser"
+    );
+
+  }
+
+}
+
+
+
+
+
+function logout(){
+
+  if(socket){
+
+    socket.disconnect();
+
+    socket=null;
+
+  }
+
+
+
+  currentUser=null;
+
+
+  localStorage.removeItem(
+    "teachlyUser"
+  );
+
+
+  openPage(
+    "introPage"
+  );
+
+}
+
+
+
+
+function openPage(id){
+
+  document
+    .querySelectorAll(
+      ".page"
+    )
+    .forEach(
+      page =>
+      page.classList.remove(
+        "active"
+      )
+    );
+
+
+  const page =
+    document.getElementById(
+      id
+    );
+
+
+  if(page)
+    page.classList.add(
+      "active"
+    );
+
+
+  if(id==="aiPage")
+    renderLessons();
+
+
+  if(id==="profilePage")
+    updateProfile();
+
+
+  if(id==="shopPage")
+    renderShop();
+
+
+  if(id==="badgesPage")
+    renderBadges();
+
+
+  if(id==="savedLessonsPage")
+    renderSavedLessons();
+
+
+  if(id==="mapPage")
+    initializeMap();
+
+
+}
+
+
+
+
+
+function continueToName(){
+
+  openPage(
+    "loginPage"
+  );
+
+}
+
+
+
+window.loginUser =
+loginUser;
+
+
 window.registerUserAccount =
 registerUserAccount;
 
@@ -1037,469 +970,26 @@ window.verifyEmail =
 verifyEmail;
 
 
-window.loginUser =
-loginUser;
+window.openPage =
+openPage;
 
 
-
-
-
-/* =====================================================
-   NAME FLOW
-===================================================== */
-
-
-function continueToName(){
-
-
-openPage(
-"namePage"
-);
-
-
-setTimeout(()=>{
-
-
-document
-.getElementById(
-"usernameInput"
-)
-?.focus();
-
-
-},100);
-
-
-}
-
-
-
-
-
-function continueFromName(){
-
-
-const input =
-document.getElementById(
-"usernameInput"
-);
-
-
-
-const username =
-input.value.trim();
-
-
-
-if(!username){
-
-input.focus();
-
-return;
-
-}
-
-
-
-currentUser={
-
-
-id:
-"local-" +
-Date.now(),
-
-
-
-username,
-
-
-
-role:"learner",
-
-
-
-coins:100,
-
-
-
-completedLessons:[],
-
-
-
-savedLessons:[],
-
-
-
-quizCompleted:[],
-
-
-
-purchasedItems:[],
-
-
-
-equippedItem:null,
-
-
-
-sessions:0
-
-
-
-};
-
-
-
-saveUser();
-
-
-updateHome();
-
-
-openPage(
-"homePage"
-);
-
-
-
-}
-
+window.logout =
+logout;
 
 
 window.continueToName =
 continueToName;
 
-
-window.continueFromName =
-continueFromName;
-
-
-
-
-
-
-/* =====================================================
-   PROFILE
-===================================================== */
-
-
-function updateProfile(){
-
-
-if(!currentUser)
-return;
-
-
-
-const name =
-document.getElementById(
-"profileName"
-);
-
-
-
-const lessons =
-document.getElementById(
-"profileLessons"
-);
-
-
-
-const sessions =
-document.getElementById(
-"profileSessions"
-);
-
-
-
-const coins =
-document.getElementById(
-"profileCoins"
-);
-
-
-
-const avatar =
-document.getElementById(
-"profileAvatar"
-);
-
-
-
-if(name)
-
-name.textContent =
-currentUser.username;
-
-
-
-if(lessons)
-
-lessons.textContent =
-currentUser.completedLessons.length;
-
-
-
-if(sessions)
-
-sessions.textContent =
-currentUser.sessions;
-
-
-
-if(coins)
-
-coins.textContent =
-currentUser.coins;
-
-
-
-if(avatar){
-
-
-const item =
-shopItems.find(
-i =>
-i.id === currentUser.equippedItem
-);
-
-
-
-avatar.textContent =
-item
-?
-item.icon
-:
-"👤";
-
-}
-
-
-
-}
-
-
-
-
-async function uploadAvatar(){
-
-
-const file =
-document
-.getElementById(
-"avatarUpload"
-)
-.files[0];
-
-
-
-if(!file || !currentUser)
-return;
-
-
-
-const reader =
-new FileReader();
-
-
-
-reader.onload = ()=>{
-
-
-currentUser.avatar =
-reader.result;
-
-
-saveUser();
-
-
-updateProfile();
-
-
-};
-
-
-
-reader.readAsDataURL(file);
-
-
-}
-
-
-
-function previewAvatar(event){
-
-
-const file =
-event.target.files[0];
-
-
-
-const preview =
-document.getElementById(
-"avatarPreview"
-);
-
-
-
-if(!file || !preview)
-return;
-
-
-
-preview.src =
-URL.createObjectURL(file);
-
-
-
-preview.style.display =
-"block";
-
-
-}
-
-
-
-window.uploadAvatar =
-uploadAvatar;
-
-
-window.previewAvatar =
-previewAvatar;
-
-/* =====================================================
-   SAVED LESSONS
-===================================================== */
-
-
-function renderSavedLessons(){
-
-const box =
-document.getElementById(
-"savedLessonList"
-);
-
-
-if(!box)
-return;
-
-
-
-box.innerHTML = "";
-
-
-
-if(!currentUser ||
-!currentUser.savedLessons.length){
-
-
-box.innerHTML =
-`
-<p>
-No saved lessons yet.
-</p>
-`;
-
-return;
-
-
-}
-
-
-
-currentUser.savedLessons.forEach(id=>{
-
-
-const lesson =
-lessons.find(
-item =>
-item.id === id
-);
-
-
-
-if(!lesson)
-return;
-
-
-
-const card =
-document.createElement(
-"div"
-);
-
-
-
-card.className =
-"lessonCard";
-
-
-
-card.innerHTML = `
-
-<div class="lessonIcon">
-${lesson.icon}
-</div>
-
-<h3>
-${lesson.title}
-</h3>
-
-<p>
-${lesson.description}
-</p>
-
-
-<button onclick="openLesson(${lesson.id})">
-
-Open Lesson
-
-</button>
-
-
-`;
-
-
-
-box.appendChild(card);
-
-
-
-});
-
-
-}
-
-
-
-
-
-
-/* =====================================================
-   LESSON SYSTEM
-===================================================== */
-
-
 function renderLessons(category="All"){
-
 
 const grid =
 document.getElementById(
 "lessonGrid"
 );
 
-
-
-const count =
-document.getElementById(
-"lessonCount"
-);
-
-
-
 if(!grid)
 return;
-
 
 
 let filtered =
@@ -1508,20 +998,12 @@ category==="All"
 lessons
 :
 lessons.filter(
-lesson =>
-lesson.category===category
+l=>l.category===category
 );
 
 
 
 grid.innerHTML="";
-
-
-
-if(count)
-
-count.textContent =
-lessons.length;
 
 
 
@@ -1535,53 +1017,28 @@ document.createElement(
 );
 
 
-
 card.className =
 "lessonCard";
 
 
 
-card.innerHTML = `
-
+card.innerHTML=`
 
 <div class="lessonIcon">
-
 ${lesson.icon}
-
 </div>
 
-
-
-<span class="lessonMiniTag">
-
-${lesson.category}
-
-</span>
-
-
-
 <h3>
-
 ${lesson.title}
-
 </h3>
 
-
-
 <p>
-
 ${lesson.description}
-
 </p>
 
-
-
 <button onclick="openLesson(${lesson.id})">
-
 Learn →
-
 </button>
-
 
 `;
 
@@ -1602,25 +1059,19 @@ grid.appendChild(card);
 
 function filterLessons(category){
 
-
 renderLessons(category);
-
 
 }
 
 
 
 
-
 function openLesson(id){
-
 
 currentLesson =
 lessons.find(
-lesson =>
-lesson.id===id
+l=>l.id===id
 );
-
 
 
 if(!currentLesson)
@@ -1672,7 +1123,6 @@ openPage(
 );
 
 
-
 }
 
 
@@ -1681,31 +1131,21 @@ openPage(
 
 function completeLesson(){
 
-
-if(!currentLesson ||
-!currentUser)
+if(!currentUser || !currentLesson)
 return;
+
+
+
+currentUser.completedLessons =
+currentUser.completedLessons || [];
 
 
 
 if(
-currentUser.completedLessons.includes(
+!currentUser.completedLessons.includes(
 currentLesson.id
 )
 ){
-
-
-alert(
-"Already completed."
-);
-
-
-return;
-
-
-}
-
-
 
 currentUser.completedLessons.push(
 currentLesson.id
@@ -1713,7 +1153,15 @@ currentLesson.id
 
 
 
-currentUser.coins += 20;
+currentUser.lessonsCompleted =
+currentUser.completedLessons.length;
+
+
+
+currentUser.coins =
+Number(
+currentUser.coins || 0
+)+20;
 
 
 
@@ -1722,65 +1170,56 @@ saveUser();
 
 updateHome();
 
-
-updateProfile();
-
-
 renderBadges();
 
 
-
 alert(
-"Lesson completed! +20 💰"
+"Lesson completed +20 coins"
 );
-
 
 
 }
 
+}
 
 
 
 
 function toggleSavedLesson(){
 
-
-if(!currentLesson ||
-!currentUser)
+if(
+!currentUser ||
+!currentLesson
+)
 return;
 
 
 
-const saved =
-currentUser.savedLessons;
+currentUser.savedLessons =
+currentUser.savedLessons || [];
 
 
 
 const index =
-saved.indexOf(
+currentUser.savedLessons.indexOf(
 currentLesson.id
 );
 
 
 
-if(index>=0){
+if(index>-1){
 
-
-saved.splice(
+currentUser.savedLessons.splice(
 index,
 1
 );
 
-
 }
-
 else{
 
-
-saved.push(
+currentUser.savedLessons.push(
 currentLesson.id
 );
-
 
 }
 
@@ -1788,20 +1227,14 @@ currentLesson.id
 
 saveUser();
 
-
-
 updateSaveButton();
-
-
 
 }
 
 
 
 
-
 function updateSaveButton(){
-
 
 const button =
 document.getElementById(
@@ -1810,57 +1243,126 @@ document.getElementById(
 
 
 
-if(!button ||
-!currentLesson ||
-!currentUser)
+if(!button)
 return;
 
 
 
+const saved =
+currentUser?.savedLessons
+?.includes(
+currentLesson?.id
+);
+
+
+
 button.textContent =
-currentUser.savedLessons.includes(
-currentLesson.id
-)
+saved
 ?
 "★ Saved"
 :
 "☆ Save Lesson";
-
-
 
 }
 
 
 
 
+function renderSavedLessons(){
 
-window.renderLessons =
-renderLessons;
-
-
-window.filterLessons =
-filterLessons;
-
-
-window.openLesson =
-openLesson;
+const box =
+document.getElementById(
+"savedLessonList"
+);
 
 
-window.completeLesson =
-completeLesson;
-
-
-window.toggleSavedLesson =
-toggleSavedLesson;
+if(!box)
+return;
 
 
 
+box.innerHTML="";
 
 
 
-/* =====================================================
-   QUIZ SYSTEM
-===================================================== */
+const saved =
+currentUser?.savedLessons || [];
+
+
+
+if(saved.length===0){
+
+box.innerHTML=
+"<p>No saved lessons yet.</p>";
+
+return;
+
+}
+
+
+
+
+saved.forEach(id=>{
+
+
+const lesson =
+lessons.find(
+l=>l.id===id
+);
+
+
+
+if(!lesson)
+return;
+
+
+
+const card =
+document.createElement(
+"div"
+);
+
+
+
+card.className=
+"lessonCard";
+
+
+
+card.innerHTML=`
+
+<div class="lessonIcon">
+${lesson.icon}
+</div>
+
+<h3>
+${lesson.title}
+</h3>
+
+<p>
+${lesson.description}
+</p>
+
+
+<button onclick="openLesson(${lesson.id})">
+Open
+</button>
+
+`;
+
+
+
+box.appendChild(card);
+
+
+
+});
+
+
+}
+
+
+
 
 
 function startQuiz(){
@@ -1901,12 +1403,6 @@ box.innerHTML="";
 
 
 
-document.getElementById(
-"quizResult"
-).textContent="";
-
-
-
 currentQuiz.options.forEach(
 option=>{
 
@@ -1933,8 +1429,8 @@ button
 );
 
 
-
 });
+
 
 
 openPage(
@@ -1942,21 +1438,12 @@ openPage(
 );
 
 
-
 }
 
 
 
 
-
 function answerQuiz(answer){
-
-
-if(!currentQuiz ||
-!currentUser)
-return;
-
-
 
 const result =
 document.getElementById(
@@ -1968,14 +1455,16 @@ document.getElementById(
 if(answer===currentQuiz.answer){
 
 
-
-result.textContent =
-"🎉 Correct! +10 💰";
-
+result.textContent=
+"🎉 Correct!";
 
 
-result.style.color =
-"#73e6a1";
+
+if(currentUser){
+
+
+currentUser.quizCompleted =
+currentUser.quizCompleted || [];
 
 
 
@@ -1992,22 +1481,24 @@ currentLesson.id
 
 
 
-currentUser.coins += 10;
+currentUser.coins =
+Number(
+currentUser.coins||0
+)+10;
 
 
 
 saveUser();
 
-
 updateHome();
-
 
 renderBadges();
 
 
-
 }
 
+
+}
 
 
 }
@@ -2015,13 +1506,8 @@ renderBadges();
 else{
 
 
-result.textContent =
-"❌ Try again!";
-
-
-
-result.style.color =
-"#ff8d9b";
+result.textContent=
+"❌ Try again";
 
 
 }
@@ -2031,61 +1517,54 @@ result.style.color =
 }
 
 
-
-window.startQuiz =
-startQuiz;
-
-
-window.answerQuiz =
-answerQuiz;
-
-/* =====================================================
-   RANDOM TOPIC
-===================================================== */
 
 
 function mysteryTopic(){
 
 
-const topic =
-mysteryTopics[
-Math.floor(
-Math.random() *
-mysteryTopics.length
-)
+const topics=[
+
+
+[
+"Why is the sky blue?",
+"Because sunlight scatters in Earth's atmosphere."
+],
+
+
+[
+"How do airplanes fly?",
+"Wings create lift by moving air."
+],
+
+
+[
+"Why do seasons happen?",
+"Earth's tilt changes sunlight angles."
+],
+
+
+[
+"What are black holes?",
+"Regions of space with extremely strong gravity."
+],
+
+
+[
+"How do plants grow?",
+"They use sunlight, water and carbon dioxide."
+]
+
+
 ];
 
 
 
-const title =
-document.getElementById(
-"mysteryTopicTitle"
-);
-
-
-
-const text =
-document.getElementById(
-"mysteryTopicText"
-);
-
-
-
-if(title){
-
-title.textContent =
-topic[0];
-
-}
-
-
-
-if(text){
-
-text.textContent =
-topic[1];
-
-}
+const topic =
+topics[
+Math.floor(
+Math.random()*topics.length
+)
+];
 
 
 
@@ -2095,27 +1574,50 @@ openPage(
 
 
 
+document.getElementById(
+"mysteryTopicTitle"
+).textContent =
+topic[0];
+
+
+
+document.getElementById(
+"mysteryTopicText"
+).textContent =
+topic[1];
+
+
 }
 
 
 
+
+
+window.renderLessons =
+renderLessons;
+
+window.filterLessons =
+filterLessons;
+
+window.openLesson =
+openLesson;
+
+window.completeLesson =
+completeLesson;
+
+window.toggleSavedLesson =
+toggleSavedLesson;
+
+window.startQuiz =
+startQuiz;
+
 window.mysteryTopic =
 mysteryTopic;
 
-
-
-
-
-
-
-
-/* =====================================================
-   AI TEACHER
-===================================================== */
-
+window.renderSavedLessons =
+renderSavedLessons;
 
 async function askAI(message){
-
 
 try{
 
@@ -2128,10 +1630,7 @@ await fetch(
 method:"POST",
 
 headers:{
-
-"Content-Type":
-"application/json"
-
+"Content-Type":"application/json"
 },
 
 
@@ -2139,24 +1638,18 @@ body:JSON.stringify({
 
 message,
 
-lesson:
-currentLesson
-?
-currentLesson.title
-:
-null,
-
 username:
-currentUser
-?
-currentUser.username
-:
-"Guest"
+currentUser?.username ||
+"Student",
+
+lesson:
+currentLesson?.title ||
+null
 
 })
 
-
 }
+
 );
 
 
@@ -2167,36 +1660,25 @@ await response.json();
 
 
 return data.answer ||
-"Sorry, I couldn't answer that.";
-
+"Sorry, I could not answer.";
 
 
 }
 
-catch(error){
-
-
-console.error(error);
-
+catch{
 
 return
-"AI Teacher is unavailable right now.";
-
-
-}
-
-
+"AI Teacher is unavailable.";
 
 }
 
 
-
+}
 
 
 
 
 async function teacherAIHelp(){
-
 
 const input =
 document.getElementById(
@@ -2204,16 +1686,14 @@ document.getElementById(
 );
 
 
-
-const chat =
+const box =
 document.getElementById(
 "aiChat"
 );
 
 
 
-if(!input ||
-!chat)
+if(!input || !box)
 return;
 
 
@@ -2228,24 +1708,18 @@ return;
 
 
 
-addAIMessage(
-chat,
-question,
-"user"
-);
+box.innerHTML +=
+`
+
+<div class="aiMessage user">
+${question}
+</div>
+
+`;
 
 
 
 input.value="";
-
-
-
-const loading =
-addAIMessage(
-chat,
-"Thinking...",
-"assistant"
-);
 
 
 
@@ -2254,8 +1728,14 @@ await askAI(question);
 
 
 
-loading.textContent =
-answer;
+box.innerHTML +=
+`
+
+<div class="aiMessage assistant">
+${answer}
+</div>
+
+`;
 
 
 
@@ -2263,257 +1743,9 @@ answer;
 
 
 
-
-
-function addAIMessage(
-box,
-text,
-type
-){
-
-
-const div =
-document.createElement(
-"div"
-);
-
-
-
-div.className =
-"aiMessage " + type;
-
-
-
-div.textContent =
-text;
-
-
-
-box.appendChild(
-div
-);
-
-
-
-box.scrollTop =
-box.scrollHeight;
-
-
-
-return div;
-
-
-}
-
-
-
-
-
-async function askAITeacher(){
-
-
-const input =
-document.getElementById(
-"aiTeacherInput"
-);
-
-
-
-const box =
-document.getElementById(
-"aiTeacherMessages"
-);
-
-
-
-if(!input ||
-!box)
-return;
-
-
-
-const question =
-input.value.trim();
-
-
-
-if(!question)
-return;
-
-
-
-addTeacherBubble(
-box,
-question,
-true
-);
-
-
-
-input.value="";
-
-
-
-const loading =
-addTeacherBubble(
-box,
-"Thinking...",
-false
-);
-
-
-
-let context="";
-
-
-
-if(currentLesson){
-
-
-context =
-`Explain ${currentLesson.title} from ${currentLesson.category}. `;
-
-
-}
-
-
-
-const answer =
-await askAI(
-context + question
-);
-
-
-
-loading.textContent =
-answer;
-
-
-
-}
-
-
-
-
-
-function askAIQuick(question){
-
-
-const input =
-document.getElementById(
-"aiTeacherInput"
-);
-
-
-
-if(input){
-
-input.value =
-question;
-
-
-}
-
-
-
-askAITeacher();
-
-
-
-}
-
-
-
-
-
-function addTeacherBubble(
-box,
-text,
-user
-){
-
-
-const div =
-document.createElement(
-"div"
-);
-
-
-
-div.className =
-user
-?
-"aiBubble user"
-:
-"aiBubble";
-
-
-
-div.textContent =
-text;
-
-
-
-box.appendChild(
-div
-);
-
-
-
-box.scrollTop =
-box.scrollHeight;
-
-
-
-return div;
-
-
-}
-
-
-
-
-function openAITeacher(){
-
-
-openPage(
-"aiTeacherPage"
-);
-
-
-}
-
-
-
-window.openAITeacher =
-openAITeacher;
-
-
-window.teacherAIHelp =
-teacherAIHelp;
-
-
-window.askAITeacher =
-askAITeacher;
-
-
-window.askAIQuick =
-askAIQuick;
-
-
-
-
-
-
-
-
-/* =====================================================
-   BADGES
-===================================================== */
 
 
 function renderBadges(){
-
 
 const box =
 document.getElementById(
@@ -2527,102 +1759,86 @@ return;
 
 
 
-box.innerHTML="";
-
-
-
 const lessonsDone =
-currentUser
-?
-currentUser.completedLessons.length
-:
-0;
+currentUser?.completedLessons?.length || 0;
 
 
 
 const quizzes =
-currentUser
-?
-currentUser.quizCompleted.length
-:
-0;
+currentUser?.quizCompleted?.length || 0;
 
 
 
 const sessions =
-currentUser
-?
-currentUser.sessions
-:
-0;
+currentUser?.sessions || 0;
 
 
 
-const purchases =
-currentUser
-?
-currentUser.purchasedItems.length
-:
-0;
+const items=[
+
+
+[
+"🌱",
+"First Step",
+lessonsDone>=1
+],
+
+
+[
+"📚",
+"Bookworm",
+lessonsDone>=5
+],
+
+
+[
+"🧠",
+"Knowledge Builder",
+lessonsDone>=10
+],
+
+
+[
+"🏆",
+"Quiz Starter",
+quizzes>=1
+],
+
+
+[
+"🎯",
+"Quiz Master",
+quizzes>=5
+],
+
+
+[
+"🤝",
+"Connector",
+sessions>=1
+]
+
+];
 
 
 
-badges.forEach(
+box.innerHTML="";
+
+
+
+items.forEach(
 badge=>{
 
 
-let unlocked=false;
-
-
-
-if(
-badge.requirement==="quiz"
-)
-unlocked =
-quizzes>=1;
-
-
-
-else if(
-badge.requirement==="quiz5"
-)
-unlocked =
-quizzes>=5;
-
-
-
-else if(
-badge.requirement==="session"
-)
-unlocked =
-sessions>0;
-
-
-
-else if(
-badge.requirement==="shop"
-)
-unlocked =
-purchases>0;
-
-
-
-else
-unlocked =
-lessonsDone >=
-badge.requirement;
-
-
-
-const card =
+const div =
 document.createElement(
 "div"
 );
 
 
 
-card.className =
-unlocked
+div.className =
+badge[2]
 ?
 "badge"
 :
@@ -2630,47 +1846,29 @@ unlocked
 
 
 
-card.innerHTML = `
+div.innerHTML=
+`
 
-<div class="badgeIcon">
-
-${badge.icon}
-
-</div>
-
+<h2>
+${badge[0]}
+</h2>
 
 <h3>
-
-${badge.title}
-
+${badge[1]}
 </h3>
 
 
 <p>
-
-${badge.description}
-
+${badge[2]
+?"Unlocked ✓"
+:"Locked"}
 </p>
-
-
-<strong>
-
-${unlocked
-?
-"Unlocked ✓"
-:
-"Locked"}
-
-</strong>
 
 `;
 
 
 
-box.appendChild(
-card
-);
-
+box.appendChild(div);
 
 
 });
@@ -2680,27 +1878,13 @@ card
 
 
 
-window.renderBadges =
-renderBadges;
-
-/* =====================================================
-   SHOP SYSTEM
-===================================================== */
 
 
 function renderShop(){
 
-
 const box =
 document.getElementById(
 "shopList"
-);
-
-
-
-const coinBox =
-document.getElementById(
-"shopCoins"
 );
 
 
@@ -2710,12 +1894,28 @@ return;
 
 
 
-if(coinBox){
+const products=[
 
-coinBox.textContent =
-currentUser?.coins || 0;
 
-}
+["🟣","Purple Glow",50],
+
+["⭐","Star Badge",75],
+
+["🚀","Rocket",100],
+
+["🔥","Fire Effect",150],
+
+["👑","Crown",250],
+
+["💎","Diamond",500],
+
+["🌌","Galaxy",750],
+
+["🏆","Champion",1000],
+
+["⚡","Legend",2500]
+
+];
 
 
 
@@ -2723,94 +1923,60 @@ box.innerHTML="";
 
 
 
-shopItems.forEach(
+products.forEach(
 item=>{
 
 
-const purchased =
+const bought =
 currentUser?.purchasedItems
-?.includes(item.id);
+?.includes(
+item[1]
+);
 
 
 
-const equipped =
-currentUser?.equippedItem ===
-item.id;
-
-
-
-const card =
+const div =
 document.createElement(
 "div"
 );
 
 
 
-card.className =
+div.className =
 "shopItem";
 
 
 
-card.innerHTML = `
-
-
-<div class="shopIcon">
-
-${item.icon}
-
-</div>
-
+div.innerHTML=
+`
 
 <h2>
-
-${item.name}
-
+${item[0]}
 </h2>
 
+<h3>
+${item[1]}
+</h3>
 
 <p>
-
-${item.description}
-
+💰 ${item[2]}
 </p>
 
 
+<button onclick="buyItem('${item[1]}',${item[2]})">
 
-<div class="price">
-
-💰 ${item.price}
-
-</div>
-
-
-
-<button onclick="buyShopItem('${item.id}')">
-
-${
-equipped
-?
-"Equipped"
-:
-purchased
-?
-"Equip"
-:
-"Buy"
-}
+${bought?"Equip":"Buy"}
 
 </button>
-
 
 `;
 
 
 
-box.appendChild(card);
-
+box.appendChild(div);
 
 
 });
-
 
 
 }
@@ -2819,25 +1985,9 @@ box.appendChild(card);
 
 
 
-
-
-function buyShopItem(id){
-
+function buyItem(name,price){
 
 if(!currentUser)
-return;
-
-
-
-const item =
-shopItems.find(
-x =>
-x.id===id
-);
-
-
-
-if(!item)
 return;
 
 
@@ -2847,174 +1997,188 @@ currentUser.purchasedItems || [];
 
 
 
-const owned =
+if(
 currentUser.purchasedItems.includes(
-id
+name
+)
+){
+
+currentUser.equippedItem =
+name;
+
+
+}
+
+else{
+
+
+if(
+currentUser.coins < price
+){
+
+alert(
+"Not enough coins"
+);
+
+return;
+
+}
+
+
+currentUser.coins-=price;
+
+
+currentUser.purchasedItems.push(
+name
 );
 
 
-
-if(owned){
-
-
 currentUser.equippedItem =
-id;
+name;
+
+
+}
 
 
 
 saveUser();
 
+updateHome();
 
 renderShop();
-
 
 updateProfile();
 
 
+}
+
+
+
+
+function previewAvatar(event){
+
+const file =
+event.target.files[0];
+
+
+if(!file)
 return;
+
+
+
+const reader =
+new FileReader();
+
+
+
+reader.onload =
+e=>{
+
+
+const img =
+document.getElementById(
+"avatarPreview"
+);
+
+
+
+if(img){
+
+img.src =
+e.target.result;
+
+img.style.display =
+"block";
+
+}
+
+
+};
+
+
+
+reader.readAsDataURL(
+file
+);
 
 
 }
 
+
+
+
+
+function uploadAvatar(){
+
+const img =
+document.getElementById(
+"avatarPreview"
+);
 
 
 
 if(
-currentUser.coins <
-item.price
-){
-
-
-alert(
-"Not enough coins."
-);
-
-
-
+!img ||
+!img.src
+)
 return;
 
 
-}
+
+if(currentUser){
 
 
-
-
-currentUser.coins -=
-item.price;
-
-
-
-currentUser.purchasedItems.push(
-id
-);
-
-
-
-currentUser.equippedItem =
-id;
+currentUser.profileImage =
+img.src;
 
 
 
 saveUser();
 
 
-
-updateHome();
-
-
-renderShop();
-
-
-renderBadges();
-
-
 updateProfile();
 
+
+}
 
 
 }
 
 
 
-window.renderShop =
-renderShop;
-
-
-window.buyShopItem =
-buyShopItem;
-
-
-
-
-
-
-
-
-/* =====================================================
-   PROFILE SYSTEM
-===================================================== */
 
 
 function updateProfile(){
-
 
 if(!currentUser)
 return;
 
 
 
-const name =
 document.getElementById(
 "profileName"
-);
-
-
-
-const lessons =
-document.getElementById(
-"profileLessons"
-);
-
-
-
-const sessions =
-document.getElementById(
-"profileSessions"
-);
-
-
-
-const coins =
-document.getElementById(
-"profileCoins"
-);
-
-
-
-if(name)
-
-name.textContent =
+).textContent =
 currentUser.username;
 
 
 
-if(lessons)
+document.getElementById(
+"profileLessons"
+).textContent =
+currentUser.completedLessons?.length || 0;
 
-lessons.textContent =
-currentUser.completedLessons.length;
 
 
-
-if(sessions)
-
-sessions.textContent =
+document.getElementById(
+"profileSessions"
+).textContent =
 currentUser.sessions || 0;
 
 
 
-if(coins)
-
-coins.textContent =
+document.getElementById(
+"profileCoins"
+).textContent =
 currentUser.coins || 0;
 
 
@@ -3029,42 +2193,10 @@ document.getElementById(
 if(avatar){
 
 
-if(
-currentUser.profileImage
-){
-
-
 avatar.innerHTML =
-`
-<img src="${currentUser.profileImage}"
-style="
-width:100%;
-height:100%;
-border-radius:50%;
-object-fit:cover;
-">
-`;
-
-
-
-}
-
-else{
-
-
-const item =
-shopItems.find(
-x =>
-x.id ===
-currentUser.equippedItem
-);
-
-
-
-avatar.textContent =
-item
+currentUser.profileImage
 ?
-item.icon
+`<img src="${currentUser.profileImage}">`
 :
 "👤";
 
@@ -3076,170 +2208,58 @@ item.icon
 
 
 
-}
 
 
+function initializeMap(){
 
-
-
-
-
-
-function previewAvatar(event){
-
-
-const file =
-event.target.files[0];
-
-
-
-if(!file)
+if(typeof L==="undefined")
 return;
 
 
 
-const reader =
-new FileReader();
-
-
-
-reader.onload =
-function(e){
-
-
-const img =
+const element =
 document.getElementById(
-"avatarPreview"
+"worldMap"
 );
 
 
 
-if(img){
-
-
-img.src =
-e.target.result;
-
-
-
-img.style.display =
-"block";
-
-
-}
-
-
-
-currentUser.profileImage =
-e.target.result;
-
-
-
-saveUser();
-
-
-
-updateProfile();
-
-
-
-};
-
-
-
-reader.readAsDataURL(
-file
-);
-
-
-
-}
-
-
-
-
-
-
-
-
-async function uploadAvatar(){
-
-
-if(!currentUser)
+if(!element)
 return;
 
 
 
-const file =
-document.getElementById(
-"avatarUpload"
+if(map)
+return;
+
+
+
+map =
+L.map(
+"worldMap"
 )
-?.files[0];
-
-
-
-if(!file)
-return;
-
-
-
-previewAvatar({
-target:{
-files:[file]
-}
-});
-
-
-
-}
-
-
-
-window.previewAvatar =
-previewAvatar;
-
-
-window.uploadAvatar =
-uploadAvatar;
-
-
-
-
-
-
-
-
-/* =====================================================
-   SAVED LESSON PAGE LOADER
-===================================================== */
-
-
-function openSavedLessons(){
-
-
-renderSavedLessons();
-
-
-openPage(
-"savedLessonsPage"
+.setView(
+[20,0],
+2
 );
 
 
 
+L.tileLayer(
+
+"https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+
+)
+.addTo(map);
+
+
 }
 
 
 
-window.openSavedLessons =
-openSavedLessons;
-
-/* =====================================================
-   PEOPLE CONNECTION SYSTEM
-===================================================== */
 
 
 async function loadPeople(){
-
 
 const list =
 document.getElementById(
@@ -3253,23 +2273,18 @@ return;
 
 
 
-list.innerHTML =
-"<p>Loading Teachly users...</p>";
-
-
-
 try{
 
 
-const response =
+const res =
 await fetch(
 `${API_URL}/api/people`
 );
 
 
 
-const people =
-await response.json();
+const users =
+await res.json();
 
 
 
@@ -3277,256 +2292,70 @@ list.innerHTML="";
 
 
 
-people.forEach(
+users.forEach(
 person=>{
 
 
 if(
-currentUser &&
-person.id ===
-currentUser.id
+person.id===currentUser?.id
 )
 return;
 
 
 
-const card =
-document.createElement(
-"div"
-);
-
-
-
-card.className =
-"person";
-
-
-
-card.innerHTML = `
-
-<div class="personInfo">
-
-
-<div class="personAvatar">
-
-${
-person.profileImage
-?
+list.innerHTML +=
 `
-<img src="${person.profileImage}"
-style="
-width:100%;
-height:100%;
-border-radius:50%;
-object-fit:cover;
-">
-`
-:
-"👤"
-}
 
-</div>
+<div class="person">
 
-
-
-<div>
-
-<strong>
-
+<h3>
 ${person.username}
-
-</strong>
-
+</h3>
 
 <p>
-
-${
-person.role==="teacher"
-?
-"🧑‍🏫 Teacher"
-:
-"🎓 Learner"
-}
-
+${person.role}
 </p>
 
 
-</div>
-
-
-</div>
-
-
-
-<button onclick="connectToPersonById('${person.id}')">
-
+<button onclick="connectToPerson(${JSON.stringify(person)})">
 Connect
-
 </button>
 
+
+</div>
+
 `;
-
-
-
-list.appendChild(
-card
-);
-
-
 
 });
 
 
-
 }
-catch(error){
 
-
-console.error(error);
-
-
+catch{
 
 list.innerHTML =
-"<p>Unable to load users.</p>";
+"Unable to load users.";
 
+}
 
 
 }
 
 
 
-}
-
-
-
-
-
-
-
-async function connectToPersonById(id){
-
-
-try{
-
-
-const response =
-await fetch(
-`${API_URL}/api/people`
-);
-
-
-
-const people =
-await response.json();
-
-
-
-const person =
-people.find(
-x =>
-x.id === id
-);
-
-
-
-if(person){
-
-connectToPerson(
-person
-);
-
-}
-
-
-
-}
-catch(error){
-
-
-console.error(error);
-
-
-}
-
-
-
-}
-
-
-
-window.loadPeople =
-loadPeople;
-
-
-window.connectToPersonById =
-connectToPersonById;
-
-
-
-
-
-
-
-
-
-/* =====================================================
-   SOCKET CHAT SYSTEM
-===================================================== */
 
 
 function connectSocket(){
 
-
 if(
-typeof io === "undefined"
+typeof io==="undefined"
 )
 return;
 
 
 
-if(socket){
-
-socket.disconnect();
-
-}
-
-
-
 socket =
-io(
-API_URL,
-{
-
-transports:[
-"websocket",
-"polling"
-]
-
-}
-);
-
-
-
-socket.on(
-"connect",
-()=>{
-
-
-socket.emit(
-"join-user",
-{
-
-id:
-currentUser.id
-
-}
-);
-
-
-}
-);
-
-
+io(API_URL);
 
 
 
@@ -3541,10 +2370,40 @@ false
 );
 
 
+});
+
 
 }
+
+
+
+
+
+function addChatMessage(
+text,
+mine
+){
+
+const box =
+document.getElementById(
+"chatMessages"
 );
 
+
+
+if(!box)
+return;
+
+
+
+box.innerHTML +=
+`
+
+<div class="message ${mine?"me":""}">
+${text}
+</div>
+
+`;
 
 
 }
@@ -3554,7 +2413,6 @@ false
 
 
 function sendMessage(){
-
 
 const input =
 document.getElementById(
@@ -3568,43 +2426,31 @@ return;
 
 
 
-const message =
+const msg =
 input.value.trim();
 
 
 
-if(!message)
+if(!msg)
 return;
 
 
 
 addChatMessage(
-message,
+msg,
 true
 );
 
 
 
-if(
-socket &&
-currentChatUser
-){
-
+if(socket){
 
 socket.emit(
 "private-message",
 {
-
-to:
-currentChatUser.id,
-
-
-message
-
+message:msg
 }
 );
-
-
 
 }
 
@@ -3619,205 +2465,6 @@ input.value="";
 
 
 
-function addChatMessage(
-message,
-mine
-){
-
-
-const box =
-document.getElementById(
-"chatMessages"
-);
-
-
-
-if(!box)
-return;
-
-
-
-const div =
-document.createElement(
-"div"
-);
-
-
-
-div.className =
-mine
-?
-"message me"
-:
-"message";
-
-
-
-div.textContent =
-message;
-
-
-
-box.appendChild(
-div
-);
-
-
-
-box.scrollTop =
-box.scrollHeight;
-
-
-
-}
-
-
-
-
-
-
-function connectToPerson(person){
-
-
-currentChatUser =
-person;
-
-
-
-if(currentUser){
-
-
-currentUser.sessions =
-Number(
-currentUser.sessions || 0
-)
-+1;
-
-
-
-saveUser();
-
-
-updateHome();
-
-
-renderBadges();
-
-
-
-}
-
-
-
-openPage(
-"chatPage"
-);
-
-
-
-const title =
-document.getElementById(
-"chatTitle"
-);
-
-
-
-if(title)
-
-title.textContent =
-`Chat with ${person.username}`;
-
-
-
-connectSocket();
-
-
-
-}
-
-
-
-window.sendMessage =
-sendMessage;
-
-
-window.connectToPerson =
-connectToPerson;
-
-
-
-
-
-
-
-
-
-/* =====================================================
-   LOGOUT + RESET
-===================================================== */
-
-
-function logout(){
-
-
-
-if(socket){
-
-
-socket.disconnect();
-
-
-socket=null;
-
-
-}
-
-
-
-currentUser=null;
-
-currentRole="learner";
-
-currentLesson=null;
-
-currentQuiz=null;
-
-currentChatUser=null;
-
-
-
-localStorage.removeItem(
-"teachlyUser"
-);
-
-
-
-openPage(
-"loginPage"
-);
-
-
-
-}
-
-
-
-window.logout =
-logout;
-
-
-
-
-
-
-
-
-
-/* =====================================================
-   STARTUP PATCH
-===================================================== */
-
-
 document.addEventListener(
 "DOMContentLoaded",
 ()=>{
@@ -3826,23 +2473,40 @@ document.addEventListener(
 loadUser();
 
 
-loadTheme();
-
-
 renderLessons();
 
 
-if(currentUser){
-
-updateHome();
-
 updateProfile();
-
-renderBadges();
-
-}
-
 
 
 }
 );
+
+
+
+window.teacherAIHelp =
+teacherAIHelp;
+
+window.renderBadges =
+renderBadges;
+
+window.renderShop =
+renderShop;
+
+window.buyItem =
+buyItem;
+
+window.previewAvatar =
+previewAvatar;
+
+window.uploadAvatar =
+uploadAvatar;
+
+window.sendMessage =
+sendMessage;
+
+window.loadPeople =
+loadPeople;
+
+window.initializeMap =
+initializeMap;
