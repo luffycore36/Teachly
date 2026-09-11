@@ -1,591 +1,850 @@
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
+  margin: 0;
   min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
   background:
-    radial-gradient(circle at 20% 20%, #243b80, transparent 30%),
-    radial-gradient(circle at 80% 80%, #542a78, transparent 30%),
-    linear-gradient(135deg, #070b25, #11183d, #090d27);
-  color: white;
+    radial-gradient(circle at top left, #243b73, transparent 35%),
+    linear-gradient(135deg, #080b18, #111936 50%, #07111f);
+  color: #f5f7ff;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
 }
 
 button {
-  border: none;
   cursor: pointer;
+  border: none;
 }
 
 .page {
   display: none;
   min-height: 100vh;
-  animation: fade .3s ease;
+  padding: 25px;
 }
 
 .page.active {
   display: block;
 }
 
-@keyframes fade {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+
+/* =====================================================
+   GENERAL
+===================================================== */
+
+button {
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6c63ff, #8f7cff);
+  color: white;
+  font-weight: 700;
+  transition: transform .2s, opacity .2s;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  opacity: .92;
+}
+
+input,
+textarea {
+  width: 100%;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 13px;
+  padding: 14px;
+  outline: none;
+  background: rgba(255,255,255,.08);
+  color: white;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255,255,255,.55);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 90px;
 }
 
 
-/* NAME */
+/* =====================================================
+   NAME PAGE
+===================================================== */
 
-.welcome {
-  min-height: 100vh;
+#namePage {
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 25px;
+}
+
+.welcome {
+  width: min(600px, 95%);
+  padding: 55px 40px;
   text-align: center;
+  border-radius: 30px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 25px 80px rgba(0,0,0,.35);
 }
 
 .logo {
-  font-size: 48px;
+  font-size: 42px;
   font-weight: 900;
-  letter-spacing: 5px;
-  margin-bottom: 30px;
-}
-
-.welcome h1 {
-  font-size: 35px;
-  margin-bottom: 10px;
-}
-
-.welcome p {
-  color: #c8cce8;
   margin-bottom: 25px;
 }
 
+.welcome h1 {
+  font-size: clamp(30px, 6vw, 55px);
+  margin: 10px 0;
+}
+
+.welcome p {
+  color: #b8c0dc;
+  line-height: 1.7;
+}
+
 .welcome input {
-  width: min(400px, 90%);
-  padding: 18px;
-  border-radius: 18px;
-  border: 2px solid #ffffff40;
-  background: #ffffff12;
-  color: white;
-  font-size: 18px;
-  outline: none;
-  margin-bottom: 15px;
+  margin: 25px 0 12px;
 }
 
-.welcome button,
-.aiControls button,
-.mysteryBox button,
-.teacherAIMode button,
-.quizBox button {
-  padding: 16px 28px;
-  border-radius: 16px;
-  background: white;
-  color: #11152f;
-  font-weight: bold;
-  font-size: 16px;
+.welcome button {
+  width: 100%;
 }
 
 
-/* HEADER */
+/* =====================================================
+   TOPBAR
+===================================================== */
 
-header {
-  min-height: 75px;
-  padding: 15px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #080d2acc;
-  backdrop-filter: blur(15px);
-  border-bottom: 1px solid #ffffff18;
-}
-
-header h1 {
-  font-size: 25px;
-}
-
-header button,
-.profileBtn {
-  background: #ffffff18;
-  color: white;
-  border-radius: 13px;
-  padding: 12px 16px;
-  font-size: 18px;
-}
-
-
-/* HOME */
-
-main {
-  width: min(900px, 94%);
+.topbar {
+  max-width: 1200px;
   margin: auto;
-  padding: 25px 0 60px;
-}
-
-#welcomeText {
-  color: #aeb5dd;
-  margin-top: 4px;
-}
-
-
-/* CLOUDS */
-
-.cloudArea {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 30px;
-  margin: 20px 0 35px;
-}
-
-.cloud {
-  min-height: 210px;
-  border-radius: 50px;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  transition: .25s;
-  box-shadow: 0 20px 50px #0008;
+  gap: 20px;
 }
 
-.cloud::before,
-.cloud::after {
-  content: "";
-  position: absolute;
-  background: inherit;
-  border-radius: 50%;
-}
-
-.cloud::before {
-  width: 130px;
-  height: 130px;
-  top: -45px;
-  left: 70px;
-}
-
-.cloud::after {
-  width: 160px;
-  height: 160px;
-  top: -60px;
-  right: 60px;
-}
-
-.cloud span,
-.cloud small {
-  position: relative;
-  z-index: 2;
-}
-
-.cloud span {
-  font-size: 42px;
+.brand {
+  font-size: 27px;
   font-weight: 900;
 }
 
-.cloud small {
-  margin-top: 12px;
-  font-size: 17px;
+.topActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.learnCloud {
-  background: linear-gradient(135deg, #367dff, #55b9ff);
+
+/* =====================================================
+   HOME
+===================================================== */
+
+.home {
+  max-width: 1200px;
+  margin: auto;
 }
 
-.teachCloud {
-  background: linear-gradient(135deg, #9b45ff, #d55cff);
+.hero {
+  text-align: center;
+  padding: 55px 10px 35px;
+}
+
+.hero h1 {
+  font-size: clamp(32px, 6vw, 60px);
+  margin: 0;
+}
+
+.hero p {
+  color: #b7c0dd;
+}
+
+.homeStats {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.statCard {
+  min-width: 150px;
+  padding: 20px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.1);
+}
+
+.statCard strong,
+.statCard span {
+  display: block;
+}
+
+.statCard strong {
+  font-size: 25px;
+}
+
+.statCard span {
+  color: #aab3d0;
+  margin-top: 6px;
+}
+
+
+/* =====================================================
+   ROLE CLOUDS
+===================================================== */
+
+.cloudArea {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 25px;
+  margin: 25px 0;
+}
+
+.cloud {
+  padding: 35px;
+  border-radius: 35px;
+  text-align: center;
+  background: linear-gradient(
+    145deg,
+    rgba(108,99,255,.25),
+    rgba(255,255,255,.07)
+  );
+  border: 1px solid rgba(255,255,255,.12);
+  transition: transform .25s;
 }
 
 .cloud:hover {
-  transform: scale(1.02);
+  transform: translateY(-7px);
+}
+
+.cloudIcon {
+  font-size: 55px;
+}
+
+.cloud p {
+  color: #b7c0dd;
 }
 
 
-/* FEATURES */
+/* =====================================================
+   FEATURES
+===================================================== */
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 30px;
+}
 
 .featureCard {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 23px;
-  margin: 18px 0;
-  border-radius: 25px;
-  background: #ffffff0d;
-  border: 1px solid #ffffff18;
-  box-shadow: 0 15px 35px #0005;
-  cursor: pointer;
-  transition: .2s;
+  padding: 28px;
+  border-radius: 22px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.1);
+  transition: transform .2s, background .2s;
 }
 
 .featureCard:hover {
-  transform: translateY(-3px);
-  background: #ffffff15;
+  transform: translateY(-5px);
+  background: rgba(255,255,255,.11);
 }
 
 .featureIcon {
   font-size: 40px;
 }
 
-.featureCard h2 {
-  margin-bottom: 5px;
-}
-
 .featureCard p {
-  color: #adb4d9;
-}
-
-.aiCard {
-  background: linear-gradient(135deg, #512a9a, #1d4c9c);
-}
-
-.mysteryCard {
-  background: linear-gradient(135deg, #913b7d, #402c85);
+  color: #adb6d3;
+  line-height: 1.6;
 }
 
 
-/* SECTIONS */
+/* =====================================================
+   PROGRESS
+===================================================== */
 
-.sectionTitle {
-  font-size: 25px;
-  font-weight: 900;
-  margin: 40px 0 15px;
+.progressBox {
+  margin-top: 30px;
+  padding: 25px;
+  border-radius: 22px;
+  background: rgba(255,255,255,.07);
 }
 
-.coinsBox {
-  text-align: center;
-  padding: 15px;
-  margin: 10px 0 20px;
-  background: #ffffff0d;
-  border-radius: 18px;
-  font-size: 20px;
-}
-
-
-/* BADGES */
-
-.badgeGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.badge {
-  padding: 20px;
+.progressTrack {
+  height: 14px;
   border-radius: 20px;
-  background: #ffffff0d;
-  border: 1px solid #ffffff18;
-  text-align: center;
+  overflow: hidden;
+  background: rgba(255,255,255,.1);
 }
 
-.badge.locked {
-  opacity: .35;
-}
-
-.badgeIcon {
-  font-size: 38px;
-  margin-bottom: 8px;
-}
-
-.badge h3 {
-  margin-bottom: 5px;
-}
-
-.badge p {
-  color: #adb4d9;
+#overallProgress {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6c63ff, #39d9ff);
+  transition: width .5s;
 }
 
 
-/* SHOP */
+/* =====================================================
+   SECTION HEADER
+===================================================== */
 
-.shopGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
+.sectionHeader {
+  max-width: 1200px;
+  margin: 0 auto 25px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
-.shopItem {
-  padding: 20px;
-  border-radius: 20px;
-  background: #ffffff0d;
-  border: 1px solid #ffffff18;
+.sectionHeader h1 {
+  margin: 0;
 }
 
-.shopItem h3 {
-  margin-bottom: 8px;
-}
-
-.price {
-  color: #ffd45c;
-  margin-bottom: 15px;
-}
-
-.shopItem button {
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  font-weight: bold;
-}
-
-.notEnough {
-  background: #5c2430 !important;
-  color: white;
+.sectionHeader p {
+  color: #adb6d3;
 }
 
 
-/* CENTER */
+/* =====================================================
+   SEARCH
+===================================================== */
 
 .centerBox {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  max-width: 550px;
+  margin: 12vh auto;
   text-align: center;
+  padding: 45px;
+  border-radius: 25px;
+  background: rgba(255,255,255,.08);
 }
 
-.loadingCircle {
-  width: 70px;
-  height: 70px;
-  border: 6px solid #ffffff30;
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 25px;
+.loadingIcon {
+  font-size: 65px;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+.loadingBar {
+  height: 10px;
+  background: rgba(255,255,255,.1);
+  border-radius: 20px;
+  overflow: hidden;
+  margin: 25px 0;
+}
+
+.loadingBar div {
+  height: 100%;
+  width: 50%;
+  background: #7c6cff;
+  animation: loading 1.2s infinite;
+}
+
+@keyframes loading {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(250%);
   }
 }
 
 
-/* CHAT */
+/* =====================================================
+   CHAT
+===================================================== */
+
+.chatBox {
+  max-width: 850px;
+  height: calc(100vh - 50px);
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  border-radius: 25px;
+  overflow: hidden;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.1);
+}
+
+.chatHeader {
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+
+.chatHeader h2 {
+  margin: 0;
+}
 
 .chatMessages {
-  padding: 20px;
-  min-height: calc(100vh - 190px);
+  flex: 1;
+  padding: 25px;
+  overflow-y: auto;
 }
 
 .message {
-  padding: 14px;
-  margin: 10px 0;
+  width: fit-content;
   max-width: 80%;
-  border-radius: 18px;
-  background: #ffffff12;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border-radius: 15px;
+  background: rgba(255,255,255,.1);
 }
 
 .message.me {
   margin-left: auto;
-  background: #385bd8;
-}
-
-.chatInput {
-  display: flex;
-  gap: 8px;
-  padding: 10px;
-}
-
-.chatInput input {
-  flex: 1;
-  padding: 15px;
-  border-radius: 15px;
-  border: none;
-  outline: none;
-}
-
-.chatInput button {
-  padding: 15px;
-  border-radius: 15px;
+  background: #6258e8;
 }
 
 .emojiBar {
   display: flex;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px;
+  gap: 5px;
+  padding: 10px 15px;
 }
 
 .emojiBar button {
-  padding: 10px;
-  border-radius: 12px;
+  padding: 7px 10px;
+  background: rgba(255,255,255,.08);
+}
+
+.chatInputRow {
+  display: flex;
+  gap: 10px;
+  padding: 15px;
+}
+
+.chatInputRow input {
+  flex: 1;
 }
 
 
-/* AI */
+/* =====================================================
+   LESSONS
+===================================================== */
 
-.aiBox,
-.teacherAIMode,
-.mysteryBox,
-.quizBox,
-.profileBox {
-  width: min(850px, 92%);
+.lessonStats {
+  max-width: 1200px;
+  margin: auto;
+}
+
+.lessonStats > div {
+  display: inline-flex;
+  flex-direction: column;
+  padding: 18px 25px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.07);
+}
+
+.lessonStats strong {
+  font-size: 28px;
+}
+
+.lessonStats span {
+  color: #aab3d0;
+}
+
+.lessonCategories {
+  max-width: 1200px;
   margin: 25px auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.lessonCategoryButton {
+  background: rgba(255,255,255,.08);
+}
+
+.lessonCategoryButton.active {
+  background: #6c63ff;
+}
+
+.lessonGrid {
+  max-width: 1200px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.lessonCard {
+  padding: 25px;
+  border-radius: 22px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.1);
+  transition: transform .2s;
+}
+
+.lessonCard:hover {
+  transform: translateY(-5px);
+}
+
+.lessonIcon {
+  font-size: 45px;
+}
+
+.lessonCard h3 {
+  font-size: 22px;
+}
+
+.lessonCard p {
+  color: #abb5d2;
+  line-height: 1.6;
+}
+
+.lessonMiniTag,
+.lessonTag {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(108,99,255,.2);
+  color: #bdb8ff;
+  font-size: 13px;
+}
+
+.aiMainCard {
+  max-width: 1200px;
+  margin: 30px auto;
   padding: 30px;
+  border-radius: 22px;
+  background: rgba(108,99,255,.15);
+}
+
+
+/* =====================================================
+   SELECTED LESSON
+===================================================== */
+
+.selectedLessonBox {
+  max-width: 900px;
+  margin: auto;
+  padding: 35px;
   border-radius: 25px;
-  background: #ffffff0d;
-  border: 1px solid #ffffff18;
+  background: rgba(255,255,255,.07);
 }
 
-.robot {
-  font-size: 70px;
-  text-align: center;
+.lessonContent {
+  margin-top: 25px;
+  padding: 25px;
+  border-radius: 18px;
+  background: rgba(0,0,0,.2);
+  line-height: 1.8;
 }
 
-.aiControls {
+.lessonActions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 25px;
 }
 
-.aiAnswer,
-#teacherAIResult,
-#quizResult {
-  margin-top: 20px;
-  padding: 18px;
-  border-radius: 18px;
-  background: #00000030;
-  line-height: 1.6;
-}
 
-
-/* MYSTERY */
+/* =====================================================
+   MYSTERY
+===================================================== */
 
 .mysteryBox {
+  max-width: 750px;
+  margin: 8vh auto;
+  padding: 50px;
   text-align: center;
+  border-radius: 30px;
+  background: linear-gradient(
+    145deg,
+    rgba(108,99,255,.2),
+    rgba(255,255,255,.07)
+  );
 }
 
-.mysteryBox > div {
+.mysteryIcon {
   font-size: 80px;
 }
 
-.mysteryBox h1 {
-  font-size: 35px;
-  margin: 20px 0 10px;
+.mysteryBox p {
+  color: #b9c1db;
+  line-height: 1.8;
 }
 
 
-/* QUIZ */
+/* =====================================================
+   PEOPLE
+===================================================== */
 
-.quizBox textarea {
-  width: 100%;
-  min-height: 160px;
-  margin: 20px 0;
-  padding: 15px;
-  border-radius: 15px;
-  resize: vertical;
-  font-size: 16px;
+#peopleList {
+  max-width: 900px;
+  margin: auto;
 }
-
-
-/* PEOPLE */
 
 .person {
-  width: min(850px, 92%);
-  margin: 15px auto;
   padding: 20px;
-  border-radius: 20px;
-  background: #ffffff0d;
+  margin-bottom: 12px;
+  border-radius: 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.person button {
-  padding: 12px 18px;
-  border-radius: 12px;
+  gap: 20px;
+  background: rgba(255,255,255,.07);
 }
 
 
-/* PROFILE */
+/* =====================================================
+   QUIZ
+===================================================== */
+
+.quizBox,
+.lessonAITeacher {
+  max-width: 900px;
+  margin: 0 auto 25px;
+  padding: 30px;
+  border-radius: 25px;
+  background: rgba(255,255,255,.07);
+}
+
+.quizQuestion {
+  font-size: 25px;
+  font-weight: 800;
+  margin: 25px 0;
+}
+
+.quizOptions {
+  display: grid;
+  gap: 10px;
+}
+
+.quizOptions button {
+  text-align: left;
+  background: rgba(255,255,255,.08);
+}
+
+.quizResult {
+  margin-top: 20px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.aiTeacherMessages {
+  max-height: 350px;
+  overflow-y: auto;
+  margin: 20px 0;
+}
+
+.aiBubble {
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 15px;
+  background: rgba(255,255,255,.08);
+}
+
+.aiBubble p {
+  line-height: 1.6;
+}
+
+.aiQuickQuestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.aiQuickQuestions button {
+  background: rgba(108,99,255,.25);
+}
+
+.aiTeacherInputRow {
+  display: flex;
+  gap: 10px;
+}
+
+.aiTeacherInputRow textarea {
+  flex: 1;
+}
+
+
+/* =====================================================
+   AI TEACHER
+===================================================== */
+
+.teacherAIMode {
+  max-width: 900px;
+  margin: auto;
+}
+
+.aiBox {
+  padding: 25px;
+  border-radius: 25px;
+  background: rgba(255,255,255,.07);
+}
+
+.aiChat {
+  min-height: 400px;
+  max-height: 55vh;
+  overflow-y: auto;
+  padding: 15px;
+}
+
+.aiMessage {
+  max-width: 85%;
+  margin-bottom: 12px;
+  padding: 14px 17px;
+  border-radius: 16px;
+  line-height: 1.6;
+}
+
+.aiMessage.assistant {
+  background: rgba(255,255,255,.1);
+}
+
+.aiMessage.user {
+  margin-left: auto;
+  background: #6258e8;
+}
+
+.aiInputRow {
+  display: flex;
+  gap: 10px;
+}
+
+.aiInputRow textarea {
+  flex: 1;
+}
+
+
+/* =====================================================
+   BADGES
+===================================================== */
+
+.badgeGrid {
+  max-width: 1100px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.badge {
+  text-align: center;
+  padding: 25px;
+  border-radius: 22px;
+  background: rgba(108,99,255,.16);
+  border: 1px solid rgba(255,255,255,.1);
+}
+
+.badge.locked {
+  opacity: .45;
+  filter: grayscale(.8);
+}
+
+.badgeIcon {
+  font-size: 55px;
+}
+
+.badge p {
+  color: #abb5d2;
+}
+
+
+/* =====================================================
+   SHOP
+===================================================== */
+
+.shopGrid {
+  max-width: 1100px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.shopItem {
+  text-align: center;
+  padding: 30px;
+  border-radius: 22px;
+  background: rgba(255,255,255,.07);
+}
+
+.shopItem p {
+  color: #aeb7d3;
+}
+
+.price {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 15px;
+}
+
+
+/* =====================================================
+   PROFILE
+===================================================== */
 
 .profileBox {
+  max-width: 600px;
+  margin: auto;
   text-align: center;
+  padding: 45px;
+  border-radius: 25px;
+  background: rgba(255,255,255,.07);
 }
 
-.bigAvatar {
-  font-size: 90px;
+.profileAvatar {
+  width: 100px;
+  height: 100px;
+  margin: auto;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 55px;
+  background: rgba(255,255,255,.1);
 }
 
 .stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
   margin-top: 30px;
 }
 
 .stats div {
-  background: #ffffff0d;
-  padding: 20px 10px;
-  border-radius: 18px;
+  min-width: 120px;
+  padding: 15px;
+  border-radius: 15px;
+  background: rgba(255,255,255,.07);
 }
 
-.stats b {
-  display: block;
-  font-size: 30px;
-}
-
+.stats strong,
 .stats span {
-  color: #adb4d9;
+  display: block;
+}
+
+.stats strong {
+  font-size: 25px;
 }
 
 
-/* REAL MAP */
-
-.mapIntro {
-  width: min(1100px, 94%);
-  margin: 20px auto;
-  padding: 20px;
-  border-radius: 20px;
-  background: #ffffff0d;
-}
-
-#worldMap {
-  width: min(1100px, 96%);
-  height: 500px;
-  margin: auto;
-  border-radius: 25px;
-  overflow: hidden;
-  border: 3px solid #ffffff25;
-  box-shadow: 0 20px 50px #0008;
-}
-
-.leaflet-container {
-  background: #0b4262;
-}
-
-.countryInfo {
-  width: min(900px, 94%);
-  margin: 20px auto;
-  padding: 25px;
-  border-radius: 22px;
-  background: #ffffff0d;
-  border: 1px solid #ffffff18;
-}
-
-.countryInfo h2 {
-  margin-bottom: 10px;
-}
-
-.countryInfo p {
-  color: #c5cae5;
-  line-height: 1.7;
-}
+/* =====================================================
+   LEARNSPHERE
+===================================================== */
 
 .continentButtons {
-  width: min(900px, 94%);
+  max-width: 1200px;
   margin: 20px auto;
   display: flex;
   flex-wrap: wrap;
@@ -593,398 +852,94 @@ main {
 }
 
 .continentButtons button {
-  padding: 13px 18px;
-  border-radius: 14px;
-  background: #ffffff12;
-  color: white;
+  background: rgba(255,255,255,.08);
 }
 
-
-/* TOAST */
-
-#toast {
-  position: fixed;
-  bottom: 25px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #11172e;
-  padding: 15px 25px;
-  border-radius: 15px;
-  display: none;
-  z-index: 9999;
+.worldMap {
+  max-width: 1200px;
+  height: 430px;
+  margin: 20px auto;
+  border-radius: 25px;
+  overflow: hidden;
 }
 
-
-/* MOBILE */
-
-@media(max-width:600px) {
-
-  .logo {
-    font-size: 38px;
-  }
-
-  .cloud {
-    min-height: 180px;
-  }
-
-  .cloud span {
-    font-size: 34px;
-  }
-
-  .badgeGrid,
-  .shopGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .stats b {
-    font-size: 23px;
-  }
-
-  #worldMap {
-    height: 420px;
-  }
-}
-
-/* =========================
-   LESSON LIBRARY
-========================= */
-
-.lessonLibrary {
-  width: min(1100px, 94%);
-  margin: 25px auto;
-}
-
-.lessonHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 25px;
-}
-
-.lessonHeader h1 {
-  font-size: 32px;
-  margin-bottom: 7px;
-}
-
-.lessonHeader p {
-  color: #adb4d9;
-}
-
-.lessonCount {
-  padding: 12px 18px;
-  border-radius: 15px;
-  background: #ffffff12;
-  border: 1px solid #ffffff18;
-  white-space: nowrap;
-}
-
-.lessonCount span {
-  font-size: 25px;
-  font-weight: 900;
-}
-
-.lessonCategories {
-  display: flex;
-  gap: 9px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-}
-
-.lessonCategoryButton {
-  padding: 11px 16px;
-  border-radius: 14px;
-  background: #ffffff12;
-  color: white;
-  border: 1px solid #ffffff18;
-}
-
-.lessonCategoryButton.active {
-  background: linear-gradient(135deg, #367dff, #8b5cff);
-}
-
-.lessonGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-}
-
-.lessonCard {
-  padding: 20px;
-  border-radius: 21px;
-  background: #ffffff0d;
-  border: 1px solid #ffffff18;
-  cursor: pointer;
-  transition: .2s;
-}
-
-.lessonCard:hover {
-  transform: translateY(-4px);
-  background: #ffffff16;
-}
-
-.lessonIcon {
-  font-size: 38px;
-  margin-bottom: 12px;
-}
-
-.lessonCard h3 {
-  margin-bottom: 8px;
-}
-
-.lessonCard p {
-  color: #adb4d9;
-  line-height: 1.5;
-}
-
-.lessonCard .lessonMiniTag {
-  display: inline-block;
-  margin-top: 13px;
-  padding: 6px 10px;
-  border-radius: 10px;
-  background: #ffffff12;
-  color: #cdd4f3;
-  font-size: 12px;
-}
-
-
-/* =========================
-   SELECTED LESSON
-========================= */
-
-.selectedLessonBox {
-  width: min(1100px, 94%);
-  margin: 25px auto;
+.continentInfo {
+  max-width: 1200px;
+  margin: auto;
   padding: 30px;
   border-radius: 25px;
-  background: linear-gradient(135deg, #172a56, #321d55);
-  border: 1px solid #ffffff20;
-  box-shadow: 0 20px 50px #0006;
+  background: rgba(255,255,255,.07);
 }
 
-.selectedLessonTop {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 20px;
-}
-
-.selectedLessonTop h1 {
-  font-size: 36px;
-  margin-top: 8px;
-}
-
-.selectedLessonTop > button,
-.lessonPrimary {
-  padding: 14px 20px;
-  border-radius: 14px;
-  background: white;
-  color: #12152f;
-  font-weight: bold;
-}
-
-.lessonPill {
-  display: inline-block;
-  padding: 6px 11px;
-  border-radius: 10px;
-  background: #ffffff18;
-  color: #d9def7;
-  font-size: 13px;
-}
-
-#selectedLessonDescription {
-  margin: 18px 0;
-  color: #c8cce8;
-  line-height: 1.7;
-}
-
-.lessonContent {
-  margin-top: 20px;
-  display: grid;
-  gap: 13px;
-}
-
-.lessonContent .lessonBlock {
-  padding: 18px;
-  border-radius: 17px;
-  background: #00000022;
-}
-
-.lessonContent h3 {
-  margin-bottom: 8px;
-}
-
-.lessonContent p {
-  color: #d4d8ee;
-  line-height: 1.7;
-}
-
-.lessonContent ul {
-  margin-left: 20px;
-  color: #d4d8ee;
+.continentInfo p {
+  color: #b7c0dd;
   line-height: 1.8;
 }
 
-.lessonActions {
-  margin-top: 25px;
-}
-
-
-/* =========================
-   QUIZ LESSON LABEL
-========================= */
-
-.quizLessonName {
-  display: inline-block;
-  padding: 8px 13px;
-  border-radius: 11px;
-  background: #ffffff12;
-  color: #cdd5f5;
-  margin-bottom: 18px;
-}
-
-
-/* =========================
-   REAL AI TEACHER
-========================= */
-
-.lessonAITeacher {
-  width: min(850px, 92%);
-  margin: 25px auto 50px;
-  padding: 25px;
-  border-radius: 25px;
-  background: linear-gradient(135deg, #171e4a, #27194b);
-  border: 1px solid #ffffff20;
-  box-shadow: 0 20px 50px #0006;
-}
-
-.aiTeacherHeader {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid #ffffff15;
-}
-
-.aiTeacherRobot {
-  width: 60px;
-  height: 60px;
+.continentFacts {
   display: grid;
-  place-items: center;
-  border-radius: 18px;
-  background: #ffffff12;
-  font-size: 35px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-top: 20px;
 }
 
-.aiTeacherHeader h2 {
-  margin-bottom: 5px;
-}
-
-.aiTeacherHeader p {
-  color: #aeb6dc;
-}
-
-.aiTeacherMessages {
-  min-height: 170px;
-  max-height: 500px;
-  overflow-y: auto;
-  padding: 18px 0;
-}
-
-.aiBubble {
-  max-width: 90%;
-  padding: 15px 17px;
-  border-radius: 18px;
-  background: #ffffff0d;
-  border: 1px solid #ffffff12;
-  line-height: 1.65;
-}
-
-.aiBubble.userBubble {
-  margin-left: auto;
-  background: #385bd8;
-}
-
-.aiBubble p {
-  margin-top: 7px;
-  color: #d7daf0;
-}
-
-.aiBubble.aiThinking {
-  opacity: .7;
-}
-
-.aiQuickQuestions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.aiQuickQuestions button {
-  padding: 9px 12px;
-  border-radius: 11px;
-  background: #ffffff12;
-  color: white;
-  border: 1px solid #ffffff18;
-}
-
-.aiTeacherInput {
-  display: flex;
-  gap: 10px;
-  align-items: flex-end;
-}
-
-.aiTeacherInput textarea {
-  flex: 1;
-  min-height: 70px;
-  resize: vertical;
-  padding: 14px;
-  border-radius: 15px;
-  border: 1px solid #ffffff20;
-  outline: none;
-  font-family: Arial, sans-serif;
-}
-
-.aiTeacherInput button {
-  padding: 15px 18px;
-  border-radius: 14px;
-  background: white;
-  color: #12152f;
-  font-weight: bold;
+.continentFact {
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.06);
 }
 
 
-/* =========================
-   MOBILE LESSONS + AI
-========================= */
+/* =====================================================
+   RESPONSIVE
+===================================================== */
 
-@media(max-width:600px) {
+@media (max-width: 900px) {
 
-  .lessonHeader {
+  .featureGrid,
+  .lessonGrid,
+  .shopGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .badgeGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+}
+
+@media (max-width: 650px) {
+
+  .page {
+    padding: 15px;
+  }
+
+  .cloudArea,
+  .featureGrid,
+  .lessonGrid,
+  .shopGrid,
+  .badgeGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar,
+  .sectionHeader {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .lessonGrid {
+  .aiInputRow,
+  .aiTeacherInputRow,
+  .chatInputRow {
+    flex-direction: column;
+  }
+
+  .continentFacts {
     grid-template-columns: 1fr;
   }
 
-  .selectedLessonTop {
-    flex-direction: column;
-  }
-
-  .selectedLessonTop > button {
-    width: 100%;
-  }
-
-  .aiTeacherInput {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .aiTeacherInput button {
-    width: 100%;
+  .worldMap {
+    height: 350px;
   }
 
 }
