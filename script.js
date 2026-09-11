@@ -2261,7 +2261,7 @@ function buyShopItem(id) {
     currentUser.purchasedItems
       .includes(id);
 
- if (purchased) {
+if (purchased) {
 
   currentUser.equippedItem =
     id;
@@ -2274,7 +2274,6 @@ function buyShopItem(id) {
 
   return;
 }
-
 if (
   Number(currentUser.coins || 0) <
   item.price
