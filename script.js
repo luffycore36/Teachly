@@ -3179,3 +3179,25 @@ clearBrokenSession();
 console.log(
 "Teachly loaded successfully 🚀"
 );
+
+
+window.continueToName = function(){
+
+    console.log("Continue clicked");
+
+    const intro =
+    document.getElementById("introPage");
+
+    const login =
+    document.getElementById("loginPage");
+
+
+    if(intro)
+        intro.classList.remove("active");
+
+
+    if(login)
+        login.classList.add("active");
+
+
+};
