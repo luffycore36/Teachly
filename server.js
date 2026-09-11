@@ -443,7 +443,7 @@ app.post(
           "",
 
         tickets:
-          0,
+          1000000,
 
         sessions:
           0,
