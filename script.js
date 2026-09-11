@@ -519,6 +519,26 @@ document
 .value
 .trim();
 
+  function startTeachly() {
+  const name = document
+    .getElementById("usernameInput")
+    .value
+    .trim();
+
+  if (!name) {
+    showToast("Please enter your username");
+    return;
+  }
+
+  state.name = name;
+  save();
+
+  document.getElementById("welcomeText").textContent =
+    "Welcome, " + state.name + "!";
+
+  openPage("homePage");
+  updateAll();
+}
 
 const message =
 document.getElementById(
