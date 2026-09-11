@@ -67,17 +67,13 @@ button {
   border: none;
   cursor: pointer;
 }
-
-.page {
-  display: none;
-  min-height: 100vh;
-  padding: 25px;
+.page{
+    display:none;
 }
 
-.page.active {
-  display: block;
+.page.active{
+    display:block;
 }
-
 
 /* =====================================================
    BUTTONS
