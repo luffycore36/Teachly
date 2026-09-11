@@ -1984,6 +1984,24 @@ function toggleSavedLesson() {
 
 
 /* =========================
+   EMOJI
+========================= */
+
+function addEmoji(emoji) {
+
+  const input =
+    document.getElementById("chatInput");
+
+  if (!input) {
+    return;
+  }
+
+  input.value += emoji;
+
+  input.focus();
+}
+
+/* =========================
    THEME
 ========================= */
 
@@ -2203,3 +2221,6 @@ window.toggleTheme =
 
 window.goBack =
   goBack;
+
+window.addEmoji =
+  addEmoji;
