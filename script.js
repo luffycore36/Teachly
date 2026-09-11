@@ -525,7 +525,7 @@ function continueFromName() {
 
     role: "learner",
 
-    coins: 100,
+    coins: 100000,
 
     lessonsCompleted: 0,
 
