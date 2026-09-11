@@ -409,7 +409,14 @@
       class="continueButton"
       type="button"
       onclick="c
-      onclick="continueToName()"
+
+      <button
+  class="continueButton"
+  type="button"
+  onclick="document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById('loginPage').classList.add('active');"
+>
+  Continue
+</button>
     >
       Continue
     </button>
