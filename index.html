@@ -42,9 +42,13 @@
         type="text"
         placeholder="Enter your username"
         maxlength="30"
+        autocomplete="off"
       >
 
-      <button onclick="startTeachly()">
+      <button
+        type="button"
+        onclick="startTeachly()"
+      >
         Start Teachly 🚀
       </button>
 
@@ -67,15 +71,24 @@
 
       <div class="topActions">
 
-        <button onclick="openPage('profilePage')">
+        <button
+          type="button"
+          onclick="openPage('profilePage')"
+        >
           👤 Profile
         </button>
 
-        <button onclick="toggleTheme()">
+        <button
+          type="button"
+          onclick="toggleTheme()"
+        >
           🌙
         </button>
 
-        <button onclick="logout()">
+        <button
+          type="button"
+          onclick="logout()"
+        >
           Logout
         </button>
 
@@ -99,24 +112,41 @@
         <div class="homeStats">
 
           <div class="statCard">
+
             <strong id="homeUsername">
               Learner
             </strong>
-            <span>Username</span>
+
+            <span>
+              Username
+            </span>
+
           </div>
 
+
           <div class="statCard">
+
             <strong id="coinCount">
               0
             </strong>
-            <span>💰 Coins</span>
+
+            <span>
+              💰 Coins
+            </span>
+
           </div>
 
+
           <div class="statCard">
+
             <strong id="sessionCount">
               0
             </strong>
-            <span>Connections</span>
+
+            <span>
+              Connections
+            </span>
+
           </div>
 
         </div>
@@ -124,20 +154,26 @@
       </div>
 
 
-      <!-- ROLE CARDS -->
+      <!-- =================================================
+           ROLE CARDS
+      ================================================== -->
 
       <div class="cloudArea">
 
         <div
           class="cloud learnerCloud"
           onclick="chooseRole('learner')"
+          role="button"
+          tabindex="0"
         >
 
           <div class="cloudIcon">
             🎓
           </div>
 
-          <h2>I Want To Learn</h2>
+          <h2>
+            I Want To Learn
+          </h2>
 
           <p>
             Find a real teacher and learn something new.
@@ -149,13 +185,17 @@
         <div
           class="cloud teacherCloud"
           onclick="chooseRole('teacher')"
+          role="button"
+          tabindex="0"
         >
 
           <div class="cloudIcon">
             🧑‍🏫
           </div>
 
-          <h2>I Want To Teach</h2>
+          <h2>
+            I Want To Teach
+          </h2>
 
           <p>
             Help another learner with something you know.
@@ -166,20 +206,29 @@
       </div>
 
 
-      <!-- FEATURE CARDS -->
+      <!-- =================================================
+           FEATURE CARDS
+      ================================================== -->
 
       <div class="featureGrid">
+
+
+        <!-- AI TEACHER -->
 
         <div
           class="featureCard"
           onclick="openAITeacher()"
+          role="button"
+          tabindex="0"
         >
 
           <div class="featureIcon">
             🤖
           </div>
 
-          <h2>AI Teacher</h2>
+          <h2>
+            AI Teacher
+          </h2>
 
           <p>
             Ask questions and get help from your AI teacher.
@@ -188,16 +237,22 @@
         </div>
 
 
+        <!-- RANDOM TOPIC -->
+
         <div
           class="featureCard"
           onclick="mysteryTopic()"
+          role="button"
+          tabindex="0"
         >
 
           <div class="featureIcon">
             🎲
           </div>
 
-          <h2>Random Topic</h2>
+          <h2>
+            Random Topic
+          </h2>
 
           <p>
             Discover something interesting.
@@ -206,16 +261,22 @@
         </div>
 
 
+        <!-- LESSON LIBRARY -->
+
         <div
           class="featureCard"
           onclick="openPage('aiPage')"
+          role="button"
+          tabindex="0"
         >
 
           <div class="featureIcon">
             📚
           </div>
 
-          <h2>Lesson Library</h2>
+          <h2>
+            Lesson Library
+          </h2>
 
           <p>
             Study structured lessons and take quizzes.
@@ -224,16 +285,22 @@
         </div>
 
 
+        <!-- PEOPLE -->
+
         <div
           class="featureCard"
           onclick="openPage('peoplePage')"
+          role="button"
+          tabindex="0"
         >
 
           <div class="featureIcon">
             👥
           </div>
 
-          <h2>People</h2>
+          <h2>
+            People
+          </h2>
 
           <p>
             See verified Teachly users.
@@ -242,16 +309,22 @@
         </div>
 
 
+        <!-- BADGES -->
+
         <div
           class="featureCard"
           onclick="openPage('badgesPage')"
+          role="button"
+          tabindex="0"
         >
 
           <div class="featureIcon">
             🏅
           </div>
 
-          <h2>Badges</h2>
+          <h2>
+            Badges
+          </h2>
 
           <p>
             Unlock achievements as you learn.
@@ -260,16 +333,22 @@
         </div>
 
 
+        <!-- SHOP -->
+
         <div
           class="featureCard"
           onclick="openPage('shopPage')"
+          role="button"
+          tabindex="0"
         >
 
           <div class="featureIcon">
             🛍️
           </div>
 
-          <h2>Shop</h2>
+          <h2>
+            Shop
+          </h2>
 
           <p>
             Spend your 💰 on profile effects.
@@ -278,16 +357,22 @@
         </div>
 
 
+        <!-- LEARNSPHERE -->
+
         <div
           class="featureCard"
           onclick="openPage('mapPage')"
+          role="button"
+          tabindex="0"
         >
 
           <div class="featureIcon">
             🌍
           </div>
 
-          <h2>LearnSphere</h2>
+          <h2>
+            LearnSphere
+          </h2>
 
           <p>
             Explore the seven continents.
@@ -298,14 +383,20 @@
       </div>
 
 
-      <!-- PROGRESS -->
+      <!-- =================================================
+           PROGRESS
+      ================================================== -->
 
       <div class="progressBox">
 
-        <h2>Learning Progress</h2>
+        <h2>
+          Learning Progress
+        </h2>
 
         <div class="progressTrack">
+
           <div id="overallProgress"></div>
+
         </div>
 
         <p>
@@ -343,7 +434,10 @@
         <div></div>
       </div>
 
-      <button onclick="goHome()">
+      <button
+        type="button"
+        onclick="goHome()"
+      >
         Cancel
       </button>
 
@@ -362,7 +456,10 @@
 
       <div class="chatHeader">
 
-        <button onclick="goHome()">
+        <button
+          type="button"
+          onclick="goHome()"
+        >
           ←
         </button>
 
@@ -385,25 +482,42 @@
       </div>
 
 
+      <!-- EMOJIS -->
+
       <div class="emojiBar">
 
-        <button onclick="addEmoji('😀')">
+        <button
+          type="button"
+          onclick="addEmoji('😀')"
+        >
           😀
         </button>
 
-        <button onclick="addEmoji('🎉')">
+        <button
+          type="button"
+          onclick="addEmoji('🎉')"
+        >
           🎉
         </button>
 
-        <button onclick="addEmoji('👍')">
+        <button
+          type="button"
+          onclick="addEmoji('👍')"
+        >
           👍
         </button>
 
-        <button onclick="addEmoji('📚')">
+        <button
+          type="button"
+          onclick="addEmoji('📚')"
+        >
           📚
         </button>
 
-        <button onclick="addEmoji('❤️')">
+        <button
+          type="button"
+          onclick="addEmoji('❤️')"
+        >
           ❤️
         </button>
 
@@ -416,9 +530,13 @@
           id="messageInput"
           type="text"
           placeholder="Type a message..."
+          autocomplete="off"
         >
 
-        <button onclick="sendMessage()">
+        <button
+          type="button"
+          onclick="sendMessage()"
+        >
           Send
         </button>
 
@@ -437,15 +555,23 @@
 
     <div class="sectionHeader">
 
-      <button onclick="goHome()">
+      <button
+        type="button"
+        onclick="goHome()"
+      >
         ← Home
       </button>
 
       <div>
-        <h1>📚 Lesson Library</h1>
+
+        <h1>
+          📚 Lesson Library
+        </h1>
+
         <p>
           Learn, practice and ask the AI Teacher.
         </p>
+
       </div>
 
     </div>
@@ -454,14 +580,21 @@
     <div class="lessonStats">
 
       <div>
+
         <strong id="lessonCount">
           0
         </strong>
-        <span>Lessons</span>
+
+        <span>
+          Lessons
+        </span>
+
       </div>
 
     </div>
 
+
+    <!-- LESSON CATEGORIES -->
 
     <div
       id="lessonCategories"
@@ -469,6 +602,7 @@
     >
 
       <button
+        type="button"
         class="lessonCategoryButton active"
         onclick="filterLessons('All')"
       >
@@ -476,6 +610,7 @@
       </button>
 
       <button
+        type="button"
         class="lessonCategoryButton"
         onclick="filterLessons('Mathematics')"
       >
@@ -483,6 +618,7 @@
       </button>
 
       <button
+        type="button"
         class="lessonCategoryButton"
         onclick="filterLessons('Science')"
       >
@@ -490,6 +626,7 @@
       </button>
 
       <button
+        type="button"
         class="lessonCategoryButton"
         onclick="filterLessons('English')"
       >
@@ -497,6 +634,7 @@
       </button>
 
       <button
+        type="button"
         class="lessonCategoryButton"
         onclick="filterLessons('History')"
       >
@@ -506,21 +644,30 @@
     </div>
 
 
+    <!-- LESSONS -->
+
     <div
       id="lessonGrid"
       class="lessonGrid"
     ></div>
 
 
+    <!-- AI CARD -->
+
     <div class="aiMainCard">
 
-      <h2>🤖 AI Teacher</h2>
+      <h2>
+        🤖 AI Teacher
+      </h2>
 
       <p>
         Ask the AI anything about learning.
       </p>
 
-      <button onclick="openAITeacher()">
+      <button
+        type="button"
+        onclick="openAITeacher()"
+      >
         Ask AI Teacher
       </button>
 
@@ -537,11 +684,14 @@
 
     <div class="sectionHeader">
 
-      <button onclick="openPage('aiPage')">
+      <button
+        type="button"
+        onclick="openPage('aiPage')"
+      >
         ← Lessons
       </button>
 
-      <h1 id="selectedLessonTitle">
+      <h1 id="selectedLessonHeader">
         Lesson
       </h1>
 
@@ -557,13 +707,16 @@
         Category
       </span>
 
+
       <h2 id="selectedLessonTitle">
         Lesson
       </h2>
 
+
       <p id="selectedLessonDescription">
         Description
       </p>
+
 
       <div
         id="selectedLessonContent"
@@ -575,22 +728,35 @@
 
       <div class="lessonActions">
 
-        <button onclick="completeLesson()">
+        <button
+          type="button"
+          onclick="completeLesson()"
+        >
           ✅ Complete Lesson
         </button>
 
+
         <button
           id="saveLessonButton"
+          type="button"
           onclick="toggleSavedLesson()"
         >
           ☆ Save Lesson
         </button>
 
-        <button onclick="startQuiz()">
+
+        <button
+          type="button"
+          onclick="startQuiz()"
+        >
           🧠 Take Quiz
         </button>
 
-        <button onclick="openAITeacher()">
+
+        <button
+          type="button"
+          onclick="openAITeacher()"
+        >
           🤖 Ask AI
         </button>
 
@@ -609,11 +775,16 @@
 
     <div class="sectionHeader">
 
-      <button onclick="goHome()">
+      <button
+        type="button"
+        onclick="goHome()"
+      >
         ← Home
       </button>
 
-      <h1>🎲 Random Topic</h1>
+      <h1>
+        🎲 Random Topic
+      </h1>
 
     </div>
 
@@ -632,7 +803,10 @@
         Click the button to discover a random educational topic.
       </p>
 
-      <button onclick="mysteryTopic()">
+      <button
+        type="button"
+        onclick="mysteryTopic()"
+      >
         🎲 Give Me Another Topic
       </button>
 
@@ -649,11 +823,16 @@
 
     <div class="sectionHeader">
 
-      <button onclick="goHome()">
+      <button
+        type="button"
+        onclick="goHome()"
+      >
         ← Home
       </button>
 
-      <h1>👥 Teachly People</h1>
+      <h1>
+        👥 Teachly People
+      </h1>
 
     </div>
 
@@ -673,11 +852,16 @@
 
     <div class="sectionHeader">
 
-      <button onclick="openPage('selectedLessonPage')">
+      <button
+        type="button"
+        onclick="openPage('selectedLessonPage')"
+      >
         ← Lesson
       </button>
 
-      <h1>🧠 Quiz</h1>
+      <h1>
+        🧠 Quiz
+      </h1>
 
     </div>
 
@@ -688,30 +872,39 @@
         Quiz
       </h2>
 
+
       <div
         id="quizQuestion"
         class="quizQuestion"
       ></div>
+
 
       <div
         id="quizOptions"
         class="quizOptions"
       ></div>
 
+
+      <!-- Kept for compatibility with the existing quiz UI -->
+
       <input
         id="quizAnswer"
         type="text"
         placeholder="Answer"
         style="display:none"
+        autocomplete="off"
       >
+
 
       <button
         id="checkQuizButton"
+        type="button"
         onclick="checkQuiz()"
         style="display:none"
       >
         Check Answer
       </button>
+
 
       <div
         id="quizResult"
@@ -721,7 +914,9 @@
     </div>
 
 
-    <!-- LESSON AI -->
+    <!-- =================================================
+         LESSON AI
+    ================================================== -->
 
     <div class="lessonAITeacher">
 
@@ -733,6 +928,7 @@
         Need help understanding this lesson?
       </p>
 
+
       <div
         id="aiTeacherMessages"
         class="aiTeacherMessages"
@@ -742,18 +938,23 @@
       <div class="aiQuickQuestions">
 
         <button
+          type="button"
           onclick="askAIQuick('Explain this lesson simply')"
         >
           Explain simply
         </button>
 
+
         <button
+          type="button"
           onclick="askAIQuick('Give me an example')"
         >
           Give example
         </button>
 
+
         <button
+          type="button"
           onclick="askAIQuick('What should I remember?')"
         >
           Key points
@@ -769,7 +970,11 @@
           placeholder="Ask your AI Teacher..."
         ></textarea>
 
-        <button onclick="askAITeacher()">
+
+        <button
+          type="button"
+          onclick="askAITeacher()"
+        >
           Ask
         </button>
 
@@ -788,11 +993,16 @@
 
     <div class="sectionHeader">
 
-      <button onclick="goHome()">
+      <button
+        type="button"
+        onclick="goHome()"
+      >
         ← Home
       </button>
 
-      <h1>🤖 AI Teacher</h1>
+      <h1>
+        🤖 AI Teacher
+      </h1>
 
     </div>
 
@@ -821,7 +1031,11 @@
             placeholder="Ask your question..."
           ></textarea>
 
-          <button onclick="teacherAIHelp()">
+
+          <button
+            type="button"
+            onclick="teacherAIHelp()"
+          >
             Ask AI
           </button>
 
@@ -842,11 +1056,16 @@
 
     <div class="sectionHeader">
 
-      <button onclick="goHome()">
+      <button
+        type="button"
+        onclick="goHome()"
+      >
         ← Home
       </button>
 
-      <h1>🏅 Badges</h1>
+      <h1>
+        🏅 Badges
+      </h1>
 
     </div>
 
@@ -867,19 +1086,32 @@
 
     <div class="sectionHeader">
 
-      <button onclick="goHome()">
+      <button
+        type="button"
+        onclick="goHome()"
+      >
         ← Home
       </button>
 
+
       <div>
-        <h1>🛍️ Teachly Shop</h1>
+
+        <h1>
+          🛍️ Teachly Shop
+        </h1>
 
         <p>
           Your balance:
+
           <strong>
-            💰 <span id="shopCoins">0</span>
+            💰
+            <span id="shopCoins">
+              0
+            </span>
           </strong>
+
         </p>
+
       </div>
 
     </div>
@@ -901,11 +1133,16 @@
 
     <div class="sectionHeader">
 
-      <button onclick="goHome()">
+      <button
+        type="button"
+        onclick="goHome()"
+      >
         ← Home
       </button>
 
-      <h1>👤 Profile</h1>
+      <h1>
+        👤 Profile
+      </h1>
 
     </div>
 
@@ -919,31 +1156,50 @@
         👤
       </div>
 
+
       <h2 id="profileName">
         Learner
       </h2>
 
+
       <div class="stats">
 
         <div>
+
           <strong id="profileLessons">
             0
           </strong>
-          <span>Lessons</span>
+
+          <span>
+            Lessons
+          </span>
+
         </div>
 
+
         <div>
+
           <strong id="profileSessions">
             0
           </strong>
-          <span>Connections</span>
+
+          <span>
+            Connections
+          </span>
+
         </div>
 
+
         <div>
+
           <strong id="profileCoins">
             0
           </strong>
-          <span>💰</span>
+
+          <span>
+            💰
+          </span>
+
         </div>
 
       </div>
@@ -961,59 +1217,102 @@
 
     <div class="sectionHeader">
 
-      <button onclick="goHome()">
+      <button
+        type="button"
+        onclick="goHome()"
+      >
         ← Home
       </button>
 
+
       <div>
-        <h1>🌍 LearnSphere</h1>
+
+        <h1>
+          🌍 LearnSphere
+        </h1>
 
         <p>
           Explore Earth's seven continents.
         </p>
+
       </div>
 
     </div>
 
 
+    <!-- =================================================
+         CONTINENT BUTTONS
+    ================================================== -->
+
     <div class="continentButtons">
 
-      <button onclick="showContinent('Asia')">
+      <button
+        type="button"
+        onclick="showContinent('Asia')"
+      >
         🌏 Asia
       </button>
 
-      <button onclick="showContinent('Africa')">
+
+      <button
+        type="button"
+        onclick="showContinent('Africa')"
+      >
         🌍 Africa
       </button>
 
-      <button onclick="showContinent('Europe')">
+
+      <button
+        type="button"
+        onclick="showContinent('Europe')"
+      >
         🌍 Europe
       </button>
 
-      <button onclick="showContinent('North America')">
+
+      <button
+        type="button"
+        onclick="showContinent('North America')"
+      >
         🌎 North America
       </button>
 
-      <button onclick="showContinent('South America')">
+
+      <button
+        type="button"
+        onclick="showContinent('South America')"
+      >
         🌎 South America
       </button>
 
-      <button onclick="showContinent('Australia/Oceania')">
+
+      <button
+        type="button"
+        onclick="showContinent('Australia/Oceania')"
+      >
         🌏 Australia/Oceania
       </button>
 
-      <button onclick="showContinent('Antarctica')">
+
+      <button
+        type="button"
+        onclick="showContinent('Antarctica')"
+      >
         ❄️ Antarctica
       </button>
 
     </div>
 
 
+    <!-- MAP -->
+
     <div
       id="worldMap"
       class="worldMap"
     ></div>
 
+
+    <!-- CONTINENT INFORMATION -->
 
     <div
       id="countryInfo"
@@ -1038,7 +1337,9 @@
        SCRIPTS
   ====================================================== -->
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  ></script>
 
   <script src="./script.js"></script>
 
