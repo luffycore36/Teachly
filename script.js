@@ -150,12 +150,23 @@ window.goHome = goHome;
 
 
 
-function continueToName(){
+ffunction continueToName(){
 
-openPage("loginPage");
+    const intro = document.getElementById("introPage");
+    const login = document.getElementById("loginPage");
+
+    if(intro){
+        intro.classList.remove("active");
+    }
+
+    if(login){
+        login.classList.add("active");
+    }
 
 }
 
+
+window.continueToName = continueToName;
 
 window.continueToName = continueToName;
 
@@ -3065,33 +3076,18 @@ function startApplication(){
 
 
 
-document.addEventListener(
-"DOMContentLoaded",
-()=>{
+document.addEventListener("DOMContentLoaded",()=>{
 
+    loadTheme();
 
-    startApplication();
+    loadUser();
 
-
-});
-
-
-
-
-
-
-
-
-window.addEventListener(
-"error",
-event=>{
-
-
-    console.error(
-        "Teachly error:",
-        event.error
-    );
-
+    if(currentUser){
+        openPage("homePage");
+    }
+    else{
+        openPage("introPage");
+    }
 
 });
 
