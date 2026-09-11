@@ -193,15 +193,11 @@ window.openPage=openPage;
 // CONTINUE BUTTON FIX
 // ===============================
 
-function continueToName(){
-
-openPage("loginPage");
-
+function continueToAuth(){
+  openPage("loginPage");
 }
 
-
-window.continueToName =
-continueToName;
+window.continueToAuth = continueToAuth;
 
 
 // ===============================
