@@ -257,7 +257,6 @@ const mysteryTopics = [
   ]
 ];
 
-
 const badges = [
   {
     id: "first",
@@ -284,14 +283,45 @@ const badges = [
   },
 
   {
+    id: "quiz",
+    icon: "🏆",
+    title: "Quiz Starter",
+    description: "Complete your first quiz.",
+    requirement: "quiz"
+  },
+
+  {
+    id: "quiz-five",
+    icon: "🎯",
+    title: "Quiz Master",
+    description: "Complete five quizzes.",
+    requirement: "quiz5"
+  },
+
+  {
+    id: "session",
+    icon: "🤝",
+    title: "First Connection",
+    description: "Connect with another Teachly user.",
+    requirement: "session"
+  },
+
+  {
     id: "teacher",
     icon: "🧑‍🏫",
     title: "Helpful Teacher",
-    description: "Connect with another learner.",
-    requirement: "session"
+    description: "Connect with a learner.",
+    requirement: "teacher"
+  },
+
+  {
+    id: "collector",
+    icon: "🛍️",
+    title: "Collector",
+    description: "Purchase your first shop item.",
+    requirement: "shop"
   }
 ];
-
 
 const shopItems = [
   {
@@ -316,9 +346,56 @@ const shopItems = [
     name: "Rocket",
     description: "Give your profile a rocket icon.",
     price: 100
+  },
+
+  {
+    id: "fire",
+    icon: "🔥",
+    name: "Fire Profile",
+    description: "Show your learning streak with fire.",
+    price: 150
+  },
+
+  {
+    id: "crown",
+    icon: "👑",
+    name: "Learning Crown",
+    description: "Show a crown on your profile.",
+    price: 250
+  },
+
+  {
+    id: "diamond",
+    icon: "💎",
+    name: "Diamond",
+    description: "A premium-looking profile icon.",
+    price: 500
+  },
+
+  {
+    id: "galaxy",
+    icon: "🌌",
+    name: "Galaxy",
+    description: "Give your profile a cosmic style.",
+    price: 750
+  },
+
+  {
+    id: "trophy",
+    icon: "🏆",
+    name: "Champion Trophy",
+    description: "Show that you're a serious learner.",
+    price: 1000
+  },
+
+  {
+    id: "legend",
+    icon: "⚡",
+    name: "Legend Effect",
+    description: "A special legendary profile effect.",
+    price: 2500
   }
 ];
-
 
 const continents = {
   Asia: {
@@ -451,6 +528,15 @@ function loadUser() {
 
     currentUser = JSON.parse(saved);
 
+currentUser.coins = Number(currentUser.coins ?? 10000);
+currentUser.completedLessons = currentUser.completedLessons || [];
+currentUser.quizCompleted = currentUser.quizCompleted || [];
+currentUser.savedLessons = currentUser.savedLessons || [];
+currentUser.purchasedItems = currentUser.purchasedItems || [];
+currentUser.equippedItem = currentUser.equippedItem || null;
+
+saveUser();
+    
     if (currentUser) {
 
       currentRole =
@@ -529,13 +615,16 @@ function continueFromName() {
 
     lessonsCompleted: 0,
 
-    sessions: 0,
+completedLessons: [],
 
-    savedLessons: [],
+sessions: 0,
+   savedLessons: [],
 
-    purchasedItems: [],
+quizCompleted: [],
 
-    equippedItem: null
+purchasedItems: [],
+
+equippedItem: null
 
   };
 
@@ -659,6 +748,12 @@ function updateHome() {
     coins.textContent =
       Number(currentUser.coins || 0);
   }
+
+  const quizzes =
+  (currentUser?.quizCompleted || []).length;
+
+const purchases =
+  (currentUser?.purchasedItems || []).length;
 
   if (sessions) {
     sessions.textContent =
@@ -897,19 +992,20 @@ function connectToPerson(person) {
   currentChatUser =
     person;
 
-  if (currentUser) {
+if (currentUser) {
 
-    currentUser.sessions =
-      Number(
-        currentUser.sessions || 0
-      ) + 1;
+  currentUser.sessions =
+    Number(
+      currentUser.sessions || 0
+    ) + 1;
 
-    saveUser();
-
-  }
+  saveUser();
 
   updateHome();
+  renderBadges();
+}
 
+  
   openPage("chatPage");
 
   const title =
@@ -1421,16 +1517,11 @@ function completeLesson() {
     Number(currentUser.coins || 0) +
     20;
 
-  saveUser();
-
-  updateHome();
-
-  renderBadges();
-
-  alert(
-    "Lesson completed! +20 💰 coins"
-  );
-
+saveUser();
+updateHome();
+renderBadges();
+updateProfile();
+alert("Lesson completed! +20 💰 coins");
 }
 
 
@@ -1597,18 +1688,43 @@ function answerQuiz(answer) {
     result.style.color =
       "#73e6a1";
 
-    if (currentUser) {
+  if (currentUser) {
 
-      currentUser.coins =
-        Number(
-          currentUser.coins || 0
-        ) + 10;
+  currentUser.quizCompleted =
+    currentUser.quizCompleted || [];
 
-      saveUser();
+  if (
+    !currentUser.quizCompleted.includes(
+      currentLesson.id
+    )
+  ) {
 
-      updateHome();
+    currentUser.quizCompleted.push(
+      currentLesson.id
+    );
 
-    }
+    currentUser.coins =
+      Number(
+        currentUser.coins || 0
+      ) + 10;
+
+    saveUser();
+
+    updateHome();
+
+    renderBadges();
+
+    alert("Correct! +10 💰 coins");
+
+  } else {
+
+    saveUser();
+
+    updateHome();
+
+  }
+
+}
 
   } else {
 
@@ -1973,18 +2089,37 @@ function renderBadges() {
     );
 
   const sessions =
-    Number(
-      currentUser?.sessions || 0
-    );
+  Number(
+    currentUser?.sessions || 0
+  );
 
-  box.innerHTML = "";
+const quizzes =
+  (currentUser?.quizCompleted || []).length;
+
+const purchases =
+  (currentUser?.purchasedItems || []).length;
+
+box.innerHTML = "";
 
   badges.forEach(badge => {
+    
+let unlocked = false;
 
-    const unlocked =
-      badge.requirement === "session"
-        ? sessions > 0
-        : completed >= badge.requirement;
+if (badge.requirement === "session") {
+  unlocked = sessions > 0;
+} else if (badge.requirement === "teacher") {
+  unlocked =
+    sessions > 0 &&
+    currentUser?.role === "teacher";
+} else if (badge.requirement === "quiz") {
+  unlocked = quizzes >= 1;
+} else if (badge.requirement === "quiz5") {
+  unlocked = quizzes >= 5;
+} else if (badge.requirement === "shop") {
+  unlocked = purchases >= 1;
+} else {
+  unlocked = completed >= badge.requirement;
+}
 
     const card =
       document.createElement(
@@ -2126,23 +2261,24 @@ function buyShopItem(id) {
     currentUser.purchasedItems
       .includes(id);
 
-  if (purchased) {
+ if (purchased) {
 
-    currentUser.equippedItem =
-      id;
+  currentUser.equippedItem =
+    id;
 
-    saveUser();
+  saveUser();
+  updateHome();
+  renderShop();
+  renderBadges();
+  updateProfile();
 
-    renderShop();
+  return;
+}
 
-    return;
-
-  }
-
-  if (
-    Number(currentUser.coins || 0) <
-    item.price
-  ) {
+if (
+  Number(currentUser.coins || 0) <
+  item.price
+) {
 
     alert(
       "You don't have enough 💰 coins."
@@ -2161,13 +2297,16 @@ function buyShopItem(id) {
 
   currentUser.equippedItem =
     id;
+saveUser();
 
-  saveUser();
+updateHome();
 
-  updateHome();
+renderShop();
 
-  renderShop();
+renderBadges();
 
+updateProfile();
+  
 }
 
 
@@ -2225,6 +2364,29 @@ function updateProfile() {
       currentUser.coins || 0;
   }
 
+
+  
+const avatar =
+  document.getElementById("profileAvatar");
+
+if (avatar) {
+
+  const equipped =
+    currentUser.equippedItem;
+
+  const item =
+    shopItems.find(
+      shopItem =>
+        shopItem.id === equipped
+    );
+
+  avatar.textContent =
+    item
+      ? item.icon
+      : "👤";
+
+}
+  
 }
 
 
@@ -2388,3 +2550,37 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 
 }
+
+
+/* =====================================================
+   LOGOUT
+===================================================== */
+
+function logout() {
+
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
+
+  currentUser = null;
+  currentRole = "learner";
+  currentLesson = null;
+  currentQuiz = null;
+  currentChatUser = null;
+
+  localStorage.removeItem("teachlyUser");
+
+  openPage("namePage");
+
+  const input =
+    document.getElementById("usernameInput");
+
+  if (input) {
+    input.value = "";
+    input.focus();
+  }
+
+}
+
+window.logout = logout;
