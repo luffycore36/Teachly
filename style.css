@@ -1818,3 +1818,141 @@ body.lightTheme .roleCard p {
   }
 
 }
+
+/* =====================================================
+   AUTH PAGES
+===================================================== */
+
+#registerPage,
+#verifyPage,
+#loginPage {
+  display: none;
+  min-height: 100vh;
+  justify-content: center;
+  align-items: center;
+}
+
+#registerPage.active,
+#verifyPage.active,
+#loginPage.active {
+  display: flex;
+}
+
+#registerPage .nameCard,
+#verifyPage .nameCard,
+#loginPage .nameCard {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+
+/* =====================================================
+   AVATAR UPLOAD
+===================================================== */
+
+#avatarUpload {
+  margin-top: 20px;
+  padding: 12px;
+
+  cursor: pointer;
+
+  background:
+    rgba(255,255,255,.07);
+
+  border-radius: 14px;
+}
+
+
+.profileBox button {
+  margin-top: 15px;
+}
+
+
+/* =====================================================
+   PROFILE ROLE
+===================================================== */
+
+#profileRole {
+
+  margin-top: 15px;
+
+  display: inline-block;
+
+  padding:
+  8px 16px;
+
+  border-radius: 20px;
+
+  font-weight: 800;
+
+  color: #bdb8ff;
+
+  background:
+    rgba(108,99,255,.18);
+
+  border:
+    1px solid rgba(255,255,255,.1);
+}
+
+
+/* =====================================================
+   SAVED LESSONS PAGE
+===================================================== */
+
+#savedLessonsPage .lessonGrid {
+
+  margin-top: 30px;
+
+}
+
+
+/* =====================================================
+   PROFILE IMAGE SUPPORT
+===================================================== */
+
+.profileAvatar img {
+
+  width:100%;
+  height:100%;
+
+  object-fit:cover;
+
+  border-radius:50%;
+
+}
+
+
+/* =====================================================
+   AUTH MESSAGE
+===================================================== */
+
+#authMessage,
+#aiError {
+
+  margin-top:15px;
+
+  color:#ff8f8f;
+
+  font-weight:700;
+
+}
+
+
+/* =====================================================
+   MOBILE AUTH
+===================================================== */
+
+@media(max-width:650px){
+
+  #registerPage .nameCard,
+  #verifyPage .nameCard,
+  #loginPage .nameCard {
+
+    width:95%;
+
+    padding:35px 20px;
+
+  }
+
+}
