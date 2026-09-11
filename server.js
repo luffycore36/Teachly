@@ -1,1328 +1,1417 @@
+require("dotenv").config();
+
 const express = require("express");
 const http = require("http");
+const cors = require("cors");
 const { Server } = require("socket.io");
+
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
-const dotenv = require("dotenv");
-const OpenAI = require("openai");
+
 const nodemailer = require("nodemailer");
+const OpenAI = require("openai");
 
-dotenv.config();
 
-const app = express();
+/* =========================================================
+   APP
+========================================================= */
 
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+const app =
+  express();
 
-    if (req.method === "OPTIONS") {
-        return res.sendStatus(204);
+const server =
+  http.createServer(app);
+
+
+const io =
+  new Server(
+    server,
+    {
+      cors: {
+        origin: "*",
+        methods: [
+          "GET",
+          "POST"
+        ]
+      }
     }
+  );
 
-    next();
-});
-
-const server = http.createServer(app);
-const io = new Server(server);
-
-const PORT = process.env.PORT || 3000;
-
-app.use(express.json({ limit: "5mb" }));
-
-/* =========================
-   DATA STORAGE
-========================= */
-
-const dataDir = path.join(__dirname, "data");
-const usersFile = path.join(dataDir, "users.json");
-
-if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-}
-
-if (!fs.existsSync(usersFile)) {
-    fs.writeFileSync(usersFile, "[]");
-}
-
-function loadUsers() {
-    try {
-        return JSON.parse(
-            fs.readFileSync(usersFile, "utf8")
-        );
-    } catch {
-        return [];
-    }
-}
-
-function saveUsers(users) {
-    fs.writeFileSync(
-        usersFile,
-        JSON.stringify(users, null, 2)
-    );
-}
-
-/* =========================
-   SESSIONS
-========================= */
-
-const sessions = new Map();
-
-function createSession(userId) {
-    const token =
-        crypto.randomBytes(32).toString("hex");
-
-    sessions.set(token, {
-        userId,
-        createdAt: Date.now()
-    });
-
-    return token;
-}
-
-function getUserFromToken(token) {
-    if (!token) return null;
-
-    const session =
-        sessions.get(token);
-
-    if (!session) return null;
-
-    const users = loadUsers();
-
-    return users.find(
-        user => user.id === session.userId
-    ) || null;
-}
-
-function publicUser(user) {
-    if (!user) return null;
-
-    return {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        profileImage: user.profileImage || "",
-        role: user.role || "",
-        tickets: user.tickets || 0,
-        sessions: user.sessions || 0,
-        streak: user.streak || 0,
-        earnedBadges: user.earnedBadges || [],
-        ownedEffects: user.ownedEffects || [],
-        equippedEffect: user.equippedEffect || ""
-    };
-}
-
-function authenticated(req, res, next) {
-    const token =
-        req.headers.authorization?.replace(
-            "Bearer ",
-            ""
-        );
-
-    const user =
-        getUserFromToken(token);
-
-    if (!user) {
-        return res.status(401).json({
-            error: "Please log in first."
-        });
-    }
-
-    req.user = user;
-    req.token = token;
-
-    next();
-}
-
-/* =========================
-   EMAIL
-========================= */
-
-const transporter =
-    process.env.EMAIL_USER &&
-    process.env.EMAIL_PASSWORD
-        ? nodemailer.createTransport({
-              service: "gmail",
-              auth: {
-                  user: process.env.EMAIL_USER,
-                  pass: process.env.EMAIL_PASSWORD
-              }
-          })
-        : null;
-
-/* =========================
-   REGISTER
-========================= */
-
-app.post(
-    "/api/auth/register",
-    async (req, res) => {
-
-        try {
-
-            const {
-                username,
-                email,
-                password,
-                role
-            } = req.body;
-
-            if (!username || !email || !password) {
-                return res.status(400).json({
-                    error:
-                        "Please fill in all fields."
-                });
-            }
-
-            const cleanUsername =
-                username.trim();
-
-            const cleanEmail =
-                email.trim().toLowerCase();
-
-            const cleanRole =
-                role === "teacher"
-                    ? "teacher"
-                    : "learner";
-
-            if (
-                !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-                    cleanEmail
-                )
-            ) {
-                return res.status(400).json({
-                    error:
-                        "Please enter a valid email address."
-                });
-            }
-
-            if (password.length < 8) {
-                return res.status(400).json({
-                    error:
-                        "Password must contain at least 8 characters."
-                });
-            }
-
-            if (!cleanUsername) {
-                return res.status(400).json({
-                    error:
-                        "Please choose a username."
-                });
-            }
-
-            const users = loadUsers();
-
-            const existingEmail =
-                users.find(
-                    user =>
-                        user.email ===
-                        cleanEmail
-                );
-
-            if (existingEmail) {
-                return res.status(409).json({
-                    error:
-                        "This email is already being used. Please log in."
-                });
-            }
-
-            const existingUsername =
-                users.find(
-                    user =>
-                        user.username.toLowerCase() ===
-                        cleanUsername.toLowerCase()
-                );
-
-            if (existingUsername) {
-                return res.status(409).json({
-                    error:
-                        "That username is already being used."
-                });
-            }
-
-            const hashedPassword =
-                await bcrypt.hash(
-                    password,
-                    12
-                );
-
-            const verificationCode =
-                String(
-                    Math.floor(
-                        100000 +
-                        Math.random() *
-                        900000
-                    )
-                );
-
-            const user = {
-                id:
-                    crypto.randomUUID(),
-
-                username:
-                    cleanUsername,
-
-                email:
-                    cleanEmail,
-
-                password:
-                    hashedPassword,
-
-                verified:
-                    false,
-
-                verificationCode,
-
-                verificationExpires:
-                    Date.now() +
-                    10 * 60 * 1000,
-
-                profileImage:
-                    "",
-
-                /*
-                 * REAL REGISTERED USER ROLE
-                 */
-                role:
-                    cleanRole,
-
-                tickets:
-                    0,
-
-                sessions:
-                    0,
-
-                streak:
-                    0,
-
-                earnedBadges:
-                    [],
-
-                ownedEffects:
-                    [],
-
-                equippedEffect:
-                    ""
-            };
-
-            users.push(user);
-
-            saveUsers(users);
-
-            if (transporter) {
-
-                await transporter.sendMail({
-                    from:
-                        process.env.EMAIL_USER,
-
-                    to:
-                        cleanEmail,
-
-                    subject:
-                        "Teachly verification code",
-
-                    text:
-                        `Your Teachly verification code is ${verificationCode}. It expires in 10 minutes.`
-                });
-
-            } else {
-
-                console.log(
-                    "Teachly verification code:",
-                    verificationCode
-                );
-
-            }
-
-            res.json({
-                message:
-                    "Verification code sent. Check your email."
-            });
-
-        } catch (error) {
-
-            console.error(error);
-
-            res.status(500).json({
-                error:
-                    "Unable to create account."
-            });
-
-        }
-
-    }
-);
-
-/* =========================
-   VERIFY EMAIL
-========================= */
-
-app.post(
-    "/api/auth/verify-email",
-    (req, res) => {
-
-        const {
-            email,
-            code
-        } = req.body;
-
-        const users =
-            loadUsers();
-
-        const user =
-            users.find(
-                u =>
-                    u.email ===
-                    email.trim().toLowerCase()
-            );
-
-        if (!user) {
-            return res.status(404).json({
-                error:
-                    "Account not found."
-            });
-        }
-
-        if (user.verified) {
-            return res.status(400).json({
-                error:
-                    "This email is already verified."
-            });
-        }
-
-        if (
-            Date.now() >
-            user.verificationExpires
-        ) {
-            return res.status(400).json({
-                error:
-                    "Verification code expired. Please register again."
-            });
-        }
-
-        if (
-            code !==
-            user.verificationCode
-        ) {
-            return res.status(400).json({
-                error:
-                    "Incorrect verification code."
-            });
-        }
-
-        user.verified =
-            true;
-
-        delete user.verificationCode;
-        delete user.verificationExpires;
-
-        saveUsers(users);
-
-        const token =
-            createSession(user.id);
-
-        res.json({
-            token,
-            user:
-                publicUser(user)
-        });
-
-    }
-);
-
-/* =========================
-   LOGIN
-========================= */
-
-app.post(
-    "/api/auth/login",
-    async (req, res) => {
-
-        try {
-
-            const {
-                email,
-                password
-            } = req.body;
-
-            const users =
-                loadUsers();
-
-            const user =
-                users.find(
-                    u =>
-                        u.email ===
-                        email.trim().toLowerCase()
-                );
-
-            if (!user) {
-                return res.status(401).json({
-                    error:
-                        "Email or password is incorrect."
-                });
-            }
-
-            const passwordCorrect =
-                await bcrypt.compare(
-                    password,
-                    user.password
-                );
-
-            if (!passwordCorrect) {
-                return res.status(401).json({
-                    error:
-                        "Email or password is incorrect."
-                });
-            }
-
-            if (!user.verified) {
-                return res.status(403).json({
-                    error:
-                        "Please verify your email before logging in."
-                });
-            }
-
-            const token =
-                createSession(user.id);
-
-            res.json({
-                token,
-                user:
-                    publicUser(user)
-            });
-
-        } catch (error) {
-
-            console.error(error);
-
-            res.status(500).json({
-                error:
-                    "Unable to log in."
-            });
-
-        }
-
-    }
-);
-
-/* =========================
-   LOGOUT
-========================= */
-
-app.post(
-    "/api/auth/logout",
-    authenticated,
-    (req, res) => {
-
-        sessions.delete(
-            req.token
-        );
-
-        res.json({
-            message:
-                "Logged out successfully."
-        });
-
-    }
-);
-
-/* =========================
-   REAL REGISTERED PEOPLE
-========================= */
-
-app.get(
-    "/api/people",
-    (req, res) => {
-
-        try {
-
-            const users =
-                loadUsers();
-
-            /*
-             * Only verified real users.
-             * Passwords, verification codes,
-             * and other private information
-             * are never returned.
-             */
-
-            const people =
-                users
-                    .filter(
-                        user =>
-                            user.verified === true
-                    )
-                    .map(
-                        user => ({
-                            id:
-                                user.id,
-
-                            username:
-                                user.username,
-
-                            profileImage:
-                                user.profileImage || "",
-
-                            role:
-                                user.role || ""
-                        })
-                    );
-
-            res.json({
-                people
-            });
-
-        } catch (error) {
-
-            console.error(
-                "PEOPLE ERROR:",
-                error
-            );
-
-            res.status(500).json({
-                error:
-                    "Unable to load registered users."
-            });
-
-        }
-
-    }
-);
-
-/* =========================
-   AVATAR
-========================= */
-
-app.post(
-    "/api/auth/avatar",
-    authenticated,
-    (req, res) => {
-
-        const {
-            image
-        } = req.body;
-
-        if (!image) {
-            return res.status(400).json({
-                error:
-                    "No image received."
-            });
-        }
-
-        if (image.length > 4_000_000) {
-            return res.status(400).json({
-                error:
-                    "Image is too large."
-            });
-        }
-
-        const users =
-            loadUsers();
-
-        const user =
-            users.find(
-                u =>
-                    u.id ===
-                    req.user.id
-            );
-
-        if (!user) {
-            return res.status(404).json({
-                error:
-                    "User not found."
-            });
-        }
-
-        user.profileImage =
-            image;
-
-        saveUsers(users);
-
-        res.json({
-            user:
-                publicUser(user)
-        });
-
-    }
-);
-
-/* =========================
-   SHOP
-========================= */
-
-const products = {
-    ring: 30,
-    spark: 45,
-    crown: 70
-};
-
-app.post(
-    "/api/shop/buy",
-    authenticated,
-    (req, res) => {
-
-        const {
-            id
-        } = req.body;
-
-        if (!products[id]) {
-            return res.status(400).json({
-                error:
-                    "Unable to buy product"
-            });
-        }
-
-        const users =
-            loadUsers();
-
-        const user =
-            users.find(
-                u =>
-                    u.id ===
-                    req.user.id
-            );
-
-        if (!user) {
-            return res.status(404).json({
-                error:
-                    "User not found."
-            });
-        }
-
-        user.ownedEffects =
-            user.ownedEffects || [];
-
-        if (
-            user.ownedEffects.includes(id)
-        ) {
-
-            user.equippedEffect =
-                id;
-
-            saveUsers(users);
-
-            return res.json({
-                user:
-                    publicUser(user)
-            });
-
-        }
-
-        if (
-            (user.tickets || 0) <
-            products[id]
-        ) {
-            return res.status(400).json({
-                error:
-                    "Unable to buy product"
-            });
-        }
-
-        user.tickets -=
-            products[id];
-
-        user.ownedEffects.push(id);
-
-        user.equippedEffect =
-            id;
-
-        saveUsers(users);
-
-        res.json({
-            user:
-                publicUser(user)
-        });
-
-    }
-);
-
-/* =========================
-   EQUIP
-========================= */
-
-app.post(
-    "/api/shop/equip",
-    authenticated,
-    (req, res) => {
-
-        const {
-            id
-        } = req.body;
-
-        const users =
-            loadUsers();
-
-        const user =
-            users.find(
-                u =>
-                    u.id ===
-                    req.user.id
-            );
-
-        if (!user) {
-            return res.status(404).json({
-                error:
-                    "User not found."
-            });
-        }
-
-        if (
-            !user.ownedEffects?.includes(id)
-        ) {
-            return res.status(400).json({
-                error:
-                    "You do not own this effect."
-            });
-        }
-
-        user.equippedEffect =
-            id;
-
-        saveUsers(users);
-
-        res.json({
-            user:
-                publicUser(user)
-        });
-
-    }
-);
-
-/* =========================
-   AI
-========================= */
-
-let openai = null;
-
-if (process.env.OPENAI_API_KEY) {
-
-    openai =
-        new OpenAI({
-            apiKey:
-                process.env.OPENAI_API_KEY
-        });
-
-}
-
-app.post(
-    "/api/ai",
-    async (req, res) => {
-
-        try {
-
-            const {
-                message,
-                lesson
-            } = req.body;
-
-            if (
-                !message ||
-                !String(message).trim()
-            ) {
-                return res.status(400).json({
-                    error:
-                        "Please enter a question."
-                });
-            }
-
-            if (!openai) {
-                return res.status(500).json({
-                    error:
-                        "AI is not configured yet. Check OPENAI_API_KEY in Render."
-                });
-            }
-
-            const lessonTitle =
-                lesson?.title ||
-                "General learning";
-
-            const lessonCategory =
-                lesson?.category ||
-                "General";
-
-            const lessonDescription =
-                lesson?.description ||
-                "";
-
-            const lessonContent =
-                lesson?.content ||
-                "";
-
-            const response =
-                await openai.responses.create({
-
-                    model:
-                        process.env.OPENAI_MODEL ||
-                        "gpt-5.6-luna",
-
-                    instructions: `
-You are Teachly AI Teacher, a friendly educational tutor.
-
-The learner is studying this lesson:
-
-TITLE:
-${lessonTitle}
-
-CATEGORY:
-${lessonCategory}
-
-DESCRIPTION:
-${lessonDescription}
-
-LESSON MATERIAL:
-${lessonContent}
-
-Rules:
-- Answer the learner's question clearly.
-- Base your explanation on the current lesson whenever possible.
-- If the question is related to another subject, you may still answer it.
-- Explain difficult ideas step by step.
-- Give simple examples.
-- Do not just give an answer when explaining schoolwork; help the learner understand it.
-- Use headings and bullet points when helpful.
-- Keep answers appropriate for a school learner.
-- Never pretend to be a real human.
-`,
-
-                    input:
-                        String(
-                            message
-                        ).trim()
-                });
-
-            res.json({
-                answer:
-                    response.output_text ||
-                    "I couldn't generate an answer right now."
-            });
-
-        } catch (error) {
-
-            console.error(
-                "AI ERROR:",
-                error
-            );
-
-            res.status(500).json({
-                error:
-                    error?.message ||
-                    "AI could not respond right now."
-            });
-
-        }
-
-    }
-);
-
-/* =========================
-   MULTIPLAYER MATCHING
-========================= */
-
-const waitingUsers =
-    new Map();
-
-const rooms =
-    new Map();
-
-function topicsMatch(a, b) {
-
-    const first =
-        String(a || "")
-            .toLowerCase()
-            .trim();
-
-    const second =
-        String(b || "")
-            .toLowerCase()
-            .trim();
-
-    return (
-        first === second ||
-        first.includes(second) ||
-        second.includes(first)
-    );
-
-}
-
-function removeFromWaiting(socketId) {
-
-    for (
-        const [id]
-        of waitingUsers
-    ) {
-
-        if (id === socketId) {
-            waitingUsers.delete(id);
-        }
-
-    }
-
-}
-
-io.on(
-    "connection",
-    socket => {
-
-        socket.on(
-            "authSession",
-            () => {
-
-                const token =
-                    socket.handshake.auth?.token;
-
-                const user =
-                    getUserFromToken(token);
-
-                if (
-                    !user ||
-                    !user.verified
-                ) {
-
-                    socket.emit(
-                        "serverMessage",
-                        "Please log in with a verified account."
-                    );
-
-                    socket.disconnect();
-
-                    return;
-
-                }
-
-                socket.userId =
-                    user.id;
-
-                socket.username =
-                    user.username;
-
-            }
-        );
-
-        socket.on(
-            "findUser",
-            ({ role, topic }) => {
-
-                if (!socket.userId) {
-                    return;
-                }
-
-                removeFromWaiting(
-                    socket.id
-                );
-
-                const oppositeRole =
-                    role === "teacher"
-                        ? "learner"
-                        : "teacher";
-
-                for (
-                    const [
-                        otherId,
-                        other
-                    ] of waitingUsers
-                ) {
-
-                    if (
-                        other.role ===
-                            oppositeRole &&
-                        topicsMatch(
-                            topic,
-                            other.topic
-                        )
-                    ) {
-
-                        waitingUsers.delete(
-                            otherId
-                        );
-
-                        const room =
-                            crypto.randomUUID();
-
-                        rooms.set(
-                            room,
-                            {
-                                users: [
-                                    socket.id,
-                                    other.socketId
-                                ],
-                                topic
-                            }
-                        );
-
-                        socket.join(
-                            room
-                        );
-
-                        io.sockets.sockets
-                            .get(
-                                other.socketId
-                            )
-                            ?.join(room);
-
-                        const users =
-                            loadUsers();
-
-                        const current =
-                            users.find(
-                                u =>
-                                    u.id ===
-                                    socket.userId
-                            );
-
-                        const partner =
-                            users.find(
-                                u =>
-                                    u.id ===
-                                    other.userId
-                            );
-
-                        socket.emit(
-                            "matchFound",
-                            {
-                                room,
-                                topic,
-                                partner:
-                                    publicUser(
-                                        partner
-                                    )
-                            }
-                        );
-
-                        io.to(
-                            other.socketId
-                        ).emit(
-                            "matchFound",
-                            {
-                                room,
-                                topic,
-                                partner:
-                                    publicUser(
-                                        current
-                                    )
-                            }
-                        );
-
-                        return;
-
-                    }
-
-                }
-
-                waitingUsers.set(
-                    socket.id,
-                    {
-                        socketId:
-                            socket.id,
-
-                        userId:
-                            socket.userId,
-
-                        username:
-                            socket.username,
-
-                        role,
-
-                        topic,
-
-                        startedAt:
-                            Date.now()
-                    }
-                );
-
-                socket.emit(
-                    "serverMessage",
-                    "Searching for a real person..."
-                );
-
-                setTimeout(
-                    () => {
-
-                        const waiting =
-                            waitingUsers.get(
-                                socket.id
-                            );
-
-                        if (waiting) {
-
-                            waitingUsers.delete(
-                                socket.id
-                            );
-
-                            socket.emit(
-                                "noUsersFound"
-                            );
-
-                        }
-
-                    },
-                    30000
-                );
-
-            }
-        );
-
-        socket.on(
-            "sessionMessage",
-            ({ room, message }) => {
-
-                if (
-                    !room ||
-                    !message ||
-                    !rooms.has(room)
-                ) {
-                    return;
-                }
-
-                const session =
-                    rooms.get(room);
-
-                if (
-                    !session.users.includes(
-                        socket.id
-                    )
-                ) {
-                    return;
-                }
-
-                io.to(room).emit(
-                    "sessionMessage",
-                    {
-                        username:
-                            socket.username,
-
-                        message:
-                            String(message)
-                                .slice(
-                                    0,
-                                    2000
-                                )
-                    }
-                );
-
-            }
-        );
-
-        socket.on(
-            "leaveSession",
-            ({ room }) => {
-
-                if (!room) return;
-
-                const session =
-                    rooms.get(room);
-
-                if (!session) return;
-
-                socket.leave(
-                    room
-                );
-
-                const partner =
-                    session.users.find(
-                        id =>
-                            id !==
-                            socket.id
-                    );
-
-                if (partner) {
-
-                    io.to(
-                        partner
-                    ).emit(
-                        "partnerLeft"
-                    );
-
-                }
-
-                rooms.delete(
-                    room
-                );
-
-            }
-        );
-
-        socket.on(
-            "disconnect",
-            () => {
-
-                removeFromWaiting(
-                    socket.id
-                );
-
-                for (
-                    const [
-                        room,
-                        session
-                    ] of rooms
-                ) {
-
-                    if (
-                        session.users.includes(
-                            socket.id
-                        )
-                    ) {
-
-                        const partner =
-                            session.users.find(
-                                id =>
-                                    id !==
-                                    socket.id
-                            );
-
-                        if (partner) {
-
-                            io.to(
-                                partner
-                            ).emit(
-                                "partnerLeft"
-                            );
-
-                        }
-
-                        rooms.delete(
-                            room
-                        );
-
-                    }
-
-                }
-
-            }
-        );
-
-    }
-);
-
-/* =========================
-   STATIC FRONTEND
-========================= */
-
-/*
- * IMPORTANT:
- * Keep this AFTER the API routes.
- * This prevents the frontend/static
- * handler from interfering with API
- * requests.
- */
 
 app.use(
-    express.static(__dirname)
+  cors()
 );
 
-/* =========================
-   START
-========================= */
+app.use(
+  express.json({
+    limit: "5mb"
+  })
+);
 
-server.listen(
-    PORT,
-    () => {
 
-        console.log(
-            `Teachly server running on port ${PORT}`
+/* =========================================================
+   DATA
+========================================================= */
+
+const dataDirectory =
+  path.join(
+    __dirname,
+    "data"
+  );
+
+const usersFile =
+  path.join(
+    dataDirectory,
+    "users.json"
+  );
+
+
+if (
+  !fs.existsSync(
+    dataDirectory
+  )
+) {
+
+  fs.mkdirSync(
+    dataDirectory,
+    {
+      recursive: true
+    }
+  );
+
+}
+
+
+if (
+  !fs.existsSync(
+    usersFile
+  )
+) {
+
+  fs.writeFileSync(
+    usersFile,
+    "[]"
+  );
+
+}
+
+
+function readUsers() {
+
+  try {
+
+    const text =
+      fs.readFileSync(
+        usersFile,
+        "utf8"
+      );
+
+    const users =
+      JSON.parse(
+        text
+      );
+
+    return Array.isArray(users)
+      ? users
+      : [];
+
+  } catch (error) {
+
+    console.error(
+      "Could not read users:",
+      error
+    );
+
+    return [];
+
+  }
+
+}
+
+
+function writeUsers(users) {
+
+  fs.writeFileSync(
+    usersFile,
+    JSON.stringify(
+      users,
+      null,
+      2
+    )
+  );
+
+}
+
+
+/* =========================================================
+   SESSIONS
+========================================================= */
+
+const sessions =
+  new Map();
+
+
+function createToken() {
+
+  return crypto
+    .randomBytes(32)
+    .toString("hex");
+
+}
+
+
+function publicUser(user) {
+
+  return {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    profileImage:
+      user.profileImage || "",
+    role:
+      user.role || "learner",
+    tickets:
+      user.tickets || 0,
+    sessions:
+      user.sessions || 0,
+    streak:
+      user.streak || 0,
+    earnedBadges:
+      user.earnedBadges || [],
+    ownedEffects:
+      user.ownedEffects || [],
+    equippedEffect:
+      user.equippedEffect || ""
+  };
+
+}
+
+
+function authenticated(
+  req,
+  res,
+  next
+) {
+
+  const header =
+    req.headers.authorization || "";
+
+  const token =
+    header.startsWith("Bearer ")
+      ? header.slice(7)
+      : "";
+
+
+  const userId =
+    sessions.get(
+      token
+    );
+
+
+  if (!userId) {
+
+    return res
+      .status(401)
+      .json({
+        error:
+          "Authentication required."
+      });
+
+  }
+
+
+  const users =
+    readUsers();
+
+  const user =
+    users.find(
+      item =>
+        item.id ===
+        userId
+    );
+
+
+  if (!user) {
+
+    return res
+      .status(401)
+      .json({
+        error:
+          "User session is invalid."
+      });
+
+  }
+
+
+  req.user =
+    user;
+
+  req.token =
+    token;
+
+  next();
+
+}
+
+
+/* =========================================================
+   EMAIL
+========================================================= */
+
+let transporter = null;
+
+
+if (
+  process.env.EMAIL_HOST &&
+  process.env.EMAIL_USER &&
+  process.env.EMAIL_PASS
+) {
+
+  transporter =
+    nodemailer.createTransport({
+      host:
+        process.env.EMAIL_HOST,
+
+      port:
+        Number(
+          process.env.EMAIL_PORT ||
+          587
+        ),
+
+      secure:
+        process.env.EMAIL_SECURE ===
+        "true",
+
+      auth: {
+        user:
+          process.env.EMAIL_USER,
+
+        pass:
+          process.env.EMAIL_PASS
+      }
+
+    });
+
+}
+
+
+/* =========================================================
+   REGISTER
+========================================================= */
+
+app.post(
+  "/api/auth/register",
+  async (
+    req,
+    res
+  ) => {
+
+    try {
+
+      const {
+        username,
+        email,
+        password,
+        role
+      } = req.body;
+
+
+      if (
+        !username ||
+        !email ||
+        !password
+      ) {
+
+        return res
+          .status(400)
+          .json({
+            error:
+              "Username, email and password are required."
+          });
+
+      }
+
+
+      if (
+        password.length <
+        6
+      ) {
+
+        return res
+          .status(400)
+          .json({
+            error:
+              "Password must contain at least 6 characters."
+          });
+
+      }
+
+
+      const users =
+        readUsers();
+
+
+      const normalizedEmail =
+        email
+          .trim()
+          .toLowerCase();
+
+
+      if (
+        users.some(
+          user =>
+            user.email ===
+            normalizedEmail
+        )
+      ) {
+
+        return res
+          .status(409)
+          .json({
+            error:
+              "An account with that email already exists."
+          });
+
+      }
+
+
+      if (
+        users.some(
+          user =>
+            user.username
+              .toLowerCase() ===
+            username
+              .trim()
+              .toLowerCase()
+        )
+      ) {
+
+        return res
+          .status(409)
+          .json({
+            error:
+              "That username is already taken."
+          });
+
+      }
+
+
+      const verificationCode =
+        String(
+          Math.floor(
+            100000 +
+            Math.random() *
+            900000
+          )
         );
 
+
+      const passwordHash =
+        await bcrypt.hash(
+          password,
+          10
+        );
+
+
+      const user = {
+
+        id:
+          crypto
+            .randomUUID(),
+
+        username:
+          username.trim(),
+
+        email:
+          normalizedEmail,
+
+        passwordHash,
+
+        role:
+          role === "teacher"
+            ? "teacher"
+            : "learner",
+
+        verified:
+          false,
+
+        verificationCode,
+
+        profileImage:
+          "",
+
+        tickets:
+          0,
+
+        sessions:
+          0,
+
+        streak:
+          0,
+
+        earnedBadges:
+          [],
+
+        ownedEffects:
+          [],
+
+        equippedEffect:
+          ""
+
+      };
+
+
+      users.push(
+        user
+      );
+
+      writeUsers(
+        users
+      );
+
+
+      if (transporter) {
+
+        await transporter.sendMail({
+
+          from:
+            process.env.EMAIL_FROM ||
+            process.env.EMAIL_USER,
+
+          to:
+            user.email,
+
+          subject:
+            "Teachly verification code",
+
+          text:
+            `Your Teachly verification code is ${verificationCode}.`
+
+        });
+
+      }
+
+
+      const response = {
+        message:
+          "Verification code created. Check your email.",
+        userId:
+          user.id
+      };
+
+
+      /*
+       * Development convenience:
+       * if email is not configured, return the code.
+       * Remove DEV mode before public production use.
+       */
+
+      if (!transporter) {
+
+        response.developmentCode =
+          verificationCode;
+
+      }
+
+
+      return res.json(
+        response
+      );
+
+    } catch (error) {
+
+      console.error(
+        "REGISTER ERROR:",
+        error
+      );
+
+      return res
+        .status(500)
+        .json({
+          error:
+            "Registration failed."
+        });
+
     }
+
+  }
+);
+
+
+/* =========================================================
+   VERIFY EMAIL
+========================================================= */
+
+app.post(
+  "/api/auth/verify-email",
+  (
+    req,
+    res
+  ) => {
+
+    const {
+      email,
+      code
+    } =
+      req.body;
+
+
+    if (
+      !email ||
+      !code
+    ) {
+
+      return res
+        .status(400)
+        .json({
+          error:
+            "Email and verification code are required."
+        });
+
+    }
+
+
+    const users =
+      readUsers();
+
+
+    const user =
+      users.find(
+        item =>
+          item.email ===
+          email
+            .trim()
+            .toLowerCase()
+      );
+
+
+    if (!user) {
+
+      return res
+        .status(404)
+        .json({
+          error:
+            "Account not found."
+        });
+
+    }
+
+
+    if (
+      String(
+        user.verificationCode
+      ) !==
+      String(code)
+    ) {
+
+      return res
+        .status(400)
+        .json({
+          error:
+            "Incorrect verification code."
+        });
+
+    }
+
+
+    user.verified =
+      true;
+
+    delete user.verificationCode;
+
+
+    writeUsers(
+      users
+    );
+
+
+    const token =
+      createToken();
+
+
+    sessions.set(
+      token,
+      user.id
+    );
+
+
+    return res.json({
+      message:
+        "Email verified.",
+      token,
+      user:
+        publicUser(user)
+    });
+
+  }
+);
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+app.post(
+  "/api/auth/login",
+  async (
+    req,
+    res
+  ) => {
+
+    try {
+
+      const {
+        email,
+        password
+      } =
+        req.body;
+
+
+      if (
+        !email ||
+        !password
+      ) {
+
+        return res
+          .status(400)
+          .json({
+            error:
+              "Email and password are required."
+          });
+
+      }
+
+
+      const users =
+        readUsers();
+
+
+      const user =
+        users.find(
+          item =>
+            item.email ===
+            email
+              .trim()
+              .toLowerCase()
+        );
+
+
+      if (!user) {
+
+        return res
+          .status(401)
+          .json({
+            error:
+              "Invalid email or password."
+          });
+
+      }
+
+
+      const valid =
+        await bcrypt.compare(
+          password,
+          user.passwordHash
+        );
+
+
+      if (!valid) {
+
+        return res
+          .status(401)
+          .json({
+            error:
+              "Invalid email or password."
+          });
+
+      }
+
+
+      if (!user.verified) {
+
+        return res
+          .status(403)
+          .json({
+            error:
+              "Please verify your email first."
+          });
+
+      }
+
+
+      const token =
+        createToken();
+
+
+      sessions.set(
+        token,
+        user.id
+      );
+
+
+      return res.json({
+
+        message:
+          "Login successful.",
+
+        token,
+
+        user:
+          publicUser(user)
+
+      });
+
+
+    } catch (error) {
+
+      console.error(
+        "LOGIN ERROR:",
+        error
+      );
+
+      return res
+        .status(500)
+        .json({
+          error:
+            "Login failed."
+        });
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+app.post(
+  "/api/auth/logout",
+  authenticated,
+  (
+    req,
+    res
+  ) => {
+
+    sessions.delete(
+      req.token
+    );
+
+    res.json({
+      message:
+        "Logged out."
+    });
+
+  }
+);
+
+
+/* =========================================================
+   REAL PEOPLE
+========================================================= */
+
+app.get(
+  "/api/people",
+  (
+    req,
+    res
+  ) => {
+
+    const users =
+      readUsers();
+
+
+    const people =
+      users
+        .filter(
+          user =>
+            user.verified ===
+            true
+        )
+        .map(
+          publicUser
+        );
+
+
+    res.json({
+      people
+    });
+
+  }
+);
+
+
+/* =========================================================
+   AVATAR
+========================================================= */
+
+app.post(
+  "/api/auth/avatar",
+  authenticated,
+  (
+    req,
+    res
+  ) => {
+
+    const {
+      profileImage
+    } =
+      req.body;
+
+
+    if (
+      typeof profileImage !==
+      "string"
+    ) {
+
+      return res
+        .status(400)
+        .json({
+          error:
+            "Invalid profile image."
+        });
+
+    }
+
+
+    const users =
+      readUsers();
+
+
+    const user =
+      users.find(
+        item =>
+          item.id ===
+          req.user.id
+      );
+
+
+    user.profileImage =
+      profileImage;
+
+
+    writeUsers(
+      users
+    );
+
+
+    res.json({
+      user:
+        publicUser(user)
+    });
+
+  }
+);
+
+
+/* =========================================================
+   SHOP
+========================================================= */
+
+const shopProducts = {
+
+  ring: {
+    price: 30
+  },
+
+  spark: {
+    price: 45
+  },
+
+  crown: {
+    price: 70
+  }
+
+};
+
+
+app.post(
+  "/api/shop/buy",
+  authenticated,
+  (
+    req,
+    res
+  ) => {
+
+    const {
+      productId
+    } =
+      req.body;
+
+
+    const product =
+      shopProducts[
+        productId
+      ];
+
+
+    if (!product) {
+
+      return res
+        .status(404)
+        .json({
+          error:
+            "Product not found."
+        });
+
+    }
+
+
+    const users =
+      readUsers();
+
+
+    const user =
+      users.find(
+        item =>
+          item.id ===
+          req.user.id
+      );
+
+
+    if (
+      !Array.isArray(
+        user.ownedEffects
+      )
+    ) {
+
+      user.ownedEffects =
+        [];
+
+    }
+
+
+    if (
+      user.ownedEffects.includes(
+        productId
+      )
+    ) {
+
+      user.equippedEffect =
+        productId;
+
+      writeUsers(
+        users
+      );
+
+      return res.json({
+        user:
+          publicUser(user)
+      });
+
+    }
+
+
+    const tickets =
+      user.tickets ||
+      0;
+
+
+    if (
+      tickets <
+      product.price
+    ) {
+
+      return res
+        .status(400)
+        .json({
+          error:
+            "Not enough coins."
+        });
+
+    }
+
+
+    user.tickets =
+      tickets -
+      product.price;
+
+
+    user.ownedEffects.push(
+      productId
+    );
+
+    user.equippedEffect =
+      productId;
+
+
+    writeUsers(
+      users
+    );
+
+
+    res.json({
+      user:
+        publicUser(user)
+    });
+
+  }
+);
+
+
+/* =========================================================
+   EQUIP
+========================================================= */
+
+app.post(
+  "/api/shop/equip",
+  authenticated,
+  (
+    req,
+    res
+  ) => {
+
+    const {
+      productId
+    } =
+      req.body;
+
+
+    const users =
+      readUsers();
+
+
+    const user =
+      users.find(
+        item =>
+          item.id ===
+          req.user.id
+      );
+
+
+    if (
+      !user.ownedEffects ||
+      !user.ownedEffects.includes(
+        productId
+      )
+    ) {
+
+      return res
+        .status(400)
+        .json({
+          error:
+            "You do not own this effect."
+        });
+
+    }
+
+
+    user.equippedEffect =
+      productId;
+
+
+    writeUsers(
+      users
+    );
+
+
+    res.json({
+      user:
+        publicUser(user)
+    });
+
+  }
+);
+
+
+/* =========================================================
+   AI
+========================================================= */
+
+const openai =
+  process.env.OPENAI_API_KEY
+    ? new OpenAI({
+        apiKey:
+          process.env.OPENAI_API_KEY
+      })
+    : null;
+
+
+app.post(
+  "/api/ai",
+  async (
+    req,
+    res
+  ) => {
+
+    try {
+
+      if (!openai) {
+
+        return res
+          .status(500)
+          .json({
+            error:
+              "OPENAI_API_KEY is not configured on the server."
+          });
+
+      }
+
+
+      const {
+        message,
+        lesson
+      } =
+        req.body;
+
+
+      if (
+        !message ||
+        typeof message !==
+        "string"
+      ) {
+
+        return res
+          .status(400)
+          .json({
+            error:
+              "A question is required."
+          });
+
+      }
+
+
+      let lessonContext =
+        "";
+
+
+      if (
+        lesson &&
+        typeof lesson ===
+        "object"
+      ) {
+
+        lessonContext = `
+
+Current lesson:
+Title: ${lesson.title || ""}
+Category: ${lesson.category || ""}
+Description: ${lesson.description || ""}
+Content: ${lesson.content || ""}
+
+`;
+
+      }
+
+
+      const response =
+        await openai.responses.create({
+
+          model:
+            process.env.OPENAI_MODEL ||
+            "gpt-5.6-luna",
+
+          instructions:
+            `You are Teachly AI Teacher.
+
+Your job is to help students learn.
+
+Rules:
+- Explain clearly.
+- Use age-appropriate educational language.
+- Break difficult ideas into smaller steps.
+- Give examples when useful.
+- Do not simply give an answer when teaching a concept; explain why.
+- If the student is confused, try another explanation.
+- Stay focused on education.
+${lessonContext}`,
+
+          input:
+            message
+
+        });
+
+
+      const answer =
+        response.output_text ||
+        "";
+
+
+      if (!answer) {
+
+        return res
+          .status(500)
+          .json({
+            error:
+              "The AI returned an empty response."
+          });
+
+      }
+
+
+      return res.json({
+        answer
+      });
+
+
+    } catch (error) {
+
+      console.error(
+        "OPENAI ERROR:",
+        error
+      );
+
+
+      return res
+        .status(500)
+        .json({
+          error:
+            error.message ||
+            "AI request failed."
+        });
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   SOCKET.IO
+========================================================= */
+
+const socketUsers =
+  new Map();
+
+
+io.on(
+  "connection",
+  socket => {
+
+    console.log(
+      "Socket connected:",
+      socket.id
+    );
+
+
+    socket.on(
+      "authSession",
+      token => {
+
+        const userId =
+          sessions.get(
+            token
+          );
+
+
+        if (!userId) {
+
+          socket.emit(
+            "authError",
+            {
+              error:
+                "Invalid session."
+            }
+          );
+
+          return;
+        }
+
+
+        socketUsers.set(
+          socket.id,
+          userId
+        );
+
+
+        socket.emit(
+          "authSuccess"
+        );
+
+      }
+    );
+
+
+    socket.on(
+      "sessionMessage",
+      data => {
+
+        const userId =
+          socketUsers.get(
+            socket.id
+          );
+
+
+        if (!userId) {
+          return;
+        }
+
+
+        socket.broadcast.emit(
+          "sessionMessage",
+          {
+            ...data,
+            senderId:
+              userId
+          }
+        );
+
+      }
+    );
+
+
+    socket.on(
+      "leaveSession",
+      () => {
+
+        socket.emit(
+          "sessionLeft"
+        );
+
+      }
+    );
+
+
+    socket.on(
+      "disconnect",
+      () => {
+
+        socketUsers.delete(
+          socket.id
+        );
+
+        console.log(
+          "Socket disconnected:",
+          socket.id
+        );
+
+      }
+    );
+
+  }
+);
+
+
+/* =========================================================
+   STATIC FILES
+   ========================================================= */
+
+app.use(
+  express.static(
+    __dirname
+  )
+);
+
+
+/* =========================================================
+   START SERVER
+========================================================= */
+
+const PORT =
+  process.env.PORT ||
+  3000;
+
+
+server.listen(
+  PORT,
+  () => {
+
+    console.log(
+      `Teachly server running on port ${PORT}`
+    );
+
+  }
 );
