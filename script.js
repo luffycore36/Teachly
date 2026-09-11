@@ -2044,17 +2044,3 @@ console.log(
 "Teachly Final JS Loaded 🚀"
 );
 
-document.getElementById("continueBtn").addEventListener("click", () => {
-    const continueScreen = document.getElementById("continueScreen");
-
-    if (continueScreen) {
-        continueScreen.style.display = "none";
-    }
-
-    // Start/resume the game
-    if (typeof startGame === "function") {
-        startGame();
-    } else if (typeof gameStarted !== "undefined") {
-        gameStarted = true;
-    }
-});
