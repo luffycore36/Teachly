@@ -5,19 +5,24 @@
 
 <meta charset="UTF-8">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
 
 <title>Teachly</title>
 
-<link rel="stylesheet" href="./style.css">
+<link
+  rel="stylesheet"
+  href="./style.css"
+>
 
 <link
-rel="stylesheet"
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 />
 
 </head>
-
 
 <body>
 
@@ -28,44 +33,60 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 
 <section id="loginPage" class="page">
 
-<div class="nameCard">
+  <div class="nameCard">
 
-<h1>
-📚 Login To Teachly
-</h1>
+    <div class="smallLogo">
+      📚 Teachly
+    </div>
 
+    <h1>
+      Welcome Back
+    </h1>
 
-<input
-id="loginEmail"
-type="email"
-placeholder="Email"
-/>
+    <p>
+      Sign in to continue learning and teaching.
+    </p>
 
+    <input
+      id="loginEmail"
+      type="email"
+      placeholder="Email"
+      autocomplete="email"
+    >
 
-<input
-id="loginPassword"
-type="password"
-placeholder="Password"
-/>
+    <input
+      id="loginPassword"
+      type="password"
+      placeholder="Password"
+      autocomplete="current-password"
+    >
 
+    <button
+      type="button"
+      onclick="loginUser()"
+    >
+      Login
+    </button>
 
-<button onclick="loginUser()">
-Login
-</button>
+    <button
+      type="button"
+      onclick="openPage('registerPage')"
+    >
+      Create Account
+    </button>
 
+    <button
+      type="button"
+      onclick="openPage('forgotPasswordPage')"
+    >
+      Forgot Password?
+    </button>
 
-<button onclick="openPage('registerPage')">
-Create Account
-</button>
+    <p id="authMessage"></p>
 
-
-<p id="authMessage"></p>
-
-
-</div>
+  </div>
 
 </section>
-
 
 
 <!-- =========================
@@ -74,1338 +95,962 @@ Create Account
 
 <section id="registerPage" class="page">
 
+  <div class="nameCard">
 
-<div class="nameCard">
+    <div class="smallLogo">
+      📚 Teachly
+    </div>
 
+    <h1>
+      Create Account
+    </h1>
 
-<h1>
-Create Teachly Account
-</h1>
+    <p>
+      Join Teachly and start learning or teaching.
+    </p>
 
+    <input
+      id="registerUsername"
+      type="text"
+      maxlength="30"
+      placeholder="Username"
+      autocomplete="username"
+    >
 
+    <input
+      id="registerEmail"
+      type="email"
+      placeholder="Email"
+      autocomplete="email"
+    >
 
-<input
-id="registerUsername"
-placeholder="Username"
-/>
+    <input
+      id="registerPassword"
+      type="password"
+      placeholder="Password"
+      autocomplete="new-password"
+    >
 
+    <select id="registerRole">
 
+      <option value="learner">
+        Learner
+      </option>
 
-<input
-id="registerEmail"
-type="email"
-placeholder="Email"
-/>
+      <option value="teacher">
+        Teacher
+      </option>
 
+    </select>
 
+    <button
+      type="button"
+      onclick="registerUserAccount()"
+    >
+      Sign Up
+    </button>
 
-<input
-id="registerPassword"
-type="password"
-placeholder="Password"
-/>
+    <button
+      type="button"
+      onclick="openPage('loginPage')"
+    >
+      Already have an account?
+    </button>
 
+    <p id="registerMessage"></p>
 
-
-<select id="registerRole">
-
-
-<option value="learner">
-Learner
-</option>
-
-
-<option value="teacher">
-Teacher
-</option>
-
-
-</select>
-
-
-
-
-<button onclick="registerUserAccount()">
-
-Register
-
-</button>
-
-
-
-<button onclick="openPage('loginPage')">
-
-Already have an account?
-
-</button>
-
-
-<p id="registerMessage"></p>
-
-
-</div>
-
+  </div>
 
 </section>
-
-
 
 
 <!-- =========================
      VERIFY EMAIL PAGE
 ========================= -->
 
-
 <section id="verifyPage" class="page">
 
+  <div class="nameCard">
 
-<div class="nameCard">
+    <div class="smallLogo">
+      📚 Teachly
+    </div>
 
+    <h1>
+      Verify Your Email
+    </h1>
 
-<h1>
-Verify Email
-</h1>
+    <p>
+      Enter the verification code sent to your email.
+    </p>
 
+    <input
+      id="verifyEmail"
+      type="email"
+      placeholder="Email"
+      autocomplete="email"
+    >
 
+    <input
+      id="verifyCode"
+      type="text"
+      inputmode="numeric"
+      maxlength="6"
+      placeholder="Verification Code"
+      autocomplete="one-time-code"
+    >
 
-<input
-id="verifyEmail"
-placeholder="Email"
-/>
+    <button
+      type="button"
+      onclick="verifyEmail()"
+    >
+      Verify Email
+    </button>
 
+    <p id="verifyMessage"></p>
 
+    <button
+      type="button"
+      onclick="openPage('loginPage')"
+    >
+      Back To Login
+    </button>
 
-<input
-id="verifyCode"
-placeholder="Verification Code"
-/>
-
-
-
-<button onclick="verifyEmail()">
-
-Verify
-
-</button>
-
-
-
-<p id="verifyMessage"></p>
-
-
-</div>
-
+  </div>
 
 </section>
 
 
+<!-- =========================
+     TWO STEP VERIFICATION
+========================= -->
 
+<section id="twoStepPage" class="page">
+
+  <div class="nameCard">
+
+    <div class="smallLogo">
+      📚 Teachly
+    </div>
+
+    <h1>
+      Two-Step Verification
+    </h1>
+
+    <p>
+      Enter the security code to finish signing in.
+    </p>
+
+    <input
+      id="twoStepEmail"
+      type="email"
+      placeholder="Email"
+      autocomplete="email"
+    >
+
+    <input
+      id="twoStepCode"
+      type="text"
+      inputmode="numeric"
+      maxlength="6"
+      placeholder="Security Code"
+      autocomplete="one-time-code"
+    >
+
+    <button
+      type="button"
+      onclick="verifyTwoStep()"
+    >
+      Verify Code
+    </button>
+
+    <p id="twoStepMessage"></p>
+
+  </div>
+
+</section>
+
+
+<!-- =========================
+     FORGOT PASSWORD PAGE
+========================= -->
+
+<section id="forgotPasswordPage" class="page">
+
+  <div class="nameCard">
+
+    <div class="smallLogo">
+      📚 Teachly
+    </div>
+
+    <h1>
+      Reset Password
+    </h1>
+
+    <p>
+      Enter your email and we'll send instructions
+      to securely reset your password.
+    </p>
+
+    <input
+      id="forgotEmail"
+      type="email"
+      placeholder="Email"
+      autocomplete="email"
+    >
+
+    <button
+      type="button"
+      onclick="forgotPassword()"
+    >
+      Send Reset Code
+    </button>
+
+    <p id="forgotMessage"></p>
+
+    <button
+      type="button"
+      onclick="openPage('loginPage')"
+    >
+      Back To Login
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =========================
+     RESET PASSWORD PAGE
+========================= -->
+
+<section id="resetPasswordPage" class="page">
+
+  <div class="nameCard">
+
+    <div class="smallLogo">
+      📚 Teachly
+    </div>
+
+    <h1>
+      Create New Password
+    </h1>
+
+    <input
+      id="resetEmail"
+      type="email"
+      placeholder="Email"
+      autocomplete="email"
+    >
+
+    <input
+      id="resetCode"
+      type="text"
+      inputmode="numeric"
+      maxlength="6"
+      placeholder="Reset Code"
+      autocomplete="one-time-code"
+    >
+
+    <input
+      id="newPassword"
+      type="password"
+      placeholder="New Password"
+      autocomplete="new-password"
+    >
+
+    <button
+      type="button"
+      onclick="resetPassword()"
+    >
+      Reset Password
+    </button>
+
+    <p id="resetMessage"></p>
+
+  </div>
+
+</section>
 
 
 <!-- =========================
      INTRO PAGE
 ========================= -->
 
-
-<section id="introPage" class="page active introPage">
-
-
-<div class="backgroundGlow glowOne"></div>
-
-<div class="backgroundGlow glowTwo"></div>
-
-
-
-<div class="introCard">
-
-
-<div class="introLogo">
-
-📚
-
-</div>
-
-
-
-<h1>
-
-Teachly
-
-</h1>
-
-
-
-<p class="introTagline">
-
-Learn. Teach. Connect.
-
-</p>
-
-
-
-<p class="introDescription">
-
-A place where everyone can learn something
-and everyone has something to teach.
-
-</p>
-
-
-
-<button
-class="continueButton"
-onclick="continueToName()"
+<section
+  id="introPage"
+  class="page active introPage"
 >
 
-Continue
+  <div class="backgroundGlow glowOne"></div>
 
-</button>
+  <div class="backgroundGlow glowTwo"></div>
 
+  <div class="introCard">
 
+    <div class="introLogo">
+      📚
+    </div>
 
-</div>
+    <h1>
+      Teachly
+    </h1>
 
+    <p class="introTagline">
+      Learn. Teach. Connect.
+    </p>
+
+    <p class="introDescription">
+      A place where everyone can learn something
+      and everyone has something to teach.
+    </p>
+
+    <button
+      class="continueButton"
+      type="button"
+      onclick="continueToAuth()"
+    >
+      Continue
+    </button>
+
+  </div>
 
 </section>
-
-
-
 
 
 <!-- =========================
-     NAME PAGE
-========================= -->
-
-
-<section id="namePage" class="page namePage">
-
-
-<div class="backgroundGlow glowThree"></div>
-
-
-
-<div class="nameCard">
-
-
-<div class="smallLogo">
-
-📚 Teachly
-
-</div>
-
-
-
-<h1>
-
-Welcome to Teachly
-
-</h1>
-
-
-
-<p>
-
-Tell us what we should call you.
-
-</p>
-
-
-
-
-<input
-id="usernameInput"
-maxlength="30"
-placeholder="Your name or username"
-/>
-
-
-
-
-<button onclick="continueFromName()">
-
-Continue
-
-</button>
-
-
-
-</div>
-
-
-</section>
-
-  <!-- =========================
      HOME PAGE
 ========================= -->
 
-
 <section id="homePage" class="page">
 
+  <header class="topbar">
 
-<header class="topbar">
+    <div class="brand">
+      📚 Teachly
+    </div>
 
+    <div class="topActions">
 
-<div class="brand">
+      <button
+        type="button"
+        onclick="openPage('profilePage')"
+      >
+        👤 Profile
+      </button>
 
-📚 Teachly
+      <button
+        type="button"
+        onclick="logout()"
+      >
+        🚪 Logout
+      </button>
 
-</div>
+      <button
+        type="button"
+        onclick="toggleTheme()"
+      >
+        🌙
+      </button>
 
+    </div>
 
+  </header>
 
-<div class="topActions">
 
+  <main class="home">
 
-<button
-onclick="openPage('profilePage')"
->
+    <div class="hero">
 
-👤 Profile
+      <div class="heroOrb">
+        ✨
+      </div>
 
-</button>
+      <h1 id="welcomeText">
+        Welcome!
+      </h1>
 
+      <p>
+        What would you like to do today?
+      </p>
 
+      <div class="homeStats">
 
-<button
-onclick="logout()"
->
+        <div class="statCard">
 
-🚪 Logout
+          <strong id="homeUsername">
+            Learner
+          </strong>
 
-</button>
+          <span>
+            Username
+          </span>
 
+        </div>
 
 
-<button
-onclick="toggleTheme()"
->
+        <div class="statCard">
 
-🌙
+          <strong id="coinCount">
+            10000
+          </strong>
 
-</button>
+          <span>
+            💰 Coins
+          </span>
 
+        </div>
 
-</div>
 
+        <div class="statCard">
 
-</header>
+          <strong id="sessionCount">
+            0
+          </strong>
 
+          <span>
+            Connections
+          </span>
 
+        </div>
 
+      </div>
 
+    </div>
 
-<main class="home">
 
+    <!-- =========================
+         ROLE SELECTION
+    ========================= -->
 
+    <div class="roleArea">
 
-<div class="hero">
+      <div
+        class="roleCard learnerCard"
+        onclick="chooseRole('learner')"
+      >
 
+        <div class="roleIcon">
+          🎓
+        </div>
 
-<div class="heroOrb">
+        <h2>
+          I Want To Learn
+        </h2>
 
-✨
+        <p>
+          Find a real Teachly user who can
+          teach you something.
+        </p>
 
-</div>
+        <span class="roleArrow">
+          →
+        </span>
 
+      </div>
 
 
-<h1 id="welcomeText">
+      <div
+        class="roleCard teacherCard"
+        onclick="chooseRole('teacher')"
+      >
 
-Welcome!
+        <div class="roleIcon">
+          🧑‍🏫
+        </div>
 
-</h1>
+        <h2>
+          I Want To Teach
+        </h2>
 
+        <p>
+          Share what you know and help
+          another learner.
+        </p>
 
+        <span class="roleArrow">
+          →
+        </span>
 
-<p>
+      </div>
 
-What would you like to do today?
+    </div>
 
-</p>
 
+    <!-- =========================
+         FEATURES
+    ========================= -->
 
+    <div class="featureGrid">
 
+      <div
+        class="featureCard aiFeature"
+        onclick="openAITeacher()"
+      >
 
+        <div class="featureIcon">
+          🤖
+        </div>
 
-<div class="homeStats">
+        <h2>
+          AI Teacher
+        </h2>
 
+        <p>
+          Ask questions and learn with
+          your AI teacher.
+        </p>
 
+      </div>
 
-<div class="statCard">
 
-<strong id="homeUsername">
+      <div
+        class="featureCard"
+        onclick="mysteryTopic()"
+      >
 
-Learner
+        <div class="featureIcon">
+          🎲
+        </div>
 
-</strong>
+        <h2>
+          Random Topic
+        </h2>
 
-<span>
+        <p>
+          Discover something interesting.
+        </p>
 
-Username
+      </div>
 
-</span>
 
-</div>
+      <div
+        class="featureCard"
+        onclick="openPage('aiPage')"
+      >
 
+        <div class="featureIcon">
+          📚
+        </div>
 
+        <h2>
+          Lesson Library
+        </h2>
 
+        <p>
+          Study lessons and take quizzes.
+        </p>
 
-<div class="statCard">
+      </div>
 
 
-<strong id="coinCount">
+      <div
+        class="featureCard"
+        onclick="openPage('savedLessonsPage')"
+      >
 
-100
+        <div class="featureIcon">
+          ⭐
+        </div>
 
-</strong>
+        <h2>
+          Saved Lessons
+        </h2>
 
+        <p>
+          Keep your favorite lessons here.
+        </p>
 
-<span>
+      </div>
 
-💰 Coins
 
-</span>
+      <div
+        class="featureCard"
+        onclick="openPage('peoplePage')"
+      >
 
+        <div class="featureIcon">
+          👥
+        </div>
 
-</div>
+        <h2>
+          People
+        </h2>
 
+        <p>
+          Find real registered Teachly users.
+        </p>
 
+      </div>
 
 
+      <div
+        class="featureCard"
+        onclick="openPage('badgesPage')"
+      >
 
-<div class="statCard">
+        <div class="featureIcon">
+          🏅
+        </div>
 
+        <h2>
+          Badges
+        </h2>
 
-<strong id="sessionCount">
+        <p>
+          Unlock achievements while learning.
+        </p>
 
-0
+      </div>
 
-</strong>
 
+      <div
+        class="featureCard"
+        onclick="openPage('shopPage')"
+      >
 
-<span>
+        <div class="featureIcon">
+          🛍️
+        </div>
 
-Connections
+        <h2>
+          Shop
+        </h2>
 
-</span>
+        <p>
+          Spend your 💰 coins on profile items.
+        </p>
 
+      </div>
 
-</div>
 
+      <div
+        class="featureCard"
+        onclick="openPage('mapPage')"
+      >
 
+        <div class="featureIcon">
+          🌍
+        </div>
 
-</div>
+        <h2>
+          LearnSphere
+        </h2>
 
+        <p>
+          Explore Earth's seven continents.
+        </p>
 
-</div>
+      </div>
 
+    </div>
 
 
+    <!-- =========================
+         PROGRESS
+    ========================= -->
 
+    <div class="progressBox">
 
+      <div class="progressHeading">
 
-<!-- ROLE SELECTION -->
+        <h2>
+          Learning Progress
+        </h2>
 
+        <span id="progressPercent">
+          0%
+        </span>
 
-<div class="roleArea">
+      </div>
 
+      <div class="progressTrack">
 
+        <div id="overallProgress"></div>
 
-<div
-class="roleCard learnerCard"
-onclick="chooseRole('learner')"
->
+      </div>
 
+      <p>
+        Complete lessons to increase your progress.
+      </p>
 
-<div class="roleIcon">
+    </div>
 
-🎓
-
-</div>
-
-
-
-<h2>
-
-I Want To Learn
-
-</h2>
-
-
-
-<p>
-
-Find someone who can teach you.
-
-</p>
-
-
-
-<span class="roleArrow">
-
-→
-
-</span>
-
-
-</div>
-
-
-
-
-
-
-
-<div
-class="roleCard teacherCard"
-onclick="chooseRole('teacher')"
->
-
-
-
-<div class="roleIcon">
-
-🧑‍🏫
-
-</div>
-
-
-
-<h2>
-
-I Want To Teach
-
-</h2>
-
-
-
-<p>
-
-Share your knowledge with others.
-
-</p>
-
-
-
-<span class="roleArrow">
-
-→
-
-</span>
-
-
-
-</div>
-
-
-
-</div>
-
-
-
-
-
-
-
-
-<!-- FEATURES -->
-
-
-<div class="featureGrid">
-
-
-
-
-
-<div
-class="featureCard aiFeature"
-onclick="openAITeacher()"
->
-
-
-<div class="featureIcon">
-
-🤖
-
-</div>
-
-
-<h2>
-
-AI Teacher
-
-</h2>
-
-
-<p>
-
-Learn with your AI assistant.
-
-</p>
-
-
-</div>
-
-
-
-
-
-
-
-<div
-class="featureCard"
-onclick="mysteryTopic()"
->
-
-
-<div class="featureIcon">
-
-🎲
-
-</div>
-
-
-<h2>
-
-Random Topic
-
-</h2>
-
-
-<p>
-
-Discover something new.
-
-</p>
-
-
-</div>
-
-
-
-
-
-
-
-
-<div
-class="featureCard"
-onclick="openPage('aiPage')"
->
-
-
-<div class="featureIcon">
-
-📚
-
-</div>
-
-
-<h2>
-
-Lesson Library
-
-</h2>
-
-
-<p>
-
-Study lessons and quizzes.
-
-</p>
-
-
-</div>
-
-
-
-<!-- SAVED LESSONS -->
-
-<div
-class="featureCard"
-onclick="openPage('savedLessonsPage')"
->
-
-
-<div class="featureIcon">
-
-⭐
-
-</div>
-
-
-<h2>
-
-Saved Lessons
-
-</h2>
-
-
-<p>
-
-View your bookmarked lessons.
-
-</p>
-
-
-</div>
-
-
-
-<div
-class="featureCard"
-onclick="openPage('peoplePage')"
->
-
-
-<div class="featureIcon">
-
-👥
-
-</div>
-
-
-<h2>
-
-People
-
-</h2>
-
-
-<p>
-
-Find Teachly users.
-
-</p>
-
-
-</div>
-
-
-
-
-
-
-
-<div
-class="featureCard"
-onclick="openPage('badgesPage')"
->
-
-
-<div class="featureIcon">
-
-🏅
-
-</div>
-
-
-<h2>
-
-Badges
-
-</h2>
-
-
-<p>
-
-Unlock achievements.
-
-</p>
-
-
-</div>
-
-
-
-
-
-
-
-<div
-class="featureCard"
-onclick="openPage('shopPage')"
->
-
-
-<div class="featureIcon">
-
-🛍️
-
-</div>
-
-
-<h2>
-
-Shop
-
-</h2>
-
-
-<p>
-
-Spend your coins.
-
-</p>
-
-
-</div>
-
-
-
-
-
-
-
-<div
-class="featureCard"
-onclick="openPage('mapPage')"
->
-
-
-<div class="featureIcon">
-
-🌍
-
-</div>
-
-
-<h2>
-
-LearnSphere
-
-</h2>
-
-
-<p>
-
-Explore continents.
-
-</p>
-
-
-</div>
-
-
-
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<!-- PROGRESS -->
-
-
-<div class="progressBox">
-
-
-<div class="progressHeading">
-
-
-<h2>
-
-Learning Progress
-
-</h2>
-
-
-<span id="progressPercent">
-
-0%
-
-</span>
-
-
-</div>
-
-
-
-
-
-<div class="progressTrack">
-
-
-<div id="overallProgress">
-
-</div>
-
-
-</div>
-
-
-
-
-<p>
-
-Complete lessons to increase progress.
-
-</p>
-
-
-
-</div>
-
-
-
-
-
-</main>
-
-
+  </main>
 
 </section>
 
-  <!-- =========================
+
+<!-- =========================
      SEARCH PAGE
 ========================= -->
 
-
 <section id="searchPage" class="page">
 
+  <div class="centerBox">
 
-<div class="centerBox">
+    <div class="loadingIcon">
+      🔎
+    </div>
 
+    <h1 id="searchTitle">
+      Finding someone...
+    </h1>
 
-<div class="loadingIcon">
+    <p id="searchText">
+      Looking for a real Teachly user.
+    </p>
 
-🔎
+    <div class="loadingBar">
+      <div></div>
+    </div>
 
-</div>
+    <button
+      type="button"
+      onclick="goHome()"
+    >
+      Cancel
+    </button>
 
-
-
-<h1 id="searchTitle">
-
-Finding someone...
-
-</h1>
-
-
-
-<p id="searchText">
-
-Looking for a Teachly user.
-
-</p>
-
-
-
-<div class="loadingBar">
-
-<div></div>
-
-</div>
-
-
-
-
-<button onclick="goHome()">
-
-Cancel
-
-</button>
-
-
-
-</div>
-
+  </div>
 
 </section>
-
-
-
-
-
 
 
 <!-- =========================
      CHAT PAGE
 ========================= -->
 
-
 <section id="chatPage" class="page">
 
+  <div class="chatBox">
 
-<div class="chatBox">
+    <div class="chatHeader">
 
+      <button
+        type="button"
+        onclick="goHome()"
+      >
+        ←
+      </button>
 
+      <div>
 
-<div class="chatHeader">
+        <h2 id="chatTitle">
+          Teachly Connection
+        </h2>
 
+        <small id="chatStatus">
+          Connected
+        </small>
 
-<button onclick="goHome()">
+      </div>
 
-←
+    </div>
 
-</button>
 
+    <div
+      id="chatMessages"
+      class="chatMessages"
+    >
 
+      <div class="message">
+        Your Teachly conversation will appear here.
+      </div>
 
+    </div>
 
-<div>
 
+    <div class="emojiBar">
 
-<h2 id="chatTitle">
+      <button
+        type="button"
+        onclick="addEmoji('😀')"
+      >
+        😀
+      </button>
 
-Teachly Connection
+      <button
+        type="button"
+        onclick="addEmoji('🎉')"
+      >
+        🎉
+      </button>
 
-</h2>
+      <button
+        type="button"
+        onclick="addEmoji('👍')"
+      >
+        👍
+      </button>
 
+      <button
+        type="button"
+        onclick="addEmoji('📚')"
+      >
+        📚
+      </button>
 
-<small id="chatStatus">
+      <button
+        type="button"
+        onclick="addEmoji('❤️')"
+      >
+        ❤️
+      </button>
 
-Connected
+    </div>
 
-</small>
 
+    <div class="chatInputRow">
 
+      <input
+        id="messageInput"
+        type="text"
+        placeholder="Type a message..."
+        autocomplete="off"
+      >
 
-</div>
+      <button
+        type="button"
+        onclick="sendMessage()"
+      >
+        Send
+      </button>
 
+    </div>
 
-
-</div>
-
-
-
-
-
-
-
-<div
-id="chatMessages"
-class="chatMessages"
->
-
-
-<div class="message">
-
-Your Teachly conversation will appear here.
-
-</div>
-
-
-
-</div>
-
-
-
-
-
-
-
-<div class="emojiBar">
-
-
-<button onclick="addEmoji('😀')">
-
-😀
-
-</button>
-
-
-<button onclick="addEmoji('🎉')">
-
-🎉
-
-</button>
-
-
-<button onclick="addEmoji('👍')">
-
-👍
-
-</button>
-
-
-<button onclick="addEmoji('📚')">
-
-📚
-
-</button>
-
-
-<button onclick="addEmoji('❤️')">
-
-❤️
-
-</button>
-
-
-
-</div>
-
-
-
-
-
-
-
-<div class="chatInputRow">
-
-
-<input
-id="messageInput"
-placeholder="Type a message..."
->
-
-
-
-<button onclick="sendMessage()">
-
-Send
-
-</button>
-
-
-
-</div>
-
-
-
-
-</div>
-
+  </div>
 
 </section>
-
-
-
-
-
-
 
 
 <!-- =========================
      LESSON LIBRARY
 ========================= -->
 
-
 <section id="aiPage" class="page">
 
+  <div class="sectionHeader">
 
+    <button
+      type="button"
+      onclick="goHome()"
+    >
+      ← Home
+    </button>
 
-<div class="sectionHeader">
+    <div>
 
+      <h1>
+        📚 Lesson Library
+      </h1>
 
-<button onclick="goHome()">
+      <p>
+        Learn, practice and ask AI Teacher.
+      </p>
 
-← Home
+    </div>
 
-</button>
+  </div>
 
 
+  <div class="lessonStats">
 
+    <div>
 
-<div>
+      <strong id="lessonCount">
+        0
+      </strong>
 
+      <span>
+        Lessons
+      </span>
 
-<h1>
+    </div>
 
-📚 Lesson Library
+  </div>
 
-</h1>
 
+  <div class="lessonCategories">
 
+    <button
+      type="button"
+      class="lessonCategoryButton active"
+      onclick="filterLessons('All')"
+    >
+      All
+    </button>
 
-<p>
+    <button
+      type="button"
+      class="lessonCategoryButton"
+      onclick="filterLessons('Mathematics')"
+    >
+      Mathematics
+    </button>
 
-Learn, practice and ask AI Teacher.
+    <button
+      type="button"
+      class="lessonCategoryButton"
+      onclick="filterLessons('Science')"
+    >
+      Science
+    </button>
 
-</p>
+    <button
+      type="button"
+      class="lessonCategoryButton"
+      onclick="filterLessons('English')"
+    >
+      English
+    </button>
 
+    <button
+      type="button"
+      class="lessonCategoryButton"
+      onclick="filterLessons('History')"
+    >
+      History
+    </button>
 
+  </div>
 
-</div>
 
+  <div
+    id="lessonGrid"
+    class="lessonGrid"
+  >
+  </div>
 
 
-</div>
+  <div class="aiMainCard">
 
+    <div class="aiMainIcon">
+      🤖
+    </div>
 
+    <div>
 
+      <h2>
+        AI Teacher
+      </h2>
 
+      <p>
+        Need help understanding a lesson?
+      </p>
 
+    </div>
 
+    <button
+      type="button"
+      onclick="openAITeacher()"
+    >
+      Ask AI Teacher
+    </button>
 
-<div class="lessonStats">
-
-
-<div>
-
-
-<strong id="lessonCount">
-
-0
-
-</strong>
-
-
-<span>
-
-Lessons
-
-</span>
-
-
-</div>
-
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<div class="lessonCategories">
-
-
-<button
-class="lessonCategoryButton active"
-onclick="filterLessons('All')"
->
-
-All
-
-</button>
-
-
-
-<button
-onclick="filterLessons('Mathematics')"
->
-
-Mathematics
-
-</button>
-
-
-
-
-<button
-onclick="filterLessons('Science')"
->
-
-Science
-
-</button>
-
-
-
-
-
-<button
-onclick="filterLessons('English')"
->
-
-English
-
-</button>
-
-
-
-
-
-<button
-onclick="filterLessons('History')"
->
-
-History
-
-</button>
-
-
-
-
-</div>
-
-
-
-
-
-
-
-<div
-id="lessonGrid"
-class="lessonGrid"
->
-
-</div>
-
-
-
-
-
-
-
-<div class="aiMainCard">
-
-
-<div class="aiMainIcon">
-
-🤖
-
-</div>
-
-
-
-<div>
-
-
-<h2>
-
-AI Teacher
-
-</h2>
-
-
-<p>
-
-Need help?
-
-</p>
-
-
-
-</div>
-
-
-
-
-
-<button onclick="openAITeacher()">
-
-Ask AI Teacher
-
-</button>
-
-
-
-</div>
-
-
-
+  </div>
 
 </section>
-
-
-
-
-
-
-
 
 
 <!-- =========================
@@ -1414,105 +1059,78 @@ Ask AI Teacher
 
 <section id="savedLessonsPage" class="page">
 
-<div class="sectionHeader">
+  <div class="sectionHeader">
 
-<button onclick="goHome()">
-← Home
-</button>
+    <button
+      type="button"
+      onclick="goHome()"
+    >
+      ← Home
+    </button>
 
-<h1>
+    <h1>
+      ⭐ Saved Lessons
+    </h1>
 
-⭐ Saved Lessons
+  </div>
 
-</h1>
+  <div
+    id="savedLessonList"
+    class="lessonGrid"
+  >
 
-</div>
+    <p>
+      No saved lessons yet.
+    </p>
 
-<div
-id="savedLessonList"
-class="lessonGrid"
->
+  </div>
 
-<p>
-
-No saved lessons yet.
-
-</p>
-
-</div>
-     
 </section>
 
-  <!-- =========================
+     <!-- =========================
      SELECTED LESSON PAGE
 ========================= -->
-
 
 <section id="selectedLessonPage" class="page">
 
 
 <div class="sectionHeader">
 
-
 <button onclick="openPage('aiPage')">
-
 ← Lessons
-
 </button>
 
 
-
 <h1 id="selectedLessonHeader">
-
 Lesson
-
 </h1>
-
 
 
 </div>
 
 
 
-
-
-
-
 <div class="selectedLessonBox">
-
 
 
 <span
 id="selectedLessonCategory"
 class="lessonTag"
 >
-
 Category
-
 </span>
 
 
 
-
 <h2 id="selectedLessonTitle">
-
 Lesson
-
 </h2>
 
 
 
-
-
 <p id="selectedLessonDescription">
-
 Description
-
 </p>
-
-
-
-
 
 
 
@@ -1523,8 +1141,10 @@ class="lessonContent"
 
 </div>
 
-<div class="lessonActions">
 
+
+
+<div class="lessonActions">
 
 
 <button onclick="completeLesson()">
@@ -1532,8 +1152,6 @@ class="lessonContent"
 ✅ Complete Lesson
 
 </button>
-
-
 
 
 
@@ -1549,16 +1167,11 @@ onclick="toggleSavedLesson()"
 
 
 
-
-
 <button onclick="startQuiz()">
 
 🧠 Take Quiz
 
 </button>
-
-
-
 
 
 
@@ -1574,9 +1187,7 @@ onclick="toggleSavedLesson()"
 </div>
 
 
-
 </div>
-
 
 
 </section>
@@ -1585,13 +1196,9 @@ onclick="toggleSavedLesson()"
 
 
 
-
-
-
 <!-- =========================
      QUIZ PAGE
 ========================= -->
-
 
 <section id="quizPage" class="page">
 
@@ -1614,11 +1221,7 @@ onclick="toggleSavedLesson()"
 </h1>
 
 
-
 </div>
-
-
-
 
 
 
@@ -1626,14 +1229,11 @@ onclick="toggleSavedLesson()"
 <div class="quizBox">
 
 
-
 <h2 id="quizLessonName">
 
 Quiz
 
 </h2>
-
-
 
 
 
@@ -1646,17 +1246,12 @@ class="quizQuestion"
 
 
 
-
-
-
 <div
 id="quizOptions"
 class="quizOptions"
 >
 
 </div>
-
-
 
 
 
@@ -1671,10 +1266,6 @@ class="quizResult"
 
 
 </div>
-
-
-
-
 
 
 
@@ -1699,17 +1290,12 @@ Need help understanding?
 
 
 
-
-
 <div
 id="aiTeacherMessages"
 class="aiTeacherMessages"
 >
 
 </div>
-
-
-
 
 
 
@@ -1725,13 +1311,11 @@ Explain Simply
 
 
 
-
 <button onclick="askAIQuick('Give me an example')">
 
 Give Example
 
 </button>
-
 
 
 
@@ -1742,11 +1326,7 @@ Key Points
 </button>
 
 
-
 </div>
-
-
-
 
 
 
@@ -1762,7 +1342,6 @@ placeholder="Ask your AI Teacher..."
 
 
 
-
 <button onclick="askAITeacher()">
 
 Ask
@@ -1774,16 +1353,22 @@ Ask
 </div>
 
 
-
 </div>
 
 
 
 </section>
 
+
+
+
+
+
+
 <!-- =========================
      RANDOM TOPIC PAGE
 ========================= -->
+
 
 <section id="mysteryPage" class="page">
 
@@ -1798,6 +1383,7 @@ Ask
 </button>
 
 
+
 <h1>
 
 🎲 Random Topic
@@ -1805,7 +1391,9 @@ Ask
 </h1>
 
 
+
 </div>
+
 
 
 
@@ -1815,7 +1403,7 @@ Ask
 
 <h2 id="mysteryTopicTitle">
 
-Topic
+Discover Something
 
 </h2>
 
@@ -1823,7 +1411,7 @@ Topic
 
 <p id="mysteryTopicText">
 
-Click again to discover something new.
+Click the button to discover a topic.
 
 </p>
 
@@ -1831,21 +1419,25 @@ Click again to discover something new.
 
 <button onclick="mysteryTopic()">
 
-🎲 Another Topic
+🎲 New Topic
 
 </button>
-
 
 
 </div>
 
 
 </section>
-     
+
+
+
+
+
+
+
 <!-- =========================
      AI TEACHER PAGE
 ========================= -->
-
 
 <section id="aiTeacherPage" class="page">
 
@@ -1868,9 +1460,7 @@ Click again to discover something new.
 </h1>
 
 
-
 </div>
-
 
 
 
@@ -1883,16 +1473,13 @@ Click again to discover something new.
 <div class="aiBox">
 
 
-
 <div
 id="aiChat"
 class="aiChat"
 >
 
 
-
 <div class="aiMessage assistant">
-
 
 Hello! I'm your Teachly AI Teacher.
 Ask me anything.
@@ -1900,11 +1487,7 @@ Ask me anything.
 </div>
 
 
-
 </div>
-
-
-
 
 
 
@@ -1912,12 +1495,10 @@ Ask me anything.
 <div class="aiInputRow">
 
 
-
 <textarea
 id="aiQuestion"
 placeholder="Ask your question..."
 ></textarea>
-
 
 
 
@@ -1934,10 +1515,7 @@ Ask AI
 
 
 
-
-
 </div>
-
 
 
 </div>
@@ -1947,6 +1525,59 @@ Ask AI
 </section>
 
 
+
+
+
+
+
+<!-- =========================
+     PEOPLE PAGE
+========================= -->
+
+
+<section id="peoplePage" class="page">
+
+
+<div class="sectionHeader">
+
+
+<button onclick="goHome()">
+
+← Home
+
+</button>
+
+
+
+<h1>
+
+👥 Teachly Users
+
+</h1>
+
+
+</div>
+
+
+
+
+<div
+id="peopleList"
+class="peopleList"
+>
+
+<p>
+
+Loading users...
+
+</p>
+
+
+</div>
+
+
+
+</section>
 
 
 
@@ -1973,7 +1604,6 @@ Ask AI
 
 
 
-
 <h1>
 
 🏅 Badges
@@ -1981,10 +1611,7 @@ Ask AI
 </h1>
 
 
-
 </div>
-
-
 
 
 
@@ -1999,8 +1626,6 @@ class="badgeGrid"
 
 
 </section>
-
-
 
 
 
@@ -2027,8 +1652,6 @@ class="badgeGrid"
 
 
 
-
-
 <div>
 
 
@@ -2039,21 +1662,18 @@ class="badgeGrid"
 </h1>
 
 
-
-
-
 <p>
 
-Your balance:
-
+Balance:
 <strong>
 
-💰 <span id="shopCoins">
+💰
+
+<span id="shopCoins">
 
 0
 
 </span>
-
 
 </strong>
 
@@ -2061,14 +1681,11 @@ Your balance:
 
 
 
-
 </div>
 
 
 
 </div>
-
-
 
 
 
@@ -2086,7 +1703,13 @@ class="shopGrid"
 
 </section>
 
-  <!-- =========================
+
+
+
+
+
+
+<!-- =========================
      PROFILE PAGE
 ========================= -->
 
@@ -2120,10 +1743,7 @@ class="shopGrid"
 
 
 
-
 <div class="profileBox">
-
-
 
 
 
@@ -2136,17 +1756,16 @@ class="profileAvatar"
 
 </div>
 
-<img
-id="avatarPreview"
-class="avatarPreview"
->
-     
+
+
+
 <input
 id="avatarUpload"
 type="file"
-accept="image/png,image/jpeg,image/webp"
+accept="image/*"
 onchange="previewAvatar(event)"
 >
+
 
 
 <button onclick="uploadAvatar()">
@@ -2157,15 +1776,22 @@ onchange="previewAvatar(event)"
 
 
 
+
 <h2 id="profileName">
 
 Learner
 
 </h2>
 
+
+
+
+
 <div class="stats">
 
+
 <div>
+
 
 <strong id="profileLessons">
 
@@ -2182,9 +1808,6 @@ Lessons
 
 
 </div>
-
-
-
 
 
 
@@ -2212,8 +1835,6 @@ Connections
 
 
 
-
-
 <div>
 
 
@@ -2235,12 +1856,7 @@ Connections
 
 
 
-
-
-
 </div>
-
-
 
 
 
@@ -2256,19 +1872,15 @@ Connections
 
 
 
-
-
 <!-- =========================
-     LEARNSPHERE PAGE
+     LEARNSPHERE MAP
 ========================= -->
 
 
 <section id="mapPage" class="page">
 
 
-
 <div class="sectionHeader">
-
 
 
 <button onclick="goHome()">
@@ -2279,10 +1891,7 @@ Connections
 
 
 
-
-
 <div>
-
 
 
 <h1>
@@ -2293,10 +1902,9 @@ Connections
 
 
 
-
 <p>
 
-Explore Earth's seven continents.
+Explore Earth's continents.
 
 </p>
 
@@ -2305,10 +1913,7 @@ Explore Earth's seven continents.
 </div>
 
 
-
-
 </div>
-
 
 
 
@@ -2319,15 +1924,11 @@ Explore Earth's seven continents.
 <div class="continentButtons">
 
 
-
-
-
 <button onclick="showContinent('Asia')">
 
 🌏 Asia
 
 </button>
-
 
 
 
@@ -2339,15 +1940,11 @@ Explore Earth's seven continents.
 
 
 
-
-
 <button onclick="showContinent('Europe')">
 
 🌍 Europe
 
 </button>
-
-
 
 
 
@@ -2359,15 +1956,11 @@ Explore Earth's seven continents.
 
 
 
-
-
 <button onclick="showContinent('South America')">
 
 🌎 South America
 
 </button>
-
-
 
 
 
@@ -2379,8 +1972,6 @@ Explore Earth's seven continents.
 
 
 
-
-
 <button onclick="showContinent('Antarctica')">
 
 ❄️ Antarctica
@@ -2389,10 +1980,7 @@ Explore Earth's seven continents.
 
 
 
-
 </div>
-
-
 
 
 
@@ -2412,13 +2000,10 @@ class="worldMap"
 
 
 
-
-
 <div
 id="countryInfo"
 class="continentInfo"
 >
-
 
 
 <h2>
@@ -2428,21 +2013,15 @@ class="continentInfo"
 </h2>
 
 
-
-
 <p>
 
-Select a continent to explore geography,
-climate, wildlife and facts.
+Select a continent to explore.
 
 </p>
 
 
 
-
 </div>
-
-
 
 
 
@@ -2455,9 +2034,8 @@ climate, wildlife and facts.
 
 
 
-
 <!-- =========================
-     REQUIRED LIBRARIES
+     LIBRARIES
 ========================= -->
 
 
@@ -2465,11 +2043,8 @@ climate, wildlife and facts.
 
 
 
-
-<script
-src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
 </script>
-
 
 
 
