@@ -148,29 +148,38 @@ openPage("homePage");
 
 window.goHome = goHome;
 
+function continueToName(){
+
+    const introPage =
+    document.getElementById("introPage");
+
+    const loginPage =
+    document.getElementById("loginPage");
 
 
-ffunction continueToName(){
-
-    const intro = document.getElementById("introPage");
-    const login = document.getElementById("loginPage");
-
-    if(intro){
-        intro.classList.remove("active");
+    if(!loginPage){
+        console.error("loginPage missing");
+        return;
     }
 
-    if(login){
-        login.classList.add("active");
+
+    if(introPage){
+        introPage.classList.remove("active");
     }
+
+
+    loginPage.classList.add("active");
+
+
+    window.scrollTo(
+        0,
+        0
+    );
 
 }
 
 
 window.continueToName = continueToName;
-
-window.continueToName = continueToName;
-
-
 
 function saveUser(){
 
