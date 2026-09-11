@@ -2153,6 +2153,9 @@ window.signup =
 window.logout =
   logout;
 
+window.startTeachly = 
+  startTeachly;
+
 window.chooseRole =
   chooseRole;
 
