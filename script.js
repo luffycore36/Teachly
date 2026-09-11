@@ -1,5 +1,10 @@
 const API_URL = "https://teachly-nmxh.onrender.com";
 
+
+/* =========================================================
+   STATE
+========================================================= */
+
 let currentRole = "";
 let currentPerson = "";
 let selectedLesson = null;
@@ -10,24 +15,28 @@ let state = {
   email: "",
   token: "",
   loggedIn: false,
+
   sessions: 0,
   coins: 0,
+
   completedLessons: [],
   lessonProgress: {},
   quizScores: {},
   savedLessons: [],
-  theme: "light",
-  avatar: "",
+
   badges: [],
+
   ownedEffects: [],
-  equippedEffect: ""
+  equippedEffect: "",
+
+  theme: "light"
 };
 
 let people = [];
 
 
 /* =========================================================
-   BASIC HELPERS
+   HELPERS
 ========================================================= */
 
 function escapeHTML(value) {
@@ -41,81 +50,42 @@ function escapeHTML(value) {
 
 
 function showToast(message) {
-  const old = document.querySelector(".teachly-toast");
+
+  const old =
+    document.querySelector(".teachly-toast");
 
   if (old) {
     old.remove();
   }
 
-  const toast = document.createElement("div");
+  const toast =
+    document.createElement("div");
 
-  toast.className = "teachly-toast";
-  toast.textContent = message;
+  toast.className =
+    "teachly-toast";
 
-  toast.style.position = "fixed";
-  toast.style.bottom = "25px";
-  toast.style.left = "50%";
-  toast.style.transform = "translateX(-50%)";
-  toast.style.zIndex = "99999";
-  toast.style.padding = "13px 20px";
-  toast.style.borderRadius = "12px";
-  toast.style.background = "#111";
-  toast.style.color = "#fff";
-  toast.style.fontWeight = "600";
-  toast.style.boxShadow = "0 8px 30px rgba(0,0,0,.2)";
+  toast.textContent =
+    message;
+
+  Object.assign(toast.style, {
+    position: "fixed",
+    bottom: "25px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    zIndex: "99999",
+    padding: "13px 20px",
+    borderRadius: "12px",
+    background: "#111",
+    color: "#fff",
+    fontWeight: "700",
+    boxShadow: "0 8px 30px rgba(0,0,0,.3)"
+  });
 
   document.body.appendChild(toast);
 
   setTimeout(() => {
     toast.remove();
   }, 3000);
-}
-
-
-async function readJSONResponse(response) {
-  const contentType =
-    response.headers.get("content-type") || "";
-
-  if (contentType.includes("application/json")) {
-    return await response.json();
-  }
-
-  const text = await response.text();
-
-  throw new Error(
-    `Server returned HTML instead of JSON (${response.status}). ${text.slice(0, 200)}`
-  );
-}
-
-
-async function apiFetch(endpoint, options = {}) {
-  const headers = {
-    ...(options.headers || {})
-  };
-
-  if (state.token) {
-    headers.Authorization = `Bearer ${state.token}`;
-  }
-
-  const response = await fetch(
-    `${API_URL}${endpoint}`,
-    {
-      ...options,
-      headers
-    }
-  );
-
-  const data = await readJSONResponse(response);
-
-  if (!response.ok) {
-    throw new Error(
-      data.error ||
-      data.message ||
-      `Request failed (${response.status})`
-    );
-  }
-
-  return data;
 }
 
 
@@ -132,9 +102,13 @@ function save() {
 
 
 function load() {
+
   try {
+
     const saved =
-      localStorage.getItem("teachlyState");
+      localStorage.getItem(
+        "teachlyState"
+      );
 
     if (!saved) {
       return;
@@ -156,28 +130,100 @@ function load() {
       state.savedLessons = [];
     }
 
-    if (!state.quizScores || typeof state.quizScores !== "object") {
-      state.quizScores = {};
-    }
-
     if (!Array.isArray(state.badges)) {
       state.badges = [];
     }
 
+    if (!Array.isArray(state.ownedEffects)) {
+      state.ownedEffects = [];
+    }
+
+    if (!state.quizScores) {
+      state.quizScores = {};
+    }
+
   } catch (error) {
+
     console.error(
-      "Could not load saved state:",
+      "State load error:",
       error
     );
+
   }
 }
 
 
 /* =========================================================
-   PAGE NAVIGATION
+   API
+========================================================= */
+
+async function apiFetch(endpoint, options = {}) {
+
+  const headers = {
+    ...(options.headers || {})
+  };
+
+  if (state.token) {
+    headers.Authorization =
+      `Bearer ${state.token}`;
+  }
+
+  const response =
+    await fetch(
+      `${API_URL}${endpoint}`,
+      {
+        ...options,
+        headers
+      }
+    );
+
+  const contentType =
+    response.headers.get(
+      "content-type"
+    ) || "";
+
+  let data;
+
+  if (
+    contentType.includes(
+      "application/json"
+    )
+  ) {
+
+    data =
+      await response.json();
+
+  } else {
+
+    const text =
+      await response.text();
+
+    throw new Error(
+      `Server returned HTML instead of JSON (${response.status}). ${text.slice(0, 150)}`
+    );
+
+  }
+
+  if (!response.ok) {
+
+    throw new Error(
+      data.error ||
+      data.message ||
+      `Request failed (${response.status})`
+    );
+
+  }
+
+  return data;
+}
+
+
+/* =========================================================
+   NAVIGATION
 ========================================================= */
 
 function openPage(pageId) {
+
   document
     .querySelectorAll(".page")
     .forEach(page => {
@@ -187,9 +233,15 @@ function openPage(pageId) {
   const page =
     document.getElementById(pageId);
 
-  if (page) {
-    page.classList.add("active");
+  if (!page) {
+    console.warn(
+      "Page not found:",
+      pageId
+    );
+    return;
   }
+
+  page.classList.add("active");
 
   window.scrollTo({
     top: 0,
@@ -200,12 +252,12 @@ function openPage(pageId) {
     updateHome();
   }
 
-  if (pageId === "peoplePage") {
-    loadPeople();
-  }
-
   if (pageId === "aiPage") {
     renderLessons();
+  }
+
+  if (pageId === "peoplePage") {
+    loadPeople();
   }
 
   if (pageId === "badgesPage") {
@@ -221,20 +273,26 @@ function openPage(pageId) {
   }
 
   if (pageId === "mapPage") {
+
     setTimeout(() => {
       initializeMap();
-    }, 100);
+    }, 150);
+
   }
+
 }
 
 
 /* =========================================================
-   START SCREEN
+   START
 ========================================================= */
 
 function startTeachly() {
+
   const input =
-    document.getElementById("usernameInput");
+    document.getElementById(
+      "usernameInput"
+    );
 
   if (!input) {
     return;
@@ -244,25 +302,27 @@ function startTeachly() {
     input.value.trim();
 
   if (!name) {
-    showToast("Please enter your username.");
+
+    showToast(
+      "Please enter your username."
+    );
+
     return;
   }
 
-  state.name = name;
-  state.loggedIn = true;
+  state.name =
+    name;
+
+  state.loggedIn =
+    true;
 
   save();
 
-  const welcome =
-    document.getElementById("welcomeText");
-
-  if (welcome) {
-    welcome.textContent =
-      `Welcome, ${state.name}!`;
-  }
-
   updateHome();
-  openPage("homePage");
+
+  openPage(
+    "homePage"
+  );
 }
 
 
@@ -271,25 +331,37 @@ function startTeachly() {
 ========================================================= */
 
 function updateHome() {
+
   const username =
-    document.getElementById("homeUsername");
+    document.getElementById(
+      "homeUsername"
+    );
 
   if (username) {
     username.textContent =
-      state.name || "Learner";
+      state.name ||
+      "Learner";
   }
+
 
   const welcome =
-    document.getElementById("welcomeText");
+    document.getElementById(
+      "welcomeText"
+    );
 
-  if (welcome && state.name) {
+  if (welcome) {
+
     welcome.textContent =
-      `Welcome, ${state.name}!`;
+      state.name
+        ? `Welcome, ${state.name}!`
+        : "Welcome!";
+
   }
+
 
   const coinElements =
     document.querySelectorAll(
-      "#coinCount, .coinCount, #homeCoins, #shopCoins"
+      "#coinCount, #homeCoins, #shopCoins"
     );
 
   coinElements.forEach(element => {
@@ -297,9 +369,10 @@ function updateHome() {
       state.coins || 0;
   });
 
+
   const sessionElements =
     document.querySelectorAll(
-      "#sessionCount, .sessionCount"
+      "#sessionCount"
     );
 
   sessionElements.forEach(element => {
@@ -307,25 +380,29 @@ function updateHome() {
       state.sessions || 0;
   });
 
+
   const progress =
-    document.getElementById("overallProgress");
+    document.getElementById(
+      "overallProgress"
+    );
 
   if (progress) {
-    const total =
-      lessons.length;
 
     const completed =
-      Array.isArray(state.completedLessons)
-        ? state.completedLessons.length
-        : 0;
+      state.completedLessons.length;
 
     const percentage =
-      total
-        ? Math.round((completed / total) * 100)
+      lessons.length
+        ? Math.round(
+            completed /
+            lessons.length *
+            100
+          )
         : 0;
 
     progress.style.width =
       `${percentage}%`;
+
   }
 
   updateBadges();
@@ -333,40 +410,44 @@ function updateHome() {
 
 
 /* =========================================================
-   ROLE SELECTION
+   ROLE MATCHING
 ========================================================= */
 
 function chooseRole(role) {
-  currentRole = role;
 
-  openPage("searchPage");
+  currentRole =
+    role;
+
+  openPage(
+    "searchPage"
+  );
 
   const title =
-    document.getElementById("searchTitle");
+    document.getElementById(
+      "searchTitle"
+    );
 
   const text =
-    document.getElementById("searchText");
+    document.getElementById(
+      "searchText"
+    );
 
   if (role === "learner") {
-    if (title) {
-      title.textContent =
-        "Finding a teacher...";
-    }
 
-    if (text) {
-      text.textContent =
-        "Looking for a real registered teacher volunteer.";
-    }
+    title.textContent =
+      "Finding a teacher...";
+
+    text.textContent =
+      "Looking for a real registered teacher volunteer.";
+
   } else {
-    if (title) {
-      title.textContent =
-        "Finding a learner...";
-    }
 
-    if (text) {
-      text.textContent =
-        "Looking for a real registered learner volunteer.";
-    }
+    title.textContent =
+      "Finding a learner...";
+
+    text.textContent =
+      "Looking for a real registered learner volunteer.";
+
   }
 
   setTimeout(
@@ -377,16 +458,20 @@ function chooseRole(role) {
 
 
 async function findRealPerson() {
+
   try {
+
     const data =
-      await apiFetch("/api/people");
+      await apiFetch(
+        "/api/people"
+      );
 
     const users =
       Array.isArray(data.people)
         ? data.people
         : [];
 
-    const currentUsername =
+    const current =
       String(state.name || "")
         .trim()
         .toLowerCase();
@@ -398,31 +483,38 @@ async function findRealPerson() {
 
     const matches =
       users.filter(user => {
+
         if (!user.username) {
           return false;
         }
 
-        const username =
+        return (
           String(user.username)
             .trim()
-            .toLowerCase();
-
-        return (
-          username !== currentUsername &&
+            .toLowerCase() !==
+          current &&
           user.role === wantedRole
         );
+
       });
 
+
     if (!matches.length) {
-      if (currentRole === "learner") {
+
+      if (
+        currentRole ===
+        "learner"
+      ) {
+
         showToast(
-          "No registered teacher volunteer is available."
+          "No registered teacher is available."
         );
 
         setTimeout(() => {
+
           const useAI =
             confirm(
-              "No registered teacher volunteer is available.\n\nWould you like to learn with the AI Teacher instead?"
+              "No registered teacher is available.\n\nWould you like the AI Teacher instead?"
             );
 
           if (useAI) {
@@ -430,21 +522,25 @@ async function findRealPerson() {
           } else {
             goHome();
           }
-        }, 500);
+
+        }, 400);
 
       } else {
+
         showToast(
-          "No registered learner volunteer is available."
+          "No registered learner is available."
         );
 
         setTimeout(
           goHome,
           1200
         );
+
       }
 
       return;
     }
+
 
     const person =
       matches[0];
@@ -452,30 +548,34 @@ async function findRealPerson() {
     currentPerson =
       person.username;
 
-    state.sessions =
-      (state.sessions || 0) + 1;
+    state.sessions++;
 
     save();
 
+    updateBadges();
+
     openChat(
-      person.username
+      currentPerson
     );
 
   } catch (error) {
+
     console.error(
-      "MATCHING ERROR:",
+      "MATCH ERROR:",
       error
     );
 
     showToast(
-      "Could not check registered users right now."
+      "Could not check registered users."
     );
 
     setTimeout(
       goHome,
       1500
     );
+
   }
+
 }
 
 
@@ -484,8 +584,11 @@ async function findRealPerson() {
 ========================================================= */
 
 async function loadPeople() {
+
   const box =
-    document.getElementById("peopleList");
+    document.getElementById(
+      "peopleList"
+    );
 
   if (!box) {
     return;
@@ -493,46 +596,52 @@ async function loadPeople() {
 
   box.innerHTML = `
     <div class="person">
-      <p>Loading real registered Teachly users...</p>
+      Loading real registered users...
     </div>
   `;
 
+
   try {
+
     const data =
-      await apiFetch("/api/people");
+      await apiFetch(
+        "/api/people"
+      );
 
     people =
       Array.isArray(data.people)
         ? data.people
         : [];
 
-    const currentUsername =
+
+    const current =
       String(state.name || "")
         .trim()
         .toLowerCase();
 
-    const visiblePeople =
+
+    const visible =
       people.filter(person => {
-        if (!person.username) {
-          return false;
-        }
 
         return (
+          person.username &&
           String(person.username)
             .trim()
             .toLowerCase() !==
-          currentUsername
+          current
         );
+
       });
 
-    if (!visiblePeople.length) {
+
+    if (!visible.length) {
+
       box.innerHTML = `
         <div class="person">
           <div>
-            <h3>No other registered users yet.</h3>
+            <h3>No other users yet.</h3>
             <p>
-              When another verified Teachly user registers,
-              they will appear here.
+              Verified Teachly users will appear here.
             </p>
           </div>
         </div>
@@ -541,40 +650,42 @@ async function loadPeople() {
       return;
     }
 
+
     box.innerHTML =
-      visiblePeople
-        .map(person => `
-          <div class="person">
+      visible.map(person => `
 
-            <div>
-              <div style="font-size:35px">
-                👤
-              </div>
+        <div class="person">
 
-              <h3>
-                ${escapeHTML(person.username)}
-              </h3>
+          <div>
 
-              <p>
-                ${
-                  person.role
-                    ? `Role: ${escapeHTML(person.role)}`
-                    : "Verified Teachly user"
-                }
-              </p>
+            <div style="font-size:35px">
+              👤
             </div>
 
-            <button
-              onclick="connectPerson(${JSON.stringify(person.username)})"
-            >
-              Connect
-            </button>
+            <h3>
+              ${escapeHTML(person.username)}
+            </h3>
+
+            <p>
+              Role:
+              ${escapeHTML(person.role || "user")}
+            </p>
 
           </div>
-        `)
-        .join("");
+
+          <button
+            onclick="connectPerson(${JSON.stringify(person.username)})"
+          >
+            Connect
+          </button>
+
+        </div>
+
+      `).join("");
+
 
   } catch (error) {
+
     console.error(
       "PEOPLE ERROR:",
       error
@@ -582,17 +693,17 @@ async function loadPeople() {
 
     box.innerHTML = `
       <div class="person">
-        <div>
-          <h3>Unable to load people</h3>
-          <p>Please try again later.</p>
-        </div>
+        Unable to load people right now.
       </div>
     `;
+
   }
+
 }
 
 
 function connectPerson(username) {
+
   if (!username) {
     return;
   }
@@ -600,12 +711,15 @@ function connectPerson(username) {
   currentPerson =
     username;
 
-  state.sessions =
-    (state.sessions || 0) + 1;
+  state.sessions++;
 
   save();
 
-  openChat(username);
+  updateBadges();
+
+  openChat(
+    username
+  );
 }
 
 
@@ -614,27 +728,37 @@ function connectPerson(username) {
 ========================================================= */
 
 function openChat(person) {
+
   currentPerson =
     person;
 
   const title =
-    document.getElementById("chatTitle");
+    document.getElementById(
+      "chatTitle"
+    );
 
   if (title) {
     title.textContent =
       person;
   }
 
-  openPage("chatPage");
+  openPage(
+    "chatPage"
+  );
 }
 
 
 function sendMessage() {
+
   const input =
-    document.getElementById("messageInput");
+    document.getElementById(
+      "messageInput"
+    );
 
   const messages =
-    document.getElementById("chatMessages");
+    document.getElementById(
+      "chatMessages"
+    );
 
   if (!input || !messages) {
     return;
@@ -647,17 +771,20 @@ function sendMessage() {
     return;
   }
 
-  const userMessage =
-    document.createElement("div");
 
-  userMessage.className =
+  const message =
+    document.createElement(
+      "div"
+    );
+
+  message.className =
     "message me";
 
-  userMessage.textContent =
+  message.textContent =
     text;
 
   messages.appendChild(
-    userMessage
+    message
   );
 
   input.value = "";
@@ -665,51 +792,52 @@ function sendMessage() {
   messages.scrollTop =
     messages.scrollHeight;
 
-  /*
-   * The current HTML/JS version does not
-   * establish a Socket.IO browser connection,
-   * so keep this local fallback rather than
-   * pretending the message was delivered.
-   */
 
   setTimeout(() => {
+
     const reply =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
     reply.className =
       "message";
 
     reply.textContent =
-      `${currentPerson || "Your Teachly connection"} is not connected to the live session yet.`;
+      `${currentPerson} is not currently connected to the live chat.`;
 
-    messages.appendChild(reply);
+    messages.appendChild(
+      reply
+    );
 
     messages.scrollTop =
       messages.scrollHeight;
 
-  }, 500);
+  }, 600);
+
 }
 
 
-/* =========================================================
-   EMOJI
-========================================================= */
-
 function addEmoji(emoji) {
+
   const input =
-    document.getElementById("messageInput");
+    document.getElementById(
+      "messageInput"
+    );
 
   if (!input) {
     return;
   }
 
-  input.value += emoji;
+  input.value +=
+    emoji;
+
   input.focus();
 }
 
 
 /* =========================================================
-   LESSON DATA
+   LESSONS
 ========================================================= */
 
 const lessons = [
@@ -720,9 +848,9 @@ const lessons = [
     category: "Mathematics",
     icon: "📐",
     description:
-      "Learn variables, expressions and simple equations.",
+      "Learn variables, expressions and equations.",
     content:
-      "Algebra uses letters and symbols to represent unknown values. A variable is a letter such as x. An expression combines numbers, variables and operations. An equation states that two expressions are equal."
+      "Algebra uses letters and symbols to represent unknown values. A variable can represent a number we do not know yet. For example, in x + 3 = 7, x represents the unknown number. Solving the equation gives x = 4."
   },
 
   {
@@ -731,9 +859,9 @@ const lessons = [
     category: "Mathematics",
     icon: "➗",
     description:
-      "Understand numerators, denominators and fraction operations.",
+      "Understand numerators, denominators and equivalent fractions.",
     content:
-      "A fraction represents part of a whole. The numerator is the top number and the denominator is the bottom number. Equivalent fractions represent the same value."
+      "A fraction represents part of a whole. The numerator is the number above the line and the denominator is below it. Equivalent fractions have different numbers but represent the same value."
   },
 
   {
@@ -742,31 +870,31 @@ const lessons = [
     category: "Science",
     icon: "🔬",
     description:
-      "Learn the basic structure and function of cells.",
+      "Explore the basic unit of living organisms.",
     content:
-      "Cells are the basic units of living organisms. Plant and animal cells contain structures such as the nucleus, cell membrane and cytoplasm. Plant cells also have a cell wall, chloroplasts and a large central vacuole."
+      "Cells are the basic units of living organisms. Animal and plant cells contain structures such as the cell membrane, cytoplasm and nucleus. Plant cells also have a cell wall, chloroplasts and a large central vacuole."
   },
 
   {
     id: "science-solar",
     title: "The Solar System",
     category: "Science",
-    icon: "🌎",
+    icon: "🌌",
     description:
-      "Explore planets and other objects in our solar system.",
+      "Explore planets and objects in our Solar System.",
     content:
-      "The Solar System contains the Sun and objects that orbit it, including planets, dwarf planets, moons, asteroids and comets. The eight planets are Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus and Neptune."
+      "Our Solar System contains the Sun, eight planets, dwarf planets, moons, asteroids and comets. The planets are Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus and Neptune."
   },
 
   {
     id: "english-grammar",
     title: "English Grammar",
     category: "English",
-    icon: "📚",
+    icon: "📖",
     description:
-      "Learn the basics of nouns, verbs and sentence structure.",
+      "Learn nouns, verbs and sentence structure.",
     content:
-      "A noun names a person, place, thing or idea. A verb describes an action or state. A complete sentence normally expresses a complete thought and includes a subject and predicate."
+      "A noun names a person, place, thing or idea. A verb describes an action or state. A complete sentence communicates a complete thought and generally has a subject and predicate."
   },
 
   {
@@ -777,108 +905,117 @@ const lessons = [
     description:
       "Discover how early civilizations developed.",
     content:
-      "Ancient civilizations developed organized societies, agriculture, governments, writing systems and trade networks. Important early civilizations developed in regions such as Mesopotamia, Egypt, the Indus Valley and China."
+      "Ancient civilizations developed organized societies, agriculture, governments, writing systems and trade. Important early civilizations developed in Mesopotamia, Egypt, the Indus Valley and China."
   }
 
 ];
 
 
-/* =========================================================
-   LESSON LIBRARY
-========================================================= */
-
 function renderLessons() {
-  const container =
-    document.getElementById("lessonGrid");
 
-  if (!container) {
+  const grid =
+    document.getElementById(
+      "lessonGrid"
+    );
+
+  if (!grid) {
     return;
   }
 
+
   const count =
-    document.getElementById("lessonCount");
+    document.getElementById(
+      "lessonCount"
+    );
 
   if (count) {
     count.textContent =
       lessons.length;
   }
 
+
   let filtered =
     lessons;
 
-  if (currentCategory !== "All") {
+  if (
+    currentCategory !==
+    "All"
+  ) {
+
     filtered =
       lessons.filter(
         lesson =>
           lesson.category ===
           currentCategory
       );
+
   }
 
-  if (!filtered.length) {
-    container.innerHTML = `
-      <div class="lessonCard">
-        <h3>No lessons found</h3>
-        <p>Try another category.</p>
-      </div>
-    `;
 
-    return;
-  }
+  grid.innerHTML =
+    filtered.map(lesson => `
 
-  container.innerHTML =
-    filtered
-      .map(lesson => `
-        <div
-          class="lessonCard"
-          onclick="openLesson('${lesson.id}')"
-        >
+      <div
+        class="lessonCard"
+        onclick="openLesson('${lesson.id}')"
+      >
 
-          <div class="lessonIcon">
-            ${lesson.icon}
-          </div>
-
-          <h3>
-            ${escapeHTML(lesson.title)}
-          </h3>
-
-          <p>
-            ${escapeHTML(lesson.description)}
-          </p>
-
-          <span class="lessonMiniTag">
-            ${escapeHTML(lesson.category)}
-          </span>
-
+        <div class="lessonIcon">
+          ${lesson.icon}
         </div>
-      `)
-      .join("");
+
+        <span class="lessonMiniTag">
+          ${escapeHTML(lesson.category)}
+        </span>
+
+        <h3>
+          ${escapeHTML(lesson.title)}
+        </h3>
+
+        <p>
+          ${escapeHTML(lesson.description)}
+        </p>
+
+        <button
+          onclick="event.stopPropagation(); openLesson('${lesson.id}')"
+        >
+          Start Lesson
+        </button>
+
+      </div>
+
+    `).join("");
+
 }
 
 
 function filterLessons(category) {
+
   currentCategory =
-    category || "All";
+    category;
 
   document
     .querySelectorAll(
       ".lessonCategoryButton"
     )
     .forEach(button => {
+
       button.classList.remove(
         "active"
       );
 
       if (
         button.textContent
-          .trim()
-          .toLowerCase() ===
-        currentCategory.toLowerCase()
+          .trim() ===
+        category
       ) {
+
         button.classList.add(
           "active"
         );
+
       }
+
     });
 
   renderLessons();
@@ -886,10 +1023,11 @@ function filterLessons(category) {
 
 
 /* =========================================================
-   OPEN SELECTED LESSON
+   OPEN LESSON
 ========================================================= */
 
 function openLesson(id) {
+
   selectedLesson =
     lessons.find(
       lesson =>
@@ -900,69 +1038,74 @@ function openLesson(id) {
     return;
   }
 
+
   const title =
-    document.getElementById(
-      "selectedLessonTitle"
+    document.querySelectorAll(
+      "#selectedLessonTitle"
     );
+
+  title.forEach(element => {
+    element.textContent =
+      selectedLesson.title;
+  });
+
 
   const category =
     document.getElementById(
       "selectedLessonCategory"
     );
 
-  const description =
-    document.getElementById(
-      "selectedLessonDescription"
-    );
-
-  const content =
-    document.getElementById(
-      "selectedLessonContent"
-    );
-
-  if (title) {
-    title.textContent =
-      selectedLesson.title;
-  }
-
   if (category) {
     category.textContent =
       selectedLesson.category;
   }
+
+
+  const description =
+    document.getElementById(
+      "selectedLessonDescription"
+    );
 
   if (description) {
     description.textContent =
       selectedLesson.description;
   }
 
+
+  const content =
+    document.getElementById(
+      "selectedLessonContent"
+    );
+
   if (content) {
     content.textContent =
       selectedLesson.content;
   }
 
-  openPage("selectedLessonPage");
 
-  updateLessonButtons();
+  updateLessonSaveButton();
+
+  openPage(
+    "selectedLessonPage"
+  );
 }
 
 
-function updateLessonButtons() {
-  const saveButton =
+function updateLessonSaveButton() {
+
+  const button =
     document.getElementById(
       "saveLessonButton"
     );
 
-  if (!saveButton || !selectedLesson) {
+  if (!button || !selectedLesson) {
     return;
   }
 
-  const saved =
+  button.textContent =
     state.savedLessons.includes(
       selectedLesson.id
-    );
-
-  saveButton.textContent =
-    saved
+    )
       ? "★ Saved"
       : "☆ Save Lesson";
 }
@@ -973,41 +1116,47 @@ function updateLessonButtons() {
 ========================================================= */
 
 function completeLesson() {
+
   if (!selectedLesson) {
     showToast(
-      "Please choose a lesson first."
+      "Choose a lesson first."
     );
 
     return;
   }
+
 
   if (
     !state.completedLessons.includes(
       selectedLesson.id
     )
   ) {
+
     state.completedLessons.push(
       selectedLesson.id
     );
 
-    state.coins =
-      (state.coins || 0) + 10;
+    state.coins +=
+      10;
 
     save();
+
+    updateBadges();
+
+    updateHome();
 
     showToast(
       "Lesson completed! +10 💰"
     );
 
-    updateHome();
-
-    updateBadges();
-
   } else {
+
     showToast(
       "You already completed this lesson."
     );
+
   }
+
 }
 
 
@@ -1016,6 +1165,7 @@ function completeLesson() {
 ========================================================= */
 
 function toggleSavedLesson() {
+
   if (!selectedLesson) {
     return;
   }
@@ -1025,7 +1175,9 @@ function toggleSavedLesson() {
       selectedLesson.id
     );
 
+
   if (index === -1) {
+
     state.savedLessons.push(
       selectedLesson.id
     );
@@ -1035,6 +1187,7 @@ function toggleSavedLesson() {
     );
 
   } else {
+
     state.savedLessons.splice(
       index,
       1
@@ -1043,11 +1196,13 @@ function toggleSavedLesson() {
     showToast(
       "Lesson removed from saved lessons."
     );
+
   }
+
 
   save();
 
-  updateLessonButtons();
+  updateLessonSaveButton();
 }
 
 
@@ -1060,16 +1215,22 @@ let quizScore = 0;
 
 
 function startQuiz() {
+
   if (!selectedLesson) {
+
     showToast(
-      "Please choose a lesson first."
+      "Choose a lesson first."
     );
 
     return;
   }
 
-  currentQuizIndex = 0;
-  quizScore = 0;
+  currentQuizIndex =
+    0;
+
+  quizScore =
+    0;
+
 
   const name =
     document.getElementById(
@@ -1081,218 +1242,233 @@ function startQuiz() {
       selectedLesson.title;
   }
 
+
   const result =
     document.getElementById(
       "quizResult"
     );
 
   if (result) {
-    result.textContent = "";
+    result.textContent =
+      "";
   }
 
-  openPage("quizPage");
+
+  openPage(
+    "quizPage"
+  );
 
   renderQuizQuestion();
 }
 
 
 function getQuizQuestions() {
+
   if (!selectedLesson) {
     return [];
   }
 
-  if (
-    selectedLesson.category ===
-    "Mathematics"
+
+  switch (
+    selectedLesson.category
   ) {
-    return [
 
-      {
-        question:
-          "What is a variable?",
-        options: [
-          "A letter representing a value",
-          "Only a multiplication sign",
-          "A type of fraction",
-          "A punctuation mark"
-        ],
-        answer: 0
-      },
+    case "Mathematics":
 
-      {
-        question:
-          "What is 2 + 3?",
-        options: [
-          "4",
-          "5",
-          "6",
-          "7"
-        ],
-        answer: 1
-      },
+      return [
 
-      {
-        question:
-          "Which symbol usually represents an unknown value?",
-        options: [
-          "x",
-          ".",
-          ",",
-          "!"
-        ],
-        answer: 0
-      }
+        {
+          question:
+            "What is a variable?",
+          options: [
+            "A letter representing a value",
+            "A punctuation mark",
+            "A type of fraction",
+            "A multiplication sign"
+          ],
+          answer: 0
+        },
 
-    ];
+        {
+          question:
+            "What is 2 + 3?",
+          options: [
+            "4",
+            "5",
+            "6",
+            "7"
+          ],
+          answer: 1
+        },
+
+        {
+          question:
+            "If x + 3 = 7, what is x?",
+          options: [
+            "2",
+            "3",
+            "4",
+            "5"
+          ],
+          answer: 2
+        }
+
+      ];
+
+
+    case "Science":
+
+      return [
+
+        {
+          question:
+            "What is the basic unit of life?",
+          options: [
+            "Cell",
+            "Planet",
+            "Rock",
+            "Cloud"
+          ],
+          answer: 0
+        },
+
+        {
+          question:
+            "Which object is at the center of our Solar System?",
+          options: [
+            "Earth",
+            "Moon",
+            "Sun",
+            "Mars"
+          ],
+          answer: 2
+        },
+
+        {
+          question:
+            "Which structure contains most of a cell's genetic material?",
+          options: [
+            "Nucleus",
+            "Vacuole",
+            "Cell wall",
+            "Cytoplasm"
+          ],
+          answer: 0
+        }
+
+      ];
+
+
+    case "English":
+
+      return [
+
+        {
+          question:
+            "Which word is a noun?",
+          options: [
+            "Run",
+            "Beautiful",
+            "School",
+            "Quickly"
+          ],
+          answer: 2
+        },
+
+        {
+          question:
+            "Which word is a verb?",
+          options: [
+            "Jump",
+            "Blue",
+            "Table",
+            "Happy"
+          ],
+          answer: 0
+        },
+
+        {
+          question:
+            "Which is a complete sentence?",
+          options: [
+            "Running quickly.",
+            "The student reads.",
+            "Because the.",
+            "Very happy."
+          ],
+          answer: 1
+        }
+
+      ];
+
+
+    default:
+
+      return [
+
+        {
+          question:
+            "What does history study?",
+          options: [
+            "Past events",
+            "Only planets",
+            "Only mathematics",
+            "Only weather"
+          ],
+          answer: 0
+        },
+
+        {
+          question:
+            "Which was an ancient civilization?",
+          options: [
+            "Indus Valley civilization",
+            "Internet civilization",
+            "Digital civilization",
+            "Modern civilization"
+          ],
+          answer: 0
+        },
+
+        {
+          question:
+            "Why are historical records useful?",
+          options: [
+            "They help us understand the past",
+            "They control the weather",
+            "They replace mathematics",
+            "They predict everything"
+          ],
+          answer: 0
+        }
+
+      ];
+
   }
 
-  if (
-    selectedLesson.category ===
-    "Science"
-  ) {
-    return [
-
-      {
-        question:
-          "What is the basic unit of life?",
-        options: [
-          "Cell",
-          "Planet",
-          "Atom",
-          "Rock"
-        ],
-        answer: 0
-      },
-
-      {
-        question:
-          "Which object is at the center of our Solar System?",
-        options: [
-          "Earth",
-          "Moon",
-          "Sun",
-          "Mars"
-        ],
-        answer: 2
-      },
-
-      {
-        question:
-          "Which structure contains most of a cell's genetic material?",
-        options: [
-          "Nucleus",
-          "Cell wall",
-          "Vacuole",
-          "Cytoplasm"
-        ],
-        answer: 0
-      }
-
-    ];
-  }
-
-  if (
-    selectedLesson.category ===
-    "English"
-  ) {
-    return [
-
-      {
-        question:
-          "Which word is a noun?",
-        options: [
-          "Run",
-          "Beautiful",
-          "School",
-          "Quickly"
-        ],
-        answer: 2
-      },
-
-      {
-        question:
-          "Which word is usually a verb?",
-        options: [
-          "Jump",
-          "Blue",
-          "Table",
-          "Happy"
-        ],
-        answer: 0
-      },
-
-      {
-        question:
-          "Which sentence is complete?",
-        options: [
-          "Running quickly.",
-          "The student reads.",
-          "Because the.",
-          "Very happy."
-        ],
-        answer: 1
-      }
-
-    ];
-  }
-
-  return [
-
-    {
-      question:
-        "What does history study?",
-      options: [
-        "Past events",
-        "Only mathematics",
-        "Only planets",
-        "Only weather"
-      ],
-      answer: 0
-    },
-
-    {
-      question:
-        "Which was an ancient civilization?",
-      options: [
-        "Indus Valley civilization",
-        "Internet civilization",
-        "Digital civilization",
-        "Modern civilization"
-      ],
-      answer: 0
-    },
-
-    {
-      question:
-        "Why are historical records useful?",
-      options: [
-        "They help us understand the past",
-        "They predict every future event",
-        "They replace mathematics",
-        "They control the weather"
-      ],
-      answer: 0
-    }
-
-  ];
 }
 
 
 function renderQuizQuestion() {
+
   const questions =
     getQuizQuestions();
 
   const question =
     questions[currentQuizIndex];
 
+
+  if (!question) {
+
+    finishQuiz();
+
+    return;
+  }
+
+
   const questionBox =
     document.getElementById(
       "quizQuestion"
-    );
-
-  const answerBox =
-    document.getElementById(
-      "quizAnswer"
     );
 
   const optionsBox =
@@ -1300,40 +1476,35 @@ function renderQuizQuestion() {
       "quizOptions"
     );
 
-  if (!question) {
-    finishQuiz();
-    return;
-  }
 
   if (questionBox) {
     questionBox.textContent =
       question.question;
   }
 
-  if (answerBox) {
-    answerBox.value = "";
-    answerBox.style.display =
-      "none";
-  }
 
   if (optionsBox) {
+
     optionsBox.innerHTML =
-      question.options
-        .map(
-          (option, index) => `
-            <button
-              onclick="answerQuiz(${index})"
-            >
-              ${escapeHTML(option)}
-            </button>
-          `
-        )
-        .join("");
+      question.options.map(
+        (option, index) => `
+
+          <button
+            onclick="answerQuiz(${index})"
+          >
+            ${escapeHTML(option)}
+          </button>
+
+        `
+      ).join("");
+
   }
+
 }
 
 
 function answerQuiz(index) {
+
   const questions =
     getQuizQuestions();
 
@@ -1344,10 +1515,12 @@ function answerQuiz(index) {
     return;
   }
 
+
   if (
     index ===
     question.answer
   ) {
+
     quizScore++;
 
     showToast(
@@ -1355,10 +1528,13 @@ function answerQuiz(index) {
     );
 
   } else {
+
     showToast(
       "Not quite. Keep learning!"
     );
+
   }
+
 
   currentQuizIndex++;
 
@@ -1369,47 +1545,41 @@ function answerQuiz(index) {
 }
 
 
-/*
- * Compatibility with the current HTML.
- * The HTML has checkQuiz(), while the
- * lesson quiz uses multiple choice.
- */
-
 function checkQuiz() {
-  const options =
-    document.querySelectorAll(
-      "#quizOptions button"
-    );
 
-  if (options.length) {
-    showToast(
-      "Choose one of the answer buttons."
-    );
+  showToast(
+    "Choose an answer above."
+  );
 
-    return;
-  }
-
-  answerQuiz(0);
 }
 
 
 function finishQuiz() {
+
   if (!selectedLesson) {
     return;
   }
 
+
   const questions =
     getQuizQuestions();
+
 
   state.quizScores[
     selectedLesson.id
   ] = quizScore;
 
-  state.coins =
-    (state.coins || 0) +
+
+  state.coins +=
     quizScore * 5;
 
+
   save();
+
+  updateBadges();
+
+  updateHome();
+
 
   const result =
     document.getElementById(
@@ -1417,12 +1587,12 @@ function finishQuiz() {
     );
 
   if (result) {
+
     result.textContent =
       `You scored ${quizScore}/${questions.length}. You earned ${quizScore * 5} 💰.`;
+
   }
 
-  updateHome();
-  updateBadges();
 }
 
 
@@ -1431,24 +1601,31 @@ function finishQuiz() {
 ========================================================= */
 
 function openAITeacher() {
-  openPage("aiPage");
 
-  const title =
+  openPage(
+    "aiTeacherPage"
+  );
+
+
+  const input =
     document.getElementById(
-      "selectedLessonTitle"
+      "aiQuestion"
     );
 
-  if (
-    selectedLesson &&
-    title
-  ) {
-    title.textContent =
-      selectedLesson.title;
+  if (input) {
+
+    setTimeout(
+      () => input.focus(),
+      150
+    );
+
   }
+
 }
 
 
 async function teacherAIHelp() {
+
   const input =
     document.getElementById(
       "aiQuestion"
@@ -1459,22 +1636,29 @@ async function teacherAIHelp() {
       "aiChat"
     );
 
+
   if (!input || !chat) {
     return;
   }
 
+
   const message =
     input.value.trim();
 
+
   if (!message) {
+
     showToast(
-      "Please enter a question."
+      "Ask me a question first."
     );
 
     return;
   }
 
-  input.value = "";
+
+  input.value =
+    "";
+
 
   const userBubble =
     document.createElement(
@@ -1491,6 +1675,7 @@ async function teacherAIHelp() {
     userBubble
   );
 
+
   const loading =
     document.createElement(
       "div"
@@ -1506,10 +1691,13 @@ async function teacherAIHelp() {
     loading
   );
 
+
   chat.scrollTop =
     chat.scrollHeight;
 
+
   try {
+
     const data =
       await apiFetch(
         "/api/ai",
@@ -1526,36 +1714,31 @@ async function teacherAIHelp() {
               message,
 
               lesson:
-                selectedLesson || {
-                  title:
-                    "General learning",
-
-                  category:
-                    "General",
-
-                  description:
-                    "",
-
-                  content:
-                    ""
-                }
+                selectedLesson
+                  ? selectedLesson
+                  : null
             })
         }
       );
 
+
     loading.textContent =
       data.answer ||
-      "I couldn't generate an answer right now.";
+      "I couldn't generate an answer.";
 
   } catch (error) {
+
     console.error(
       "AI ERROR:",
       error
     );
 
     loading.textContent =
-      `Sorry, I couldn't reach the AI right now. ${error.message || ""}`;
+      "AI Teacher error: " +
+      error.message;
+
   }
+
 
   chat.scrollTop =
     chat.scrollHeight;
@@ -1563,10 +1746,127 @@ async function teacherAIHelp() {
 
 
 /* =========================================================
-   QUIZ PAGE AI TEACHER
+   LESSON AI
 ========================================================= */
 
+async function askAITeacher() {
+
+  const input =
+    document.getElementById(
+      "aiTeacherInput"
+    );
+
+  const messages =
+    document.getElementById(
+      "aiTeacherMessages"
+    );
+
+
+  if (!input || !messages) {
+    return;
+  }
+
+
+  const question =
+    input.value.trim();
+
+
+  if (!question) {
+
+    showToast(
+      "Ask the AI Teacher something."
+    );
+
+    return;
+  }
+
+
+  input.value =
+    "";
+
+
+  const user =
+    document.createElement(
+      "div"
+    );
+
+  user.className =
+    "aiBubble";
+
+  user.innerHTML =
+    `<strong>You</strong><p>${escapeHTML(question)}</p>`;
+
+  messages.appendChild(
+    user
+  );
+
+
+  const loading =
+    document.createElement(
+      "div"
+    );
+
+  loading.className =
+    "aiBubble";
+
+  loading.innerHTML =
+    `<strong>AI Teacher</strong><p>Thinking...</p>`;
+
+  messages.appendChild(
+    loading
+  );
+
+
+  try {
+
+    const data =
+      await apiFetch(
+        "/api/ai",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          body:
+            JSON.stringify({
+              message:
+                question,
+
+              lesson:
+                selectedLesson
+                  ? selectedLesson
+                  : null
+            })
+        }
+      );
+
+
+    loading.innerHTML =
+      `<strong>AI Teacher</strong><p>${escapeHTML(data.answer || "I couldn't answer that.")}</p>`;
+
+  } catch (error) {
+
+    console.error(
+      "LESSON AI ERROR:",
+      error
+    );
+
+    loading.innerHTML =
+      `<strong>AI Teacher</strong><p>Sorry, the AI could not respond: ${escapeHTML(error.message)}</p>`;
+
+  }
+
+
+  messages.scrollTop =
+    messages.scrollHeight;
+}
+
+
 function askAIQuick(question) {
+
   const input =
     document.getElementById(
       "aiTeacherInput"
@@ -1583,160 +1883,85 @@ function askAIQuick(question) {
 }
 
 
-async function askAITeacher() {
-  const input =
-    document.getElementById(
-      "aiTeacherInput"
-    );
-
-  const messages =
-    document.getElementById(
-      "aiTeacherMessages"
-    );
-
-  if (!input || !messages) {
-    return;
-  }
-
-  const question =
-    input.value.trim();
-
-  if (!question) {
-    showToast(
-      "Please enter a question."
-    );
-
-    return;
-  }
-
-  input.value = "";
-
-  const userBubble =
-    document.createElement(
-      "div"
-    );
-
-  userBubble.className =
-    "aiBubble userBubble";
-
-  userBubble.innerHTML =
-    `<strong>You</strong><p>${escapeHTML(question)}</p>`;
-
-  messages.appendChild(
-    userBubble
-  );
-
-  const thinking =
-    document.createElement(
-      "div"
-    );
-
-  thinking.className =
-    "aiBubble aiThinking";
-
-  thinking.innerHTML =
-    `<strong>AI Teacher</strong><p>Thinking...</p>`;
-
-  messages.appendChild(
-    thinking
-  );
-
-  messages.scrollTop =
-    messages.scrollHeight;
-
-  try {
-    const data =
-      await apiFetch(
-        "/api/ai",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
-
-          body:
-            JSON.stringify({
-              message: question,
-
-              lesson:
-                selectedLesson || {
-                  title:
-                    "General learning",
-
-                  category:
-                    "General",
-
-                  description:
-                    "",
-
-                  content:
-                    ""
-                }
-            })
-        }
-      );
-
-    thinking.innerHTML =
-      `<strong>AI Teacher</strong><p>${escapeHTML(data.answer || "I couldn't answer that.")}</p>`;
-
-  } catch (error) {
-    console.error(
-      "AI TEACHER ERROR:",
-      error
-    );
-
-    thinking.innerHTML =
-      `<strong>AI Teacher</strong><p>Sorry, I couldn't reach the AI right now.</p>`;
-  }
-
-  messages.scrollTop =
-    messages.scrollHeight;
-}
-
-
 /* =========================================================
-   MYSTERY TOPIC
+   RANDOM TOPIC
 ========================================================= */
 
-const mysteryTopics = [
+const randomTopics = [
+
   {
     title: "Why is the sky blue?",
     text:
-      "Sunlight contains many colors. Earth's atmosphere scatters shorter blue wavelengths more strongly, making the sky appear blue during the day."
+      "Sunlight contains many colors. Earth's atmosphere scatters blue light more strongly than many other visible wavelengths, which makes the daytime sky appear blue."
   },
+
   {
     title: "How do airplanes fly?",
     text:
-      "An airplane's wings interact with moving air to produce lift while the engines provide thrust. The shape and angle of the wings help create the pressure and airflow needed for flight."
+      "Airplane wings are shaped to interact with moving air and generate lift. The engines provide thrust, while the wings and control surfaces help the aircraft stay stable and change direction."
   },
+
   {
     title: "How does a rainbow form?",
     text:
-      "A rainbow forms when sunlight enters water droplets, where it is refracted, internally reflected and separated into different colors."
+      "A rainbow forms when sunlight interacts with water droplets. The light is refracted, reflected and separated into different colors."
   },
+
   {
     title: "Why do we have seasons?",
     text:
-      "Earth's axis is tilted. As Earth travels around the Sun, this tilt changes how directly sunlight reaches different parts of Earth during the year."
+      "Earth's axis is tilted. As Earth travels around the Sun, different parts of the planet receive different amounts of direct sunlight during the year."
   },
+
   {
     title: "How do plants make food?",
     text:
-      "Plants use photosynthesis to convert light energy into chemical energy. They use carbon dioxide and water to produce sugars, with oxygen released as a by-product."
+      "Plants use photosynthesis to turn light energy into chemical energy. They use carbon dioxide and water to produce sugars and release oxygen."
+  },
+
+  {
+    title: "What is gravity?",
+    text:
+      "Gravity is an attractive interaction between objects with mass. Earth's gravity keeps people and objects near the surface and keeps the Moon in orbit."
+  },
+
+  {
+    title: "How do volcanoes form?",
+    text:
+      "Volcanoes can form where magma reaches Earth's surface. Many occur near tectonic plate boundaries, although volcanic activity can also happen in other geological settings."
+  },
+
+  {
+    title: "What is DNA?",
+    text:
+      "DNA is a molecule that stores biological instructions used by living organisms. Sections of DNA called genes contain information used in biological processes."
+  },
+
+  {
+    title: "Why is the ocean salty?",
+    text:
+      "Rocks on land contain minerals that can dissolve into water. Rivers carry dissolved ions toward the ocean, and geological processes also contribute salts over very long periods."
+  },
+
+  {
+    title: "How do stars shine?",
+    text:
+      "Stars produce energy through nuclear fusion in their cores. In stars like the Sun, hydrogen nuclei combine to form helium and release energy."
   }
+
 ];
 
 
 function mysteryTopic() {
+
   const topic =
-    mysteryTopics[
+    randomTopics[
       Math.floor(
         Math.random() *
-        mysteryTopics.length
+        randomTopics.length
       )
     ];
+
 
   const title =
     document.getElementById(
@@ -1748,6 +1973,7 @@ function mysteryTopic() {
       "mysteryTopicText"
     );
 
+
   if (title) {
     title.textContent =
       topic.title;
@@ -1758,7 +1984,10 @@ function mysteryTopic() {
       topic.text;
   }
 
-  openPage("mysteryPage");
+
+  openPage(
+    "mysteryPage"
+  );
 }
 
 
@@ -1767,53 +1996,84 @@ function mysteryTopic() {
 ========================================================= */
 
 const badgeDefinitions = [
+
   {
     id: "first-lesson",
     icon: "🌱",
     title: "First Step",
-    description: "Complete your first lesson."
+    description:
+      "Complete your first lesson."
   },
+
   {
     id: "five-lessons",
     icon: "📚",
     title: "Bookworm",
-    description: "Complete five lessons."
+    description:
+      "Complete five lessons."
   },
+
   {
     id: "quiz-master",
     icon: "🏆",
     title: "Quiz Master",
-    description: "Score full marks on a quiz."
+    description:
+      "Get a perfect quiz score."
   },
+
   {
-    id: "social",
+    id: "connector",
     icon: "🤝",
     title: "Connector",
-    description: "Start a Teachly connection."
+    description:
+      "Connect with another Teachly user."
+  },
+
+  {
+    id: "curious",
+    icon: "🎲",
+    title: "Curious Mind",
+    description:
+      "Discover a random topic."
+  },
+
+  {
+    id: "scholar",
+    icon: "🎓",
+    title: "Scholar",
+    description:
+      "Complete every lesson."
   }
+
 ];
 
 
 function updateBadges() {
+
   const unlocked = [];
 
+
   if (
-    state.completedLessons.length >= 1
+    state.completedLessons.length >=
+    1
   ) {
     unlocked.push(
       "first-lesson"
     );
   }
 
+
   if (
-    state.completedLessons.length >= 5
+    state.completedLessons.length >=
+    5
   ) {
     unlocked.push(
       "five-lessons"
     );
   }
 
-  const perfectQuiz =
+
+  const perfect =
     Object.values(
       state.quizScores || {}
     ).some(
@@ -1821,19 +2081,42 @@ function updateBadges() {
         score === 3
     );
 
-  if (perfectQuiz) {
+
+  if (perfect) {
     unlocked.push(
       "quiz-master"
     );
   }
 
+
   if (
-    (state.sessions || 0) >= 1
+    state.sessions >=
+    1
   ) {
     unlocked.push(
-      "social"
+      "connector"
     );
   }
+
+
+  if (
+    state.randomTopicsViewed
+  ) {
+    unlocked.push(
+      "curious"
+    );
+  }
+
+
+  if (
+    state.completedLessons.length >=
+    lessons.length
+  ) {
+    unlocked.push(
+      "scholar"
+    );
+  }
+
 
   state.badges =
     unlocked;
@@ -1843,7 +2126,9 @@ function updateBadges() {
 
 
 function renderBadges() {
+
   updateBadges();
+
 
   const container =
     document.getElementById(
@@ -1854,15 +2139,19 @@ function renderBadges() {
     return;
   }
 
+
   container.innerHTML =
-    badgeDefinitions
-      .map(badge => {
+    badgeDefinitions.map(
+      badge => {
+
         const unlocked =
           state.badges.includes(
             badge.id
           );
 
+
         return `
+
           <div class="badge ${
             unlocked
               ? ""
@@ -1890,9 +2179,11 @@ function renderBadges() {
             </small>
 
           </div>
+
         `;
-      })
-      .join("");
+
+      }
+    ).join("");
 }
 
 
@@ -1901,14 +2192,16 @@ function renderBadges() {
 ========================================================= */
 
 const shopProducts = [
+
   {
     id: "ring",
     icon: "💍",
     name: "Learning Ring",
     price: 30,
     description:
-      "A special profile effect."
+      "A special learning profile effect."
   },
+
   {
     id: "spark",
     icon: "✨",
@@ -1917,26 +2210,30 @@ const shopProducts = [
     description:
       "Add a spark effect to your profile."
   },
+
   {
     id: "crown",
     icon: "👑",
     name: "Knowledge Crown",
     price: 70,
     description:
-      "Show off your learning achievement."
+      "Show your learning achievement."
   }
+
 ];
 
 
 function renderShop() {
-  const container =
+
+  const list =
     document.getElementById(
       "shopList"
     );
 
-  if (!container) {
+  if (!list) {
     return;
   }
+
 
   const coins =
     document.getElementById(
@@ -1948,28 +2245,28 @@ function renderShop() {
       state.coins || 0;
   }
 
-  container.innerHTML =
-    shopProducts
-      .map(product => {
+
+  list.innerHTML =
+    shopProducts.map(
+      product => {
+
         const owned =
           state.ownedEffects.includes(
             product.id
           );
 
-        const enough =
-          (state.coins || 0) >=
-          product.price;
 
         return `
+
           <div class="shopItem">
 
-            <div style="font-size:45px">
+            <div style="font-size:55px">
               ${product.icon}
             </div>
 
-            <h3>
+            <h2>
               ${product.name}
-            </h3>
+            </h2>
 
             <p>
               ${product.description}
@@ -1981,29 +2278,25 @@ function renderShop() {
 
             <button
               onclick="buyShopItem('${product.id}')"
-              class="${
-                !owned && !enough
-                  ? "notEnough"
-                  : ""
-              }"
             >
               ${
                 owned
                   ? "Equip"
-                  : enough
-                    ? "Buy"
-                    : "Not enough 💰"
+                  : "Buy"
               }
             </button>
 
           </div>
+
         `;
-      })
-      .join("");
+
+      }
+    ).join("");
 }
 
 
 function buyShopItem(id) {
+
   const product =
     shopProducts.find(
       item =>
@@ -2014,11 +2307,13 @@ function buyShopItem(id) {
     return;
   }
 
+
   if (
     state.ownedEffects.includes(
       id
     )
   ) {
+
     state.equippedEffect =
       id;
 
@@ -2028,21 +2323,22 @@ function buyShopItem(id) {
       `${product.name} equipped!`
     );
 
-    renderShop();
-
     return;
   }
 
+
   if (
-    (state.coins || 0) <
+    state.coins <
     product.price
   ) {
+
     showToast(
       "You don't have enough 💰."
     );
 
     return;
   }
+
 
   state.coins -=
     product.price;
@@ -2056,11 +2352,13 @@ function buyShopItem(id) {
 
   save();
 
+  renderShop();
+
+  updateHome();
+
   showToast(
     `${product.name} purchased!`
   );
-
-  renderShop();
 }
 
 
@@ -2069,6 +2367,7 @@ function buyShopItem(id) {
 ========================================================= */
 
 function updateProfile() {
+
   const name =
     document.getElementById(
       "profileName"
@@ -2080,142 +2379,286 @@ function updateProfile() {
       "Learner";
   }
 
-  const avatar =
-    document.getElementById(
-      "profileAvatar"
-    );
 
-  if (avatar) {
-    if (state.avatar) {
-      avatar.textContent = "";
-      avatar.style.backgroundImage =
-        `url(${state.avatar})`;
-      avatar.style.backgroundSize =
-        "cover";
-      avatar.style.backgroundPosition =
-        "center";
-    } else {
-      avatar.textContent =
-        "👤";
-    }
-  }
-
-  const profileCoins =
-    document.getElementById(
-      "profileCoins"
-    );
-
-  if (profileCoins) {
-    profileCoins.textContent =
-      state.coins || 0;
-  }
-
-  const profileSessions =
-    document.getElementById(
-      "profileSessions"
-    );
-
-  if (profileSessions) {
-    profileSessions.textContent =
-      state.sessions || 0;
-  }
-
-  const profileLessons =
+  const lessonsCount =
     document.getElementById(
       "profileLessons"
     );
 
-  if (profileLessons) {
-    profileLessons.textContent =
+  if (lessonsCount) {
+    lessonsCount.textContent =
       state.completedLessons.length;
   }
+
+
+  const sessions =
+    document.getElementById(
+      "profileSessions"
+    );
+
+  if (sessions) {
+    sessions.textContent =
+      state.sessions;
+  }
+
+
+  const coins =
+    document.getElementById(
+      "profileCoins"
+    );
+
+  if (coins) {
+    coins.textContent =
+      state.coins;
+  }
+
 }
 
 
 /* =========================================================
-   THEME
+   LEARNSPHERE
 ========================================================= */
 
-function toggleTheme() {
-  state.theme =
-    state.theme === "dark"
-      ? "light"
-      : "dark";
+const continents = {
 
-  applyTheme();
-  save();
-}
+  "Asia": {
+
+    emoji: "🌏",
+
+    description:
+      "Asia is the largest continent by both land area and population. It stretches from the Arctic region in the north to tropical Southeast Asia and includes enormous geographic diversity.",
+
+    geography:
+      "Asia contains the Himalayas, the Tibetan Plateau, large deserts, vast plains, forests, islands and major river systems.",
+
+    climate:
+      "Its climates range from Arctic conditions in Siberia to tropical climates near the equator.",
+
+    wildlife:
+      "Asian wildlife includes tigers, giant pandas, elephants, snow leopards, orangutans and many other species.",
+
+    facts:
+      [
+        "Asia contains the Himalayas.",
+        "The continent includes many of the world's most populous countries.",
+        "The Gobi Desert is located in Asia.",
+        "The world's highest mountain, Mount Everest, is in the Himalayas."
+      ],
+
+    coordinates:
+      [30, 90]
+
+  },
 
 
-function applyTheme() {
-  document.body.classList.toggle(
-    "dark",
-    state.theme === "dark"
-  );
-}
+  "Africa": {
+
+    emoji: "🌍",
+
+    description:
+      "Africa is the second-largest continent and is known for its huge variety of landscapes, cultures and ecosystems.",
+
+    geography:
+      "Africa contains the Sahara Desert, the Nile River, tropical rainforests, savannas, mountains and coastal regions.",
+
+    climate:
+      "Africa includes desert, tropical, Mediterranean, highland and savanna climates.",
+
+    wildlife:
+      "African wildlife includes lions, elephants, giraffes, zebras, gorillas, cheetahs and rhinoceroses.",
+
+    facts:
+      [
+        "The Sahara is the largest hot desert.",
+        "The Nile is one of the world's longest rivers.",
+        "Africa is home to many unique ecosystems.",
+        "The continent has enormous cultural and linguistic diversity."
+      ],
+
+    coordinates:
+      [5, 20]
+
+  },
 
 
-/* =========================================================
-   MAP
-========================================================= */
+  "Europe": {
+
+    emoji: "🌍",
+
+    description:
+      "Europe is a relatively small continent with a long and influential history and a high diversity of languages, cultures and landscapes.",
+
+    geography:
+      "Europe includes mountain ranges such as the Alps, large plains, peninsulas, islands and extensive coastlines.",
+
+    climate:
+      "Much of Europe has temperate climates, while northern and southern areas have colder and warmer climates respectively.",
+
+    wildlife:
+      "European wildlife includes brown bears, wolves, lynx, reindeer, foxes and many bird species.",
+
+    facts:
+      [
+        "Europe contains many countries within a relatively small area.",
+        "The Alps are a major mountain range.",
+        "The continent has many important rivers such as the Danube.",
+        "Europe contains many historically important cities."
+      ],
+
+    coordinates:
+      [50, 15]
+
+  },
+
+
+  "North America": {
+
+    emoji: "🌎",
+
+    description:
+      "North America extends from Arctic regions in the north to tropical regions in the south.",
+
+    geography:
+      "The continent includes the Rocky Mountains, Great Plains, deserts, forests, large lakes and long coastlines.",
+
+    climate:
+      "North America contains Arctic, temperate, desert, tropical and Mediterranean climate zones.",
+
+    wildlife:
+      "Wildlife includes polar bears, bison, moose, bears, wolves, alligators and many bird species.",
+
+    facts:
+      [
+        "Greenland is geographically part of North America.",
+        "The Rocky Mountains stretch through the western part of the continent.",
+        "The Great Lakes form one of the largest freshwater systems.",
+        "North America has ecosystems ranging from Arctic tundra to tropical forests."
+      ],
+
+    coordinates:
+      [40, -100]
+
+  },
+
+
+  "South America": {
+
+    emoji: "🌎",
+
+    description:
+      "South America is known for the Andes Mountains, Amazon rainforest and enormous biological diversity.",
+
+    geography:
+      "The continent contains the Andes, Amazon Basin, grasslands, deserts, highlands and extensive coastlines.",
+
+    climate:
+      "South America has tropical rainforest, savanna, desert, temperate and highland climates.",
+
+    wildlife:
+      "Wildlife includes jaguars, llamas, alpacas, anacondas, capybaras, condors and many rainforest species.",
+
+    facts:
+      [
+        "The Amazon rainforest is primarily in South America.",
+        "The Andes are the world's longest continental mountain range.",
+        "The Amazon River is one of the world's largest river systems.",
+        "The continent contains extremely high biodiversity."
+      ],
+
+    coordinates:
+      [-15, -60]
+
+  },
+
+
+  "Australia/Oceania": {
+
+    emoji: "🌏",
+
+    description:
+      "Australia/Oceania includes Australia and the many islands and island groups of the Pacific region.",
+
+    geography:
+      "The region includes deserts, tropical forests, grasslands, mountains, coral reefs and thousands of islands.",
+
+    climate:
+      "Climate ranges from tropical conditions in northern areas to temperate and desert climates in Australia.",
+
+    wildlife:
+      "The region is famous for kangaroos, koalas, wombats, platypuses, emus and many unique birds and marine species.",
+
+    facts:
+      [
+        "Australia is the world's smallest continent when treated as a continent.",
+        "The Great Barrier Reef is off Australia's northeastern coast.",
+        "Many species in Australia are found nowhere else naturally.",
+        "Oceania includes numerous Pacific island groups."
+      ],
+
+    coordinates:
+      [-25, 135]
+
+  },
+
+
+  "Antarctica": {
+
+    emoji: "❄️",
+
+    description:
+      "Antarctica surrounds the South Pole and is the coldest, driest and windiest continent.",
+
+    geography:
+      "The continent is dominated by a huge ice sheet and contains mountain ranges, glaciers and floating ice shelves.",
+
+    climate:
+      "Antarctica has an extremely cold polar climate with very low precipitation.",
+
+    wildlife:
+      "Wildlife includes penguins, seals, whales and many seabirds, particularly around coastal areas.",
+
+    facts:
+      [
+        "Antarctica is the coldest continent.",
+        "Most of its surface is covered by ice.",
+        "There are no permanent native human populations.",
+        "It is an important area for scientific research."
+      ],
+
+    coordinates:
+      [-82, 0]
+
+  }
+
+};
+
 
 let worldMap = null;
 
 
-const countryData = {
-  India: {
-    title: "India 🇮🇳",
-    text:
-      "India is a country in South Asia with a long history, many languages and diverse cultures."
-  },
-
-  UnitedStates: {
-    title: "United States 🇺🇸",
-    text:
-      "The United States is a country in North America made up of 50 states."
-  },
-
-  UnitedKingdom: {
-    title: "United Kingdom 🇬🇧",
-    text:
-      "The United Kingdom consists of England, Scotland, Wales and Northern Ireland."
-  },
-
-  Japan: {
-    title: "Japan 🇯🇵",
-    text:
-      "Japan is an island country in East Asia known for its history, technology and rich culture."
-  },
-
-  Australia: {
-    title: "Australia 🇦🇺",
-    text:
-      "Australia is both a country and a continent located in the Southern Hemisphere."
-  }
-};
-
-
 function initializeMap() {
+
   const mapElement =
     document.getElementById(
       "worldMap"
     );
 
-  if (!mapElement) {
-    return;
-  }
-
   if (
+    !mapElement ||
     typeof L ===
     "undefined"
   ) {
     return;
   }
 
+
   if (worldMap) {
+
     worldMap.invalidateSize();
+
     return;
   }
+
 
   worldMap =
     L.map(
@@ -2224,6 +2667,7 @@ function initializeMap() {
       [20, 0],
       2
     );
+
 
   L.tileLayer(
     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -2234,197 +2678,179 @@ function initializeMap() {
   ).addTo(
     worldMap
   );
+
 }
 
 
-function showCountry(country) {
+function showContinent(name) {
+
+  const continent =
+    continents[name];
+
+  if (!continent) {
+    return;
+  }
+
+
   const info =
     document.getElementById(
       "countryInfo"
     );
 
-  const data =
-    countryData[country];
-
-  if (!info || !data) {
+  if (!info) {
     return;
   }
 
+
   info.innerHTML = `
+
     <h2>
-      ${escapeHTML(data.title)}
+      ${continent.emoji}
+      ${escapeHTML(name)}
     </h2>
 
     <p>
-      ${escapeHTML(data.text)}
+      ${escapeHTML(continent.description)}
     </p>
+
+
+    <div class="continentFacts">
+
+      <div class="continentFact">
+        <h3>🗺️ Geography</h3>
+        <p>
+          ${escapeHTML(continent.geography)}
+        </p>
+      </div>
+
+      <div class="continentFact">
+        <h3>🌦️ Climate</h3>
+        <p>
+          ${escapeHTML(continent.climate)}
+        </p>
+      </div>
+
+      <div class="continentFact">
+        <h3>🐾 Wildlife</h3>
+        <p>
+          ${escapeHTML(continent.wildlife)}
+        </p>
+      </div>
+
+      <div class="continentFact">
+        <h3>💡 Interesting Facts</h3>
+
+        <ul>
+          ${continent.facts
+            .map(
+              fact =>
+                `<li>${escapeHTML(fact)}</li>`
+            )
+            .join("")}
+        </ul>
+
+      </div>
+
+    </div>
+
   `;
 
-  if (
-    worldMap
-  ) {
-    const locations = {
-      India: [20.5937, 78.9629],
-      UnitedStates: [39.8283, -98.5795],
-      UnitedKingdom: [55.3781, -3.4360],
-      Japan: [36.2048, 138.2529],
-      Australia: [-25.2744, 133.7751]
-    };
 
-    if (locations[country]) {
-      worldMap.setView(
-        locations[country],
-        4
-      );
-    }
+  if (worldMap) {
+
+    worldMap.setView(
+      continent.coordinates,
+      3
+    );
+
   }
+
 }
 
 
 /* =========================================================
-   GO HOME / BACK
+   RANDOM TOPIC BADGE
 ========================================================= */
 
+const originalMysteryTopic =
+  mysteryTopic;
+
+mysteryTopic = function() {
+
+  state.randomTopicsViewed =
+    true;
+
+  save();
+
+  updateBadges();
+
+  originalMysteryTopic();
+
+};
+
+
+/* =========================================================
+   THEME
+========================================================= */
+
+function toggleTheme() {
+
+  state.theme =
+    state.theme ===
+    "dark"
+      ? "light"
+      : "dark";
+
+  document.body.classList.toggle(
+    "dark",
+    state.theme ===
+    "dark"
+  );
+
+  save();
+}
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+function logout() {
+
+  state.loggedIn =
+    false;
+
+  state.token =
+    "";
+
+  state.name =
+    "";
+
+  save();
+
+  openPage(
+    "namePage"
+  );
+
+  showToast(
+    "Logged out."
+  );
+}
+
+
 function goHome() {
-  openPage("homePage");
-  updateHome();
+
+  openPage(
+    "homePage"
+  );
+
 }
 
 
 function goBack() {
+
   goHome();
-}
 
-
-/* =========================================================
-   SIMPLE SEARCH
-========================================================= */
-
-function searchLessons() {
-  const input =
-    document.getElementById(
-      "lessonSearch"
-    );
-
-  if (!input) {
-    return;
-  }
-
-  const query =
-    input.value
-      .trim()
-      .toLowerCase();
-
-  const container =
-    document.getElementById(
-      "lessonGrid"
-    );
-
-  if (!container) {
-    return;
-  }
-
-  const filtered =
-    lessons.filter(
-      lesson =>
-        lesson.title
-          .toLowerCase()
-          .includes(query) ||
-
-        lesson.category
-          .toLowerCase()
-          .includes(query) ||
-
-        lesson.description
-          .toLowerCase()
-          .includes(query)
-    );
-
-  if (!filtered.length) {
-    container.innerHTML = `
-      <div class="lessonCard">
-        <h3>No lessons found</h3>
-        <p>Try another search.</p>
-      </div>
-    `;
-
-    return;
-  }
-
-  container.innerHTML =
-    filtered
-      .map(lesson => `
-        <div
-          class="lessonCard"
-          onclick="openLesson('${lesson.id}')"
-        >
-
-          <div class="lessonIcon">
-            ${lesson.icon}
-          </div>
-
-          <h3>
-            ${escapeHTML(lesson.title)}
-          </h3>
-
-          <p>
-            ${escapeHTML(lesson.description)}
-          </p>
-
-          <span class="lessonMiniTag">
-            ${escapeHTML(lesson.category)}
-          </span>
-
-        </div>
-      `)
-      .join("");
-}
-
-
-/* =========================================================
-   LOGIN / SIGNUP COMPATIBILITY
-========================================================= */
-
-function showLogin() {
-  showToast(
-    "This Teachly version uses the username start screen."
-  );
-}
-
-
-function showSignup() {
-  showToast(
-    "Create your Teachly account through the backend authentication flow."
-  );
-}
-
-
-function logout() {
-  state.loggedIn = false;
-  state.token = "";
-  state.name = "";
-
-  save();
-
-  const input =
-    document.getElementById(
-      "usernameInput"
-    );
-
-  if (input) {
-    input.value = "";
-  }
-
-  const namePage =
-    document.getElementById(
-      "namePage"
-    );
-
-  if (namePage) {
-    openPage("namePage");
-  } else {
-    location.reload();
-  }
 }
 
 
@@ -2438,8 +2864,6 @@ document.addEventListener(
 
     load();
 
-    applyTheme();
-
     updateHome();
 
     renderLessons();
@@ -2450,16 +2874,28 @@ document.addEventListener(
 
     updateProfile();
 
-    /*
-     * Current index.html starts at namePage.
-     * Do not try to open nonexistent loginPage
-     * or signupPage.
-     */
+    document.body.classList.toggle(
+      "dark",
+      state.theme ===
+      "dark"
+    );
 
-    if (state.loggedIn && state.name) {
-      openPage("homePage");
+
+    if (
+      state.loggedIn &&
+      state.name
+    ) {
+
+      openPage(
+        "homePage"
+      );
+
     } else {
-      openPage("namePage");
+
+      openPage(
+        "namePage"
+      );
+
     }
 
   }
@@ -2467,7 +2903,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   ENTER KEY HANDLING
+   KEYBOARD
 ========================================================= */
 
 document.addEventListener(
@@ -2475,50 +2911,42 @@ document.addEventListener(
   event => {
 
     if (
-      event.key === "Enter"
+      event.key ===
+      "Enter"
     ) {
 
-      const target =
-        event.target;
-
       if (
-        target &&
-        target.id ===
+        event.target?.id ===
         "usernameInput"
       ) {
+
         event.preventDefault();
+
         startTeachly();
+
       }
 
+
       if (
-        target &&
-        target.id ===
+        event.target?.id ===
         "messageInput"
       ) {
+
         event.preventDefault();
+
         sendMessage();
+
       }
 
     }
+
 
     if (
       event.key ===
       "Escape"
     ) {
 
-      const searchPage =
-        document.getElementById(
-          "searchPage"
-        );
-
-      if (
-        searchPage &&
-        searchPage.classList.contains(
-          "active"
-        )
-      ) {
-        goHome();
-      }
+      goHome();
 
     }
 
@@ -2527,21 +2955,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   STORAGE SYNC
-========================================================= */
-
-window.addEventListener(
-  "storage",
-  () => {
-    load();
-    applyTheme();
-    updateHome();
-  }
-);
-
-
-/* =========================================================
-   EXPOSE FUNCTIONS USED BY HTML
+   GLOBAL FUNCTIONS FOR HTML
 ========================================================= */
 
 window.openPage =
@@ -2577,14 +2991,14 @@ window.goHome =
 window.goBack =
   goBack;
 
-window.openLesson =
-  openLesson;
+window.renderLessons =
+  renderLessons;
 
 window.filterLessons =
   filterLessons;
 
-window.searchLessons =
-  searchLessons;
+window.openLesson =
+  openLesson;
 
 window.completeLesson =
   completeLesson;
@@ -2610,11 +3024,11 @@ window.openAITeacher =
 window.teacherAIHelp =
   teacherAIHelp;
 
-window.askAIQuick =
-  askAIQuick;
-
 window.askAITeacher =
   askAITeacher;
+
+window.askAIQuick =
+  askAIQuick;
 
 window.mysteryTopic =
   mysteryTopic;
@@ -2634,14 +3048,8 @@ window.updateProfile =
 window.toggleTheme =
   toggleTheme;
 
-window.showCountry =
-  showCountry;
-
-window.showLogin =
-  showLogin;
-
-window.showSignup =
-  showSignup;
+window.showContinent =
+  showContinent;
 
 window.logout =
   logout;
