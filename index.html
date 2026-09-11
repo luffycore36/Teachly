@@ -719,7 +719,36 @@ Study lessons and quizzes.
 
 
 
+<!-- SAVED LESSONS -->
 
+<div
+class="featureCard"
+onclick="openPage('savedLessonsPage')"
+>
+
+
+<div class="featureIcon">
+
+⭐
+
+</div>
+
+
+<h2>
+
+Saved Lessons
+
+</h2>
+
+
+<p>
+
+View your bookmarked lessons.
+
+</p>
+
+
+</div>
 
 
 
@@ -1383,24 +1412,13 @@ Ask AI Teacher
      SAVED LESSONS PAGE
 ========================= -->
 
-
 <section id="savedLessonsPage" class="page">
-
-
 
 <div class="sectionHeader">
 
-
-
 <button onclick="goHome()">
-
 ← Home
-
 </button>
-
-
-
-
 
 <h1>
 
@@ -1408,22 +1426,12 @@ Ask AI Teacher
 
 </h1>
 
-
-
-
 </div>
-
-
-
-
-
-
 
 <div
 id="savedLessonList"
 class="lessonGrid"
 >
-
 
 <p>
 
@@ -1431,14 +1439,8 @@ No saved lessons yet.
 
 </p>
 
-
-
 </div>
-
-
-
-
-
+     
 </section>
 
   <!-- =========================
@@ -1520,14 +1522,6 @@ class="lessonContent"
 >
 
 </div>
-
-
-
-
-
-
-
-
 
 <div class="lessonActions">
 
@@ -1787,14 +1781,67 @@ Ask
 
 </section>
 
+<!-- =========================
+     RANDOM TOPIC PAGE
+========================= -->
+
+<section id="mysteryPage" class="page">
+
+
+<div class="sectionHeader">
+
+
+<button onclick="goHome()">
+
+← Home
+
+</button>
+
+
+<h1>
+
+🎲 Random Topic
+
+</h1>
+
+
+</div>
 
 
 
 
+<div class="selectedLessonBox">
+
+
+<h2 id="mysteryTopicTitle">
+
+Topic
+
+</h2>
 
 
 
+<p id="mysteryTopicText">
 
+Click again to discover something new.
+
+</p>
+
+
+
+<button onclick="mysteryTopic()">
+
+🎲 Another Topic
+
+</button>
+
+
+
+</div>
+
+
+</section>
+     
 <!-- =========================
      AI TEACHER PAGE
 ========================= -->
@@ -2089,20 +2136,17 @@ class="profileAvatar"
 
 </div>
 
-
-
-
-
-
-
+<img
+id="avatarPreview"
+class="avatarPreview"
+>
+     
 <input
 id="avatarUpload"
 type="file"
-accept="image/*"
+accept="image/png,image/jpeg,image/webp"
+onchange="previewAvatar(event)"
 >
-
-
-
 
 
 <button onclick="uploadAvatar()">
@@ -2113,41 +2157,13 @@ accept="image/*"
 
 
 
-
-
-
-
-
 <h2 id="profileName">
 
 Learner
 
 </h2>
 
-
-
-
-
-
-
-<p id="profileRole">
-
-Role: Learner
-
-</p>
-
-
-
-
-
-
-
-
 <div class="stats">
-
-
-
-
 
 <div>
 
