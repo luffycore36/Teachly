@@ -579,6 +579,117 @@ error.message ||
 
 }
 
+// ===============================
+// RESEND EMAIL VERIFICATION CODE
+// ===============================
+
+async function resendVerificationCode(){
+
+const email =
+document
+.getElementById("verifyEmail")
+.value
+.trim();
+
+const message =
+document.getElementById(
+"verifyMessage"
+);
+
+if(!email){
+
+if(message)
+message.textContent =
+"Enter your email first.";
+
+return;
+
+}
+
+if(message)
+message.textContent =
+"Sending a new verification code...";
+
+try{
+
+const response =
+await fetch(
+`${API_URL}/api/auth/resend-verification`,
+{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+email
+})
+
+});
+
+const contentType =
+response.headers.get(
+"content-type"
+) || "";
+
+let data;
+
+if(contentType.includes("application/json")){
+
+data =
+await response.json();
+
+}
+else{
+
+const text =
+await response.text();
+
+throw new Error(
+`Server returned HTML instead of JSON. ${text.slice(0,200)}`
+);
+
+}
+
+if(!response.ok){
+
+throw new Error(
+data.error ||
+"Could not resend verification code."
+);
+
+}
+
+if(message)
+message.textContent =
+"New verification code sent! Check your email.";
+
+showToast(
+"Verification code sent 📧"
+);
+
+}
+catch(error){
+
+console.error(
+"RESEND VERIFICATION ERROR:",
+error
+);
+
+if(message)
+message.textContent =
+error.message ||
+"Could not resend verification code.";
+
+}
+
+}
+
+window.resendVerificationCode =
+resendVerificationCode;
+
 window.verifyEmail =
 verifyEmail;
 
