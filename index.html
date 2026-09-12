@@ -207,6 +207,13 @@
       Verify Email
     </button>
 
+<button
+  type="button"
+  onclick="resendVerificationCode()"
+>
+  Resend Verification Code
+</button>
+    
     <p id="verifyMessage"></p>
 
     <button
@@ -405,22 +412,14 @@
       and everyone has something to teach.
     </p>
 
-    <button
-      class="continueButton"
-      type="button"
-      onclick="c
-
-      <button
+ <button
   class="continueButton"
   type="button"
-  onclick="document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById('loginPage').classList.add('active');"
+  onclick="openPage('loginPage')"
 >
   Continue
 </button>
-    >
-      Continue
-    </button>
-
+    
   </div>
 
 </section>
