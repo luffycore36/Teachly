@@ -151,16 +151,27 @@ app.post("/api/auth/register", (req, res) => {
 
       password,
 
-      role:
-        role === "teacher"
-          ? "teacher"
-          : "learner",
+    role:
+  role === "teacher"
+    ? "teacher"
+    : "learner",
+
+lookingFor:
+  role === "teacher"
+    ? "learner"
+    : "teacher",
+
+online: false,
+
+connectionRequests: [],
+
+connections: [],
 
       verified: true,
 
       profileImage: "",
 
-      tickets: 100,
+      tickets: 0,
 
       sessions: 0,
 
@@ -305,7 +316,6 @@ app.post("/api/auth/logout", (req, res) => {
 
 });
 
-
 /* =====================================================
    PEOPLE
 ===================================================== */
@@ -316,11 +326,18 @@ app.get("/api/people", (req, res) => {
 
   const people = users
     .filter(user => user.verified !== false)
+    .filter(user => user.online === true)
     .map(user => ({
       id: user.id,
       username: user.username,
       profileImage: user.profileImage || "",
-      role: user.role || "learner"
+      role: user.role || "learner",
+      lookingFor:
+        user.lookingFor ||
+        (user.role === "teacher"
+          ? "learner"
+          : "teacher"),
+      online: true
     }));
 
   res.json({
@@ -330,6 +347,125 @@ app.get("/api/people", (req, res) => {
 
 });
 
+/* =====================================================
+   CONNECTION REQUEST
+===================================================== */
+
+app.post("/api/connect", (req, res) => {
+
+  try {
+
+    const token =
+      req.headers.authorization?.replace(
+        "Bearer ",
+        ""
+      );
+
+    const {
+      targetUserId
+    } = req.body;
+
+    const users = readUsers();
+
+    const sender =
+      users.find(
+        user => user.token === token
+      );
+
+    if (!sender) {
+      return res.status(401).json({
+        ok: false,
+        message: "Please log in."
+      });
+    }
+
+    const target =
+      users.find(
+        user => user.id === targetUserId
+      );
+
+    if (!target) {
+      return res.status(404).json({
+        ok: false,
+        message: "User not found."
+      });
+    }
+
+    if (sender.id === target.id) {
+      return res.status(400).json({
+        ok: false,
+        message: "You cannot connect with yourself."
+      });
+    }
+
+    target.connectionRequests =
+      Array.isArray(target.connectionRequests)
+        ? target.connectionRequests
+        : [];
+
+    sender.connections =
+      Array.isArray(sender.connections)
+        ? sender.connections
+        : [];
+
+    const alreadyRequested =
+      target.connectionRequests.some(
+        request =>
+          request.fromId === sender.id
+      );
+
+    if (alreadyRequested) {
+      return res.status(400).json({
+        ok: false,
+        message: "Connection request already sent."
+      });
+    }
+
+    target.connectionRequests.push({
+      fromId: sender.id,
+      username: sender.username,
+      role: sender.role,
+      createdAt: new Date().toISOString()
+    });
+
+    saveUsers(users);
+
+    const targetSocket =
+      onlineUsers.get(target.id);
+
+    if (targetSocket) {
+
+      io.to(targetSocket).emit(
+        "connection-request",
+        {
+          fromId: sender.id,
+          username: sender.username,
+          role: sender.role
+        }
+      );
+
+    }
+
+    res.json({
+      ok: true,
+      message: "Connection request sent!"
+    });
+
+  } catch (error) {
+
+    console.error(
+      "CONNECT ERROR:",
+      error
+    );
+
+    res.status(500).json({
+      ok: false,
+      message: "Could not send connection request."
+    });
+
+  }
+
+});
 
 /* =====================================================
    AVATAR
@@ -717,32 +853,46 @@ io.on("connection", socket => {
   );
 
 
-  socket.on("authenticate", token => {
+socket.on("authenticate", token => {
 
-    const user =
-      getUserFromToken(token);
+  const user =
+    getUserFromToken(token);
 
-    if (!user) {
-      socket.emit("auth-error", {
-        message: "Invalid session."
-      });
-
-      return;
-    }
-
-    socket.userId = user.id;
-
-    onlineUsers.set(
-      user.id,
-      socket.id
-    );
-
-    socket.emit("authenticated", {
-      id: user.id,
-      username: user.username
+  if (!user) {
+    socket.emit("auth-error", {
+      message: "Invalid session."
     });
 
+    return;
+  }
+
+  socket.userId = user.id;
+
+  onlineUsers.set(
+    user.id,
+    socket.id
+  );
+
+  const users = readUsers();
+
+  const storedUser =
+    users.find(
+      item => item.id === user.id
+    );
+
+  if (storedUser) {
+    storedUser.online = true;
+    saveUsers(users);
+  }
+
+  socket.emit("authenticated", {
+    id: user.id,
+    username: user.username
   });
+
+  io.emit("people-updated");
+
+});
 
 
   socket.on(
@@ -781,22 +931,33 @@ io.on("connection", socket => {
   );
 
 
-  socket.on("disconnect", () => {
+socket.on("disconnect", () => {
 
-    if (socket.userId) {
+  if (socket.userId) {
 
-      onlineUsers.delete(
-        socket.userId
-      );
-
-    }
-
-    console.log(
-      "Socket disconnected:",
-      socket.id
+    onlineUsers.delete(
+      socket.userId
     );
 
-  });
+    const users = readUsers();
+
+    const user =
+      users.find(
+        item => item.id === socket.userId
+      );
+
+    if (user) {
+      user.online = false;
+      saveUsers(users);
+    }
+
+    io.emit("people-updated");
+  }
+
+  console.log(
+    "Socket disconnected:",
+    socket.id
+  );
 
 });
 
@@ -827,3 +988,52 @@ server.listen(
 
   }
 );
+
+
+      async function connectToUser(userId) {
+
+  try {
+
+    const token =
+      localStorage.getItem("teachlyToken");
+
+    const response =
+      await fetch(
+        "https://teachly-nmxh.onrender.com/api/connect",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization":
+              `Bearer ${token}`
+          },
+
+          body: JSON.stringify({
+            targetUserId: userId
+          })
+        }
+      );
+
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+      alert(data.message || "Could not connect.");
+      return;
+    }
+
+    alert("✅ Connection request sent!");
+
+  } catch (error) {
+
+    console.error(
+      "CONNECT ERROR:",
+      error
+    );
+
+    alert(
+      "Could not connect right now."
+    );
+  }
+}
