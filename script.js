@@ -101,21 +101,17 @@ answer:"Carbon dioxide"
 document.addEventListener(
 "DOMContentLoaded",
 ()=>{
-
+    
 loadTheme();
-
 loadUser();
 
 if(currentUser){
 
 prepareUser();
-
 updateHome();
-
 openPage("homePage");
 
-}
-else{
+}else{
 
 openPage("loginPage");
 
@@ -330,10 +326,8 @@ headers:{
 },
 
 body:JSON.stringify({
-
 email,
 password
-
 })
 
 });
@@ -351,9 +345,7 @@ currentUser =
 data.user;
 
 prepareUser();
-
 saveUser();
-
 updateHome();
 
 openPage(
@@ -383,7 +375,7 @@ loginUser;
 
 
 // ===============================
-// REGISTER
+// REGISTRATION
 // ===============================
 
 async function registerUserAccount(){
@@ -447,12 +439,10 @@ headers:{
 },
 
 body:JSON.stringify({
-
 username,
 email,
 password,
 role
-
 })
 
 });
@@ -502,7 +492,7 @@ registerUserAccount;
 
 
 // ===============================
-// VERIFY EMAIL
+// EMAIL VERIFICATION
 // ===============================
 
 async function verifyEmail(){
@@ -548,10 +538,8 @@ headers:{
 },
 
 body:JSON.stringify({
-
 email,
 code
-
 })
 
 });
@@ -621,13 +609,17 @@ if(currentUser){
 await fetch(
 `${API_URL}/api/auth/logout`,
 {
+
 method:"POST",
+
 headers:{
 "Content-Type":"application/json"
 },
+
 body:JSON.stringify({
 email:currentUser.email
 })
+
 }
 );
 
@@ -660,7 +652,7 @@ logout;
 
 
 // ===============================
-// HOME UPDATE
+// HOME DASHBOARD
 // ===============================
 
 function updateHome(){
@@ -713,10 +705,10 @@ updateHome;
 
 
 // ===============================
-// ROLE SELECT
+// ROLE SELECTION
 // ===============================
 
-function chooseRole(role){
+async function chooseRole(role){
 
 if(role!=="learner" &&
 role!=="teacher"){
@@ -737,40 +729,215 @@ saveUser();
 
 }
 
-if(role==="learner"){
-
 openPage(
 "searchPage"
+);
+
+const title =
+document.getElementById(
+"searchTitle"
+);
+
+const text =
+document.getElementById(
+"searchText"
+);
+
+if(role==="learner"){
+
+if(title)
+title.textContent =
+"Finding a teacher...";
+
+if(text)
+text.textContent =
+"Looking for a real registered teacher volunteer";
+
+}
+else{
+
+if(title)
+title.textContent =
+"Finding a learner...";
+
+if(text)
+text.textContent =
+"Looking for a real registered learner volunteer";
+
+}
+
+setTimeout(
+async ()=>{
+
+try{
+
+const response =
+await fetch(
+`${API_URL}/api/people`
+);
+
+const contentType =
+response.headers.get("content-type") || "";
+
+let data;
+
+if(contentType.includes("application/json")){
+
+data = await response.json();
+
+}
+else{
+
+const html =
+await response.text();
+
+throw new Error(
+`Server returned HTML instead of JSON. ${html.slice(0,200)}`
+);
+
+}
+
+if(!response.ok){
+
+throw new Error(
+data.error ||
+"Unable to find users."
+);
+
+}
+
+const users =
+Array.isArray(data.people)
+?
+data.people
+:
+[];
+
+const currentUsername =
+String(
+currentUser?.username || ""
+)
+.trim()
+.toLowerCase();
+
+const matches =
+users.filter(
+user=>
+user.username &&
+String(user.username)
+.trim()
+.toLowerCase()
+!== currentUsername &&
+user.role ===
+(
+role==="learner"
+?
+"teacher"
+:
+"learner"
+)
+);
+
+if(!matches.length){
+
+if(role==="learner"){
+
+showToast(
+"No registered teacher volunteer is available."
 );
 
 setTimeout(
 ()=>{
 
-openPage(
-"peoplePage"
+const useAI =
+confirm(
+"No registered teacher volunteer is available.\n\nDo you want AI to teach you?"
 );
+
+if(useAI){
+
+openAITeacher();
+
+}
+else{
+
+goHome();
+
+}
+
+},
+500
+);
+
+}
+else{
+
+showToast(
+"No registered learner volunteer is available."
+);
+
+setTimeout(
+goHome,
+1200
+);
+
+}
+
+return;
+
+}
+
+const person =
+matches[0];
+
+currentChatUser =
+person;
+
+if(currentUser){
+
+currentUser.sessions =
+Number(currentUser.sessions || 0) + 1;
+
+saveUser();
+updateHome();
+
+}
+
+openChat(
+`${person.username} • ${person.role || "Teachly user"}`
+);
+
+}
+
+catch(error){
+
+console.error(
+"MATCHING ERROR:",
+error
+);
+
+showToast(
+"Could not check registered users right now."
+);
+
+setTimeout(
+goHome,
+1500
+);
+
+}
 
 },
 1200
 );
 
 }
-else{
-
-openPage(
-"aiPage"
-);
-
-}
-
-}
 
 window.chooseRole =
 chooseRole;
 
-
 // ===============================
-// LESSON SYSTEM
+// LESSON LIBRARY
 // ===============================
 
 function renderLessons(category="All"){
@@ -782,6 +949,8 @@ document.getElementById(
 
 if(!grid)
 return;
+
+currentCategory = category;
 
 const list =
 category==="All"
@@ -798,37 +967,55 @@ grid.innerHTML="";
 list.forEach(
 lesson=>{
 
-const card =
-document.createElement(
-"div"
+const completed =
+currentUser &&
+currentUser.completedLessons.includes(
+lesson.id
 );
+
+const saved =
+currentUser &&
+currentUser.savedLessons.includes(
+lesson.id
+);
+
+const card =
+document.createElement("div");
 
 card.className =
-"lessonCard";
+"lesson-card";
 
 card.innerHTML = `
+<div class="lesson-icon">${lesson.icon}</div>
 
-<div class="lessonIcon">
-${lesson.icon}
+<h3>${escapeHTML(lesson.title)}</h3>
+
+<p>${escapeHTML(lesson.description)}</p>
+
+<div class="lesson-category">
+${escapeHTML(lesson.category)}
 </div>
 
-<h3>
-${lesson.title}
-</h3>
+<div class="lesson-actions">
 
-<p>
-${lesson.description}
-</p>
-
-<button onclick="openLesson(${lesson.id})">
-Learn →
+<button
+onclick="openLesson(${lesson.id})"
+>
+${completed ? "Review Lesson" : "Start Lesson"}
 </button>
 
+<button
+class="save-lesson-button"
+onclick="toggleSavedLesson(${lesson.id})"
+title="Save lesson"
+>
+${saved ? "🔖" : "🔖"}
+</button>
+
+</div>
 `;
 
-grid.appendChild(
-card
-);
+grid.appendChild(card);
 
 });
 
@@ -839,7 +1026,7 @@ renderLessons;
 
 
 // ===============================
-// FILTER LESSONS
+// LESSON FILTERS
 // ===============================
 
 function filterLessons(category){
@@ -847,9 +1034,30 @@ function filterLessons(category){
 currentCategory =
 category;
 
-renderLessons(
-category
+document
+.querySelectorAll(
+"[data-category]"
+)
+.forEach(button=>{
+
+button.classList.remove(
+"active"
 );
+
+if(
+button.dataset.category ===
+category
+){
+
+button.classList.add(
+"active"
+);
+
+}
+
+});
+
+renderLessons(category);
 
 }
 
@@ -863,61 +1071,111 @@ filterLessons;
 
 function openLesson(id){
 
-currentLesson =
+const lesson =
 lessons.find(
-lesson =>
-lesson.id===id
+item =>
+item.id === Number(id)
 );
 
-if(!currentLesson)
+if(!lesson)
 return;
+
+currentLesson =
+lesson;
 
 const title =
 document.getElementById(
-"selectedLessonTitle"
-);
-
-const category =
-document.getElementById(
-"selectedLessonCategory"
-);
-
-const desc =
-document.getElementById(
-"selectedLessonDescription"
+"lessonTitle"
 );
 
 const content =
 document.getElementById(
-"selectedLessonContent"
+"lessonContent"
+);
+
+const category =
+document.getElementById(
+"lessonCategory"
 );
 
 if(title)
 title.textContent =
-currentLesson.title;
+lesson.icon + " " + lesson.title;
 
 if(category)
 category.textContent =
-currentLesson.category;
-
-if(desc)
-desc.textContent =
-currentLesson.description;
+lesson.category;
 
 if(content)
 content.innerHTML =
-currentLesson.content;
+lesson.content;
 
-updateSaveButton();
+updateLessonButtons();
 
 openPage(
-"selectedLessonPage"
+"lessonPage"
 );
 
 }
 
 window.openLesson =
 openLesson;
+
+
+// ===============================
+// LESSON ACTIONS
+// ===============================
+
+function updateLessonButtons(){
+
+if(!currentLesson)
+return;
+
+const completeButton =
+document.getElementById(
+"completeLessonButton"
+);
+
+const saveButton =
+document.getElementById(
+"saveLessonButton"
+);
+
+const completed =
+currentUser &&
+currentUser.completedLessons.includes(
+currentLesson.id
+);
+
+const saved =
+currentUser &&
+currentUser.savedLessons.includes(
+currentLesson.id
+);
+
+if(completeButton){
+
+completeButton.textContent =
+completed
+?
+"Lesson Completed ✓"
+:
+"Complete Lesson";
+
+}
+
+if(saveButton){
+
+saveButton.textContent =
+saved
+?
+"🔖 Saved"
+:
+"🔖 Save Lesson";
+
+}
+
+}
 
 
 // ===============================
@@ -942,15 +1200,25 @@ currentUser.completedLessons.push(
 currentLesson.id
 );
 
-currentUser.coins += 20;
+currentUser.coins += 25;
 
 saveUser();
-
 updateHome();
 
-renderBadges();
+showToast(
+"Lesson completed! +25 💰"
+);
 
 }
+else{
+
+showToast(
+"This lesson is already completed."
+);
+
+}
+
+updateLessonButtons();
 
 }
 
@@ -962,38 +1230,60 @@ completeLesson;
 // SAVE LESSON
 // ===============================
 
-function toggleSavedLesson(){
+function toggleSavedLesson(id){
 
-if(!currentUser ||
-!currentLesson)
+if(!currentUser)
 return;
 
 prepareUser();
 
+const lessonId =
+Number(id);
+
 const index =
 currentUser.savedLessons.indexOf(
-currentLesson.id
+lessonId
 );
 
-if(index>=0){
+if(index === -1){
+
+currentUser.savedLessons.push(
+lessonId
+);
+
+showToast(
+"Lesson saved 🔖"
+);
+
+}
+else{
 
 currentUser.savedLessons.splice(
 index,
 1
 );
 
-}
-else{
-
-currentUser.savedLessons.push(
-currentLesson.id
+showToast(
+"Lesson removed from saved lessons."
 );
 
 }
 
 saveUser();
 
-updateSaveButton();
+updateLessonButtons();
+
+if(
+document.getElementById(
+"lessonGrid"
+)
+){
+
+renderLessons(
+currentCategory
+);
+
+}
 
 }
 
@@ -1002,93 +1292,81 @@ toggleSavedLesson;
 
 
 // ===============================
-// SAVE BUTTON
-// ===============================
-
-function updateSaveButton(){
-
-const button =
-document.getElementById(
-"saveLessonButton"
-);
-
-if(!button)
-return;
-
-button.textContent =
-(
-currentUser &&
-currentLesson &&
-currentUser.savedLessons.includes(
-currentLesson.id
-)
-)
-?
-"★ Saved"
-:
-"☆ Save Lesson";
-
-}
-
-
-// ===============================
 // SAVED LESSONS
 // ===============================
 
 function renderSavedLessons(){
 
-const box =
+const grid =
 document.getElementById(
-"savedLessonList"
+"savedLessonGrid"
 );
 
-if(!box)
+if(!grid)
 return;
 
-box.innerHTML="";
+if(
+!currentUser ||
+!currentUser.savedLessons.length
+){
 
-const saved =
-currentUser?.savedLessons || [];
-
-if(saved.length===0){
-
-box.innerHTML =
-"<p>No saved lessons.</p>";
+grid.innerHTML = `
+<div class="empty-state">
+<h3>No saved lessons yet</h3>
+<p>Save lessons you want to return to later.</p>
+</div>
+`;
 
 return;
 
 }
 
-saved.forEach(
-id=>{
-
-const lesson =
-lessons.find(
-x=>x.id===id
+const saved =
+lessons.filter(
+lesson =>
+currentUser.savedLessons.includes(
+lesson.id
+)
 );
 
-if(!lesson)
-return;
+grid.innerHTML = "";
 
-box.innerHTML += `
+saved.forEach(
+lesson=>{
 
-<div class="lessonCard">
+const card =
+document.createElement("div");
+
+card.className =
+"lesson-card";
+
+card.innerHTML = `
+<div class="lesson-icon">
+${lesson.icon}
+</div>
 
 <h3>
-${lesson.title}
+${escapeHTML(lesson.title)}
 </h3>
 
 <p>
-${lesson.description}
+${escapeHTML(lesson.description)}
 </p>
 
-<button onclick="openLesson(${lesson.id})">
-Open
+<button
+onclick="openLesson(${lesson.id})"
+>
+Open Lesson
 </button>
 
-</div>
-
+<button
+onclick="toggleSavedLesson(${lesson.id})"
+>
+Remove 🔖
+</button>
 `;
+
+grid.appendChild(card);
 
 });
 
@@ -1104,18 +1382,59 @@ renderSavedLessons;
 
 function startQuiz(){
 
-if(!currentLesson)
+if(!currentLesson){
+
+showToast(
+"Choose a lesson first!"
+);
+
+openPage(
+"aiPage"
+);
+
 return;
 
-currentQuiz =
-currentLesson.quiz;
+}
+
+startQuizForLesson(
+currentLesson
+);
+
+}
+
+window.startQuiz =
+startQuiz;
+
+
+function startQuizForLesson(lesson){
+
+if(!lesson ||
+!lesson.quiz){
+
+showToast(
+"This lesson does not have a quiz yet."
+);
+
+return;
+
+}
+
+currentLesson =
+lesson;
+
+currentQuiz = {
+lessonId: lesson.id,
+question: lesson.quiz.question,
+options: lesson.quiz.options,
+answer: lesson.quiz.answer
+};
 
 const question =
 document.getElementById(
 "quizQuestion"
 );
 
-const box =
+const options =
 document.getElementById(
 "quizOptions"
 );
@@ -1130,12 +1449,11 @@ question.textContent =
 currentQuiz.question;
 
 if(result)
-result.textContent="";
+result.textContent = "";
 
-if(!box)
-return;
+if(options){
 
-box.innerHTML="";
+options.innerHTML = "";
 
 currentQuiz.options.forEach(
 option=>{
@@ -1145,17 +1463,22 @@ document.createElement(
 "button"
 );
 
+button.className =
+"quiz-option";
+
 button.textContent =
 option;
 
 button.onclick =
 ()=>answerQuiz(option);
 
-box.appendChild(
+options.appendChild(
 button
 );
 
 });
+
+}
 
 openPage(
 "quizPage"
@@ -1163,12 +1486,12 @@ openPage(
 
 }
 
-window.startQuiz =
-startQuiz;
+window.startQuizForLesson =
+startQuizForLesson;
 
 
 // ===============================
-// ANSWER QUIZ
+// QUIZ ANSWERS
 // ===============================
 
 function answerQuiz(answer){
@@ -1176,40 +1499,74 @@ function answerQuiz(answer){
 if(!currentQuiz)
 return;
 
+const buttons =
+document.querySelectorAll(
+".quiz-option"
+);
+
+buttons.forEach(
+button=>{
+button.disabled = true;
+
+if(
+button.textContent ===
+currentQuiz.answer
+){
+
+button.classList.add(
+"correct"
+);
+
+}
+
+if(
+button.textContent ===
+answer &&
+answer !==
+currentQuiz.answer
+){
+
+button.classList.add(
+"wrong"
+);
+
+}
+
+});
+
 const result =
 document.getElementById(
 "quizResult"
 );
 
-if(answer===currentQuiz.answer){
+if(
+answer ===
+currentQuiz.answer
+){
 
 if(result)
 result.textContent =
-"🎉 Correct!";
-
-if(currentUser){
-
-prepareUser();
+"Correct! 🎉";
 
 if(
+currentUser &&
 !currentUser.quizCompleted.includes(
-currentLesson.id
+currentQuiz.lessonId
 )
 ){
 
 currentUser.quizCompleted.push(
-currentLesson.id
+currentQuiz.lessonId
 );
 
-currentUser.coins += 10;
+currentUser.coins += 15;
 
 saveUser();
-
 updateHome();
 
-renderBadges();
-
-}
+showToast(
+"Correct answer! +15 💰"
+);
 
 }
 
@@ -1218,7 +1575,7 @@ else{
 
 if(result)
 result.textContent =
-"❌ Try again";
+"Not quite. Keep learning!";
 
 }
 
@@ -1229,7 +1586,31 @@ answerQuiz;
 
 
 // ===============================
-// AI RESPONSE HELPER
+// QUIZ COMPLETION
+// ===============================
+
+function finishQuiz(){
+
+if(!currentQuiz){
+
+goHome();
+
+return;
+
+}
+
+openPage(
+"lessonPage"
+);
+
+}
+
+window.finishQuiz =
+finishQuiz;
+
+
+// ===============================
+// AI RESPONSE HANDLER
 // ===============================
 
 async function readAIResponse(response){
@@ -1239,9 +1620,7 @@ response.headers.get(
 "content-type"
 ) || "";
 
-if(
-!response.ok
-){
+if(!response.ok){
 
 if(
 contentType.includes(
@@ -1287,15 +1666,45 @@ return response.json();
 
 }
 
-window.readAIResponse =
-readAIResponse;
-
 
 // ===============================
-// AI TEACHER
+// AI TEACHER REQUEST
 // ===============================
 
 async function askAI(message){
+
+if(!message ||
+!String(message).trim()){
+
+return;
+
+}
+
+const cleanMessage =
+String(message).trim();
+
+renderAIMessage(
+"student",
+cleanMessage
+);
+
+const input =
+document.getElementById(
+"aiInput"
+);
+
+if(input)
+input.value = "";
+
+const loadingId =
+"ai-loading-" +
+Date.now();
+
+renderAIMessage(
+"teacher",
+"Thinking... 🤔",
+loadingId
+);
 
 try{
 
@@ -1312,15 +1721,19 @@ headers:{
 
 body:JSON.stringify({
 
-message,
+message:
+cleanMessage,
 
 username:
 currentUser?.username ||
 "Student",
 
 lesson:
-currentLesson?.title ||
-null
+currentLesson
+?
+currentLesson.title
+:
+"General Learning"
 
 })
 
@@ -1331,11 +1744,23 @@ await readAIResponse(
 response
 );
 
-return data.answer ||
-"AI could not answer.";
+const answer =
+data.answer ||
+data.response ||
+data.message ||
+data.output ||
+"Sorry, I couldn't generate an answer.";
+
+removeAIMessage(
+loadingId
+);
+
+renderAIMessage(
+"teacher",
+answer
+);
 
 }
-
 catch(error){
 
 console.error(
@@ -1343,7 +1768,14 @@ console.error(
 error
 );
 
-return "AI Teacher unavailable.";
+removeAIMessage(
+loadingId
+);
+
+renderAIMessage(
+"teacher",
+"Sorry, I couldn't reach the AI right now. Please try again."
+);
 
 }
 
@@ -1354,59 +1786,202 @@ askAI;
 
 
 // ===============================
-// AI TEACHER CHAT
+// AI CHAT MESSAGE RENDERING
 // ===============================
 
-async function teacherAIHelp(){
+function renderAIMessage(
+sender,
+message,
+id=null
+){
+
+const container =
+document.getElementById(
+"aiMessages"
+);
+
+if(!container)
+return;
+
+const messageElement =
+document.createElement(
+"div"
+);
+
+messageElement.className =
+sender === "teacher"
+?
+"ai-message teacher-message"
+:
+"ai-message student-message";
+
+if(id)
+messageElement.id =
+id;
+
+messageElement.innerHTML = `
+<div class="ai-message-content">
+${formatAIText(message)}
+</div>
+`;
+
+container.appendChild(
+messageElement
+);
+
+container.scrollTop =
+container.scrollHeight;
+
+}
+
+
+// ===============================
+// REMOVE AI MESSAGE
+// ===============================
+
+function removeAIMessage(id){
+
+const element =
+document.getElementById(id);
+
+if(element)
+element.remove();
+
+}
+
+
+// ===============================
+// AI TEXT FORMATTER
+// ===============================
+
+function formatAIText(text){
+
+if(text === null ||
+text === undefined)
+return "";
+
+let value =
+String(text);
+
+value =
+escapeHTML(value);
+
+value =
+value.replace(
+/\*\*(.*?)\*\*/g,
+"<strong>$1</strong>"
+);
+
+value =
+value.replace(
+/`([^`]+)`/g,
+"<code>$1</code>"
+);
+
+value =
+value.replace(
+/\n/g,
+"<br>"
+);
+
+return value;
+
+}
+
+
+// ===============================
+// PREPARE AI TEACHER
+// ===============================
+
+function prepareAITeacherForLesson(){
+
+const container =
+document.getElementById(
+"aiMessages"
+);
+
+if(!container)
+return;
+
+container.innerHTML = "";
+
+if(currentLesson){
+
+renderAIMessage(
+"teacher",
+`Hi! I'm your AI Teacher. Let's learn about ${currentLesson.title}. Ask me anything! 📚`
+);
+
+}
+else{
+
+renderAIMessage(
+"teacher",
+"Hi! I'm your AI Teacher. What would you like to learn today? 🧠"
+);
+
+}
+
+}
+
+window.prepareAITeacherForLesson =
+prepareAITeacherForLesson;
+
+
+// ===============================
+// OPEN AI TEACHER
+// ===============================
+
+function openAITeacher(){
+
+openPage(
+"aiPage"
+);
+
+if(!currentLesson){
+
+currentLesson = null;
+
+}
+
+prepareAITeacherForLesson();
+
+}
+
+window.openAITeacher =
+openAITeacher;
+
+
+// ===============================
+// AI HELP
+// ===============================
+
+function teacherAIHelp(){
 
 const input =
 document.getElementById(
-"aiQuestion"
+"aiInput"
 );
 
-const chat =
-document.getElementById(
-"aiChat"
-);
-
-if(!input || !chat)
+if(!input)
 return;
 
-const question =
+const message =
 input.value.trim();
 
-if(!question)
-return;
+if(!message){
 
-chat.innerHTML += `
-
-<div class="aiMessage user">
-
-${escapeHTML(question)}
-
-</div>
-
-`;
-
-input.value="";
-
-const answer =
-await askAI(
-question
+showToast(
+"Type a question first."
 );
 
-chat.innerHTML += `
+return;
 
-<div class="aiMessage assistant">
+}
 
-${escapeHTML(answer)}
-
-</div>
-
-`;
-
-chat.scrollTop =
-chat.scrollHeight;
+askAI(
+message
+);
 
 }
 
@@ -1415,101 +1990,65 @@ teacherAIHelp;
 
 
 // ===============================
-// SAFE HTML
+// QUICK AI QUESTIONS
 // ===============================
 
-function escapeHTML(value){
+function askAIQuick(question){
 
-return String(value)
-.replace(/&/g,"&amp;")
-.replace(/</g,"&lt;")
-.replace(/>/g,"&gt;")
-.replace(/"/g,"&quot;")
-.replace(/'/g,"&#039;");
+askAI(
+question
+);
 
 }
+
+window.askAIQuick =
+askAIQuick;
 
 
 // ===============================
 // MYSTERY TOPIC
 // ===============================
 
-function mysteryTopic(){
+const mysteryTopics = [
 
-const topics=[
-
-[
 "Why is the sky blue?",
-"Sunlight scatters in Earth's atmosphere."
-],
-
-[
 "How do airplanes fly?",
-"Wings create lift by changing air pressure."
-],
-
-[
-"Why do seasons happen?",
-"Earth's tilt changes sunlight."
-],
-
-[
-"What are black holes?",
-"Places with extremely strong gravity."
-],
-
-[
-"How do plants grow?",
-"Plants use sunlight, water and carbon dioxide."
-]
+"How does the human brain learn?",
+"Why do stars shine?",
+"How does electricity work?",
+"What causes rain?",
+"How do computers understand instructions?",
+"Why do we have seasons?",
+"How do volcanoes form?",
+"How does the internet work?",
+"Why does the Moon appear to change shape?",
+"How do plants grow?"
 
 ];
 
+
+function mysteryTopic(){
+
 const topic =
-topics[
+mysteryTopics[
 Math.floor(
-Math.random()*topics.length
+Math.random() *
+mysteryTopics.length
 )
 ];
 
-const page =
-document.getElementById(
-"mysteryPage"
+openAITeacher();
+
+setTimeout(
+()=>{
+
+askAI(
+`Teach me about this mystery topic in a simple and interesting way: ${topic}`
 );
 
-if(page){
-
-openPage(
-"mysteryPage"
+},
+100
 );
-
-const title =
-document.getElementById(
-"mysteryTopicTitle"
-);
-
-const text =
-document.getElementById(
-"mysteryTopicText"
-);
-
-if(title)
-title.textContent =
-topic[0];
-
-if(text)
-text.textContent =
-topic[1];
-
-}
-
-else{
-
-alert(
-topic[0]+"\n\n"+topic[1]
-);
-
-}
 
 }
 
@@ -1521,82 +2060,152 @@ mysteryTopic;
 // BADGES
 // ===============================
 
-function renderBadges(){
+const badges = [
 
-const box =
-document.getElementById(
-"allBadges"
-);
+{
+id:"firstLesson",
+icon:"🌱",
+name:"First Lesson",
+description:"Complete your first lesson.",
+check:user =>
+user.completedLessons.length >= 1
+},
 
-if(!box)
-return;
+{
+id:"bookCollector",
+icon:"📚",
+name:"Book Collector",
+description:"Complete 3 lessons.",
+check:user =>
+user.completedLessons.length >= 3
+},
 
-const completed =
-currentUser?.completedLessons?.length || 0;
+{
+id:"knowledgeMaster",
+icon:"🧠",
+name:"Knowledge Master",
+description:"Complete every available lesson.",
+check:user =>
+user.completedLessons.length >= lessons.length
+},
 
-const quizzes =
-currentUser?.quizCompleted?.length || 0;
+{
+id:"quizBeginner",
+icon:"🏆",
+name:"Quiz Beginner",
+description:"Complete your first quiz.",
+check:user =>
+user.quizCompleted.length >= 1
+},
 
-const badges=[
+{
+id:"quizExpert",
+icon:"⭐",
+name:"Quiz Expert",
+description:"Complete 3 quizzes.",
+check:user =>
+user.quizCompleted.length >= 3
+},
 
-[
-"🌱",
-"First Lesson",
-completed>=1
-],
+{
+id:"connector",
+icon:"🤝",
+name:"Connector",
+description:"Complete your first learning session.",
+check:user =>
+Number(user.sessions || 0) >= 1
+},
 
-[
-"📚",
-"Book Collector",
-completed>=5
-],
+{
+id:"lessonSaver",
+icon:"🔖",
+name:"Lesson Saver",
+description:"Save your first lesson.",
+check:user =>
+user.savedLessons.length >= 1
+},
 
-[
-"🧠",
-"Knowledge Master",
-completed>=10
-],
+{
+id:"shopExplorer",
+icon:"🛍️",
+name:"Shop Explorer",
+description:"Purchase your first shop item.",
+check:user =>
+user.purchasedItems.length >= 1
+},
 
-[
-"🏆",
-"Quiz Starter",
-quizzes>=1
-],
-
-[
-"👑",
-"Teachly Legend",
-completed>=25
-]
+{
+id:"teachlyLegend",
+icon:"👑",
+name:"Teachly Legend",
+description:"Complete 5 lessons and 3 quizzes.",
+check:user =>
+user.completedLessons.length >= 5 &&
+user.quizCompleted.length >= 3
+}
 
 ];
 
-box.innerHTML="";
+
+// ===============================
+// BADGE DISPLAY
+// ===============================
+
+function renderBadges(){
+
+const container =
+document.getElementById(
+"badgesGrid"
+);
+
+if(!container)
+return;
+
+prepareUser();
+
+container.innerHTML = "";
 
 badges.forEach(
 badge=>{
 
-box.innerHTML += `
+const unlocked =
+badge.check(
+currentUser
+);
 
-<div class="badge ${badge[2]?"":"locked"}">
+const card =
+document.createElement(
+"div"
+);
 
-<h2>
-${badge[0]}
-</h2>
+card.className =
+unlocked
+?
+"badge-card unlocked"
+:
+"badge-card locked";
+
+card.innerHTML = `
+<div class="badge-icon">
+${unlocked ? badge.icon : "🔒"}
+</div>
 
 <h3>
-${badge[1]}
+${escapeHTML(badge.name)}
 </h3>
 
 <p>
-${badge[2]?
-"Unlocked ✓":
-"Locked"}
+${escapeHTML(badge.description)}
 </p>
 
-</div>
-
+<span>
+${unlocked ? "Unlocked ✓" : "Locked"}
+</span>
 `;
+
+container.appendChild(
+card
+);
 
 });
 
@@ -1607,67 +2216,156 @@ renderBadges;
 
 
 // ===============================
-// SHOP
+// SHOP DATA
+// ===============================
+
+const shopProducts = [
+
+{
+id:"purpleGlow",
+name:"Purple Glow",
+icon:"🟣",
+price:50,
+description:"Give your profile a glowing purple effect."
+},
+
+{
+id:"starEffect",
+name:"Star Effect",
+icon:"⭐",
+price:100,
+description:"Add a sparkling star effect."
+},
+
+{
+id:"rocketEffect",
+name:"Rocket Effect",
+icon:"🚀",
+price:150,
+description:"Show your learning speed with a rocket effect."
+},
+
+{
+id:"fireAura",
+name:"Fire Aura",
+icon:"🔥",
+price:250,
+description:"Unlock a fiery profile aura."
+},
+
+{
+id:"royalCrown",
+name:"Royal Crown",
+icon:"👑",
+price:500,
+description:"Show everyone your Teachly royalty."
+},
+
+{
+id:"diamondAura",
+name:"Diamond Aura",
+icon:"💎",
+price:1000,
+description:"Unlock a premium diamond aura."
+},
+
+{
+id:"galaxyEffect",
+name:"Galaxy Effect",
+icon:"🌌",
+price:2000,
+description:"Unlock a galaxy-inspired effect."
+},
+
+{
+id:"lightningAura",
+name:"Lightning Aura",
+icon:"⚡",
+price:3000,
+description:"Unlock an electric lightning aura."
+},
+
+{
+id:"championEffect",
+name:"Champion Effect",
+icon:"🏆",
+price:5000,
+description:"Display the champion profile effect."
+},
+
+{
+id:"rainbowAura",
+name:"Rainbow Aura",
+icon:"🌈",
+price:7500,
+description:"Unlock the rainbow profile effect."
+}
+
+];
+
+
+// ===============================
+// SHOP DISPLAY
 // ===============================
 
 function renderShop(){
 
-const box =
+const container =
 document.getElementById(
-"shopList"
+"shopGrid"
 );
 
-if(!box)
+if(!container)
 return;
 
-const items=[
+prepareUser();
 
-["🟣","Purple Glow",50],
-["⭐","Star Effect",100],
-["🔥","Fire Aura",250],
-["👑","Royal Crown",500],
-["💎","Diamond Aura",1000],
-["⚡","Lightning Aura",3000]
+container.innerHTML = "";
 
-];
+shopProducts.forEach(
+product=>{
 
-box.innerHTML="";
-
-items.forEach(
-item=>{
-
-const owned =
-currentUser?.purchasedItems?.includes(
-item[1]
+const purchased =
+currentUser.purchasedItems.includes(
+product.id
 );
 
-box.innerHTML += `
+const card =
+document.createElement(
+"div"
+);
 
-<div class="shopItem">
+card.className =
+"shop-card";
 
-<h2>
-${item[0]}
-</h2>
+card.innerHTML = `
+<div class="shop-icon">
+${product.icon}
+</div>
 
 <h3>
-${item[1]}
+${escapeHTML(product.name)}
 </h3>
 
 <p>
-💰 ${item[2]}
+${escapeHTML(product.description)}
 </p>
 
-<button
-onclick="buyItem('${escapeHTML(item[1])}',${item[2]})"
->
-
-${owned?"Equip":"Buy"}
-
-</button>
-
+<div class="shop-price">
+💰 ${product.price}
 </div>
 
+<button
+onclick="buyShopItem('${product.id}')"
+${purchased ? "disabled" : ""}
+>
+${purchased ? "Purchased ✓" : "Buy"}
+</button>
 `;
+
+container.appendChild(
+card
+);
 
 });
 
@@ -1681,209 +2379,88 @@ renderShop;
 // BUY SHOP ITEM
 // ===============================
 
-function buyItem(name,price){
+function buyShopItem(id){
 
 if(!currentUser)
+return;
+
+const product =
+shopProducts.find(
+item =>
+item.id === id
+);
+
+if(!product)
 return;
 
 prepareUser();
 
 if(
 currentUser.purchasedItems.includes(
-name
+product.id
 )
 ){
 
-currentUser.equippedItem =
-name;
-
-}
-else{
-
-if(
-currentUser.coins < price
-){
-
-alert(
-"Not enough coins"
+showToast(
+"Item already purchased."
 );
 
 return;
 
 }
 
-currentUser.coins -= price;
+if(
+currentUser.coins <
+product.price
+){
+
+showToast(
+"Not enough 💰 coins."
+);
+
+return;
+
+}
+
+currentUser.coins -=
+product.price;
 
 currentUser.purchasedItems.push(
-name
+product.id
 );
 
-currentUser.equippedItem =
-name;
-
-}
-
 saveUser();
-
 updateHome();
-
 renderShop();
 
-}
-
-window.buyItem =
-buyItem;
-
-
-// ===============================
-// AVATAR PREVIEW
-// ===============================
-
-function previewAvatar(event){
-
-const file =
-event.target.files?.[0];
-
-if(!file)
-return;
-
-const reader =
-new FileReader();
-
-reader.onload =
-e=>{
-
-const preview =
-document.getElementById(
-"avatarPreview"
-);
-
-if(preview){
-
-preview.src =
-e.target.result;
-
-preview.style.display =
-"block";
-
-}
-
-};
-
-reader.readAsDataURL(
-file
+showToast(
+`${product.name} purchased! 🎉`
 );
 
 }
 
-window.previewAvatar =
-previewAvatar;
+window.buyShopItem =
+buyShopItem;
 
 
 // ===============================
-// UPLOAD AVATAR
-// ===============================
-
-function uploadAvatar(){
-
-const preview =
-document.getElementById(
-"avatarPreview"
-);
-
-if(
-!preview ||
-!currentUser ||
-!preview.src
-)
-return;
-
-currentUser.profileImage =
-preview.src;
-
-saveUser();
-
-updateProfile();
-
-}
-
-window.uploadAvatar =
-uploadAvatar;
-
-
-// ===============================
-// PROFILE
-// ===============================
-
-function updateProfile(){
-
-if(!currentUser)
-return;
-
-const name =
-document.getElementById(
-"profileName"
-);
-
-const coins =
-document.getElementById(
-"profileCoins"
-);
-
-const lessonsCompleted =
-document.getElementById(
-"profileLessons"
-);
-
-if(name)
-name.textContent =
-currentUser.username;
-
-if(coins)
-coins.textContent =
-currentUser.coins;
-
-if(lessonsCompleted)
-lessonsCompleted.textContent =
-currentUser.completedLessons.length;
-
-const avatar =
-document.getElementById(
-"profileAvatar"
-);
-
-if(
-avatar &&
-currentUser.profileImage
-){
-
-avatar.src =
-currentUser.profileImage;
-
-}
-
-}
-
-window.updateProfile =
-updateProfile;
-
-
-// ===============================
-// PEOPLE / REAL REGISTERED USERS
+// PEOPLE / REGISTERED USERS
 // ===============================
 
 async function loadPeople(){
 
 const container =
 document.getElementById(
-"peopleList"
+"peopleGrid"
 );
 
 if(!container)
 return;
 
 container.innerHTML = `
-<p>Finding real registered Teachly users...</p>
+<div class="loading-state">
+Finding registered Teachly users...
+</div>
 `;
 
 try{
@@ -1898,6 +2475,15 @@ await readAIResponse(
 response
 );
 
+if(!response.ok){
+
+throw new Error(
+data.error ||
+"Unable to load people."
+);
+
+}
+
 const users =
 Array.isArray(data.people)
 ?
@@ -1905,78 +2491,48 @@ data.people
 :
 [];
 
-const myUsername =
+const username =
 String(
 currentUser?.username || ""
 )
 .trim()
 .toLowerCase();
 
-const wantedRole =
-currentRole==="learner"
+const oppositeRole =
+currentRole === "teacher"
 ?
-"teacher"
+"learner"
 :
-"learner";
+"teacher";
 
 const matches =
 users.filter(
-user=>{
-
-const username =
-String(
-user.username || ""
-)
+user =>
+user.username &&
+String(user.username)
 .trim()
-.toLowerCase();
-
-return(
-username &&
-username!==myUsername &&
-user.role===wantedRole
+.toLowerCase()
+!== username &&
+user.role === oppositeRole
 );
-
-});
-
-container.innerHTML="";
 
 if(!matches.length){
 
 container.innerHTML = `
-
-<div class="emptyState">
-
-<h3>
-No ${wantedRole} available
-</h3>
-
+<div class="empty-state">
+<h3>No match available</h3>
 <p>
-There are no registered ${wantedRole}s available right now.
+There is currently no registered
+${oppositeRole} available.
 </p>
-
-${
-currentRole==="learner"
-?
-`
-<button onclick="openAITeacher()">
-Learn with AI Teacher
-</button>
-`
-:
-`
-<button onclick="goHome()">
-Back Home
-</button>
-`
-}
-
 </div>
-
 `;
 
 return;
 
 }
+
+container.innerHTML = "";
 
 matches.forEach(
 person=>{
@@ -1987,19 +2543,22 @@ document.createElement(
 );
 
 card.className =
-"personCard";
+"person-card";
 
 const avatar =
 person.profileImage ||
-"https://via.placeholder.com/80";
+"👤";
 
 card.innerHTML = `
-
-<img
-src="${avatar}"
-alt="Profile"
-class="personAvatar"
->
+<div class="person-avatar">
+${
+avatar.startsWith("http")
+?
+`<img src="${escapeHTML(avatar)}" alt="Avatar">`
+:
+avatar
+}
+</div>
 
 <h3>
 ${escapeHTML(person.username)}
@@ -2012,7 +2571,6 @@ ${escapeHTML(person.role || "Teachly user")}
 <button>
 Connect
 </button>
-
 `;
 
 const button =
@@ -2032,7 +2590,6 @@ card
 });
 
 }
-
 catch(error){
 
 console.error(
@@ -2041,23 +2598,10 @@ error
 );
 
 container.innerHTML = `
-
-<div class="emptyState">
-
-<h3>
-Unable to find users
-</h3>
-
-<p>
-Please try again later.
-</p>
-
-<button onclick="loadPeople()">
-Try Again
-</button>
-
+<div class="empty-state">
+<h3>Could not load people</h3>
+<p>Please try again later.</p>
 </div>
-
 `;
 
 }
@@ -2069,30 +2613,31 @@ loadPeople;
 
 
 // ===============================
-// CONNECT TO PERSON
+// CONNECT TO USER
 // ===============================
 
 function connectToPerson(person){
 
-if(!currentUser)
+if(!person)
 return;
 
 currentChatUser =
 person;
 
+if(currentUser){
+
 currentUser.sessions =
-Number(currentUser.sessions || 0) + 1;
+Number(
+currentUser.sessions || 0
+) + 1;
 
 saveUser();
-
 updateHome();
 
-const name =
-person.username ||
-"Teachly User";
+}
 
 openChat(
-name
+`${person.username} • ${person.role || "Teachly user"}`
 );
 
 }
@@ -2100,41 +2645,310 @@ name
 window.connectToPerson =
 connectToPerson;
 
-
 // ===============================
-// CHAT
+// SOCKET CHAT
 // ===============================
 
-function openChat(name){
+function connectSocket(){
 
-const chatPage =
-document.getElementById(
-"chatPage"
+if(socket)
+return;
+
+if(
+typeof io === "undefined"
+){
+
+console.warn(
+"Socket.IO client is not loaded."
 );
 
-const chatTitle =
-document.getElementById(
-"chatUserName"
+return;
+
+}
+
+socket =
+io(API_URL);
+
+socket.on(
+"connect",
+()=>{
+
+console.log(
+"Teachly chat connected."
 );
 
-if(chatTitle)
-chatTitle.textContent =
-name;
+}
+);
 
-if(chatPage){
+socket.on(
+"connect_error",
+error=>{
 
-openPage(
-"chatPage"
+console.error(
+"CHAT CONNECTION ERROR:",
+error
+);
+
+}
+);
+
+socket.on(
+"message",
+message=>{
+
+addChatMessage(
+message,
+false
+);
+
+}
+);
+
+}
+
+window.connectSocket =
+connectSocket;
+
+
+// ===============================
+// CHAT DISPLAY
+// ===============================
+
+function addChatMessage(
+message,
+own=false
+){
+
+const container =
+document.getElementById(
+"chatMessages"
+);
+
+if(!container)
+return;
+
+let text = "";
+let username = "";
+
+if(
+typeof message === "string"
+){
+
+text = message;
+
+}
+else{
+
+text =
+message?.message ||
+message?.text ||
+"";
+
+username =
+message?.username ||
+"";
+
+}
+
+if(!text)
+return;
+
+const element =
+document.createElement(
+"div"
+);
+
+element.className =
+own
+?
+"chat-message own"
+:
+"chat-message";
+
+element.innerHTML = `
+<div class="chat-message-user">
+${escapeHTML(
+username ||
+(
+own
+?
+currentUser?.username ||
+"You"
+:
+currentChatUser?.username ||
+"User"
+)
+)}
+</div>
+
+<div class="chat-message-text">
+${escapeHTML(text)}
+</div>
+`;
+
+container.appendChild(
+element
+);
+
+container.scrollTop =
+container.scrollHeight;
+
+}
+
+window.addChatMessage =
+addChatMessage;
+
+
+// ===============================
+// SEND CHAT MESSAGE
+// ===============================
+
+function sendMessage(){
+
+const input =
+document.getElementById(
+"chatInput"
+);
+
+if(!input)
+return;
+
+const text =
+input.value.trim();
+
+if(!text)
+return;
+
+if(
+!currentUser ||
+!currentChatUser
+){
+
+showToast(
+"Choose a person to chat with first."
+);
+
+return;
+
+}
+
+const message = {
+
+from:
+currentUser.username,
+
+to:
+currentChatUser.username,
+
+username:
+currentUser.username,
+
+message:
+text
+
+};
+
+if(
+socket &&
+socket.connected
+){
+
+socket.emit(
+"message",
+message
 );
 
 }
 else{
 
-alert(
-`Connected with ${name}`
+addChatMessage(
+message,
+true
 );
 
 }
+
+input.value = "";
+
+}
+
+window.sendMessage =
+sendMessage;
+
+
+// ===============================
+// CHAT EMOJI
+// ===============================
+
+function addEmoji(emoji){
+
+const input =
+document.getElementById(
+"chatInput"
+);
+
+if(!input)
+return;
+
+input.value += emoji;
+
+input.focus();
+
+}
+
+window.addEmoji =
+addEmoji;
+
+
+// ===============================
+// OPEN CHAT
+// ===============================
+
+function openChat(person){
+
+currentChatUser = {
+
+username:
+String(person || "")
+.split(" • ")[0]
+.trim(),
+
+role:
+String(person || "")
+.includes(" • ")
+?
+String(person)
+.split(" • ")[1]
+:
+"Teachly user"
+
+};
+
+const title =
+document.getElementById(
+"chatTitle"
+);
+
+if(title){
+
+title.textContent =
+currentChatUser.username;
+
+}
+
+const messages =
+document.getElementById(
+"chatMessages"
+);
+
+if(messages)
+messages.innerHTML = "";
+
+openPage(
+"chatPage"
+);
+
+connectSocket();
 
 }
 
@@ -2143,109 +2957,26 @@ openChat;
 
 
 // ===============================
-// HOME NAVIGATION
+// CLOSE CHAT
 // ===============================
 
-function goHome(){
+function closeChat(){
+
+currentChatUser =
+null;
 
 openPage(
 "homePage"
 );
 
-updateHome();
-
 }
 
-window.goHome =
-goHome;
+window.closeChat =
+closeChat;
 
 
 // ===============================
-// AI TEACHER PAGE
-// ===============================
-
-function openAITeacher(){
-
-openPage(
-"aiPage"
-);
-
-}
-
-window.openAITeacher =
-openAITeacher;
-
-
-// ===============================
-// THEME
-// ===============================
-
-function loadTheme(){
-
-const savedTheme =
-localStorage.getItem(
-"teachlyTheme"
-) ||
-"light";
-
-document.documentElement
-.setAttribute(
-"data-theme",
-savedTheme
-);
-
-document.body
-.classList.toggle(
-"dark",
-savedTheme==="dark"
-);
-
-}
-
-window.loadTheme =
-loadTheme;
-
-
-function toggleTheme(){
-
-const current =
-localStorage.getItem(
-"teachlyTheme"
-) ||
-"light";
-
-const next =
-current==="dark"
-?
-"light"
-:
-"dark";
-
-localStorage.setItem(
-"teachlyTheme",
-next
-);
-
-document.documentElement
-.setAttribute(
-"data-theme",
-next
-);
-
-document.body
-.classList.toggle(
-"dark",
-next==="dark"
-);
-
-}
-
-window.toggleTheme =
-toggleTheme;
-
-
-// ===============================
-// MAP
+// LEARNSPHERE MAP
 // ===============================
 
 function initializeMap(){
@@ -2259,7 +2990,7 @@ if(!mapElement)
 return;
 
 if(
-typeof L==="undefined"
+typeof L === "undefined"
 ){
 
 console.warn(
@@ -2272,12 +3003,7 @@ return;
 
 if(map){
 
-setTimeout(
-()=>{
 map.invalidateSize();
-},
-100
-);
 
 return;
 
@@ -2287,15 +3013,15 @@ map =
 L.map(
 mapElement
 ).setView(
-[13.0827,80.2707],
-10
+[20,0],
+2
 );
 
 L.tileLayer(
 "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
 {
-attribution:
-"&copy; OpenStreetMap contributors"
+maxZoom:19,
+attribution:"© OpenStreetMap"
 }
 ).addTo(map);
 
@@ -2306,4563 +3032,989 @@ initializeMap;
 
 
 // ===============================
-// REFRESH DATA
+// MAP CONTINENTS
 // ===============================
 
-function refreshData(){
+function showContinent(
+name,
+latitude,
+longitude,
+zoom=4
+){
+
+if(!map)
+initializeMap();
+
+if(!map)
+return;
+
+map.setView(
+[
+Number(latitude),
+Number(longitude)
+],
+zoom
+);
+
+showToast(
+`Exploring ${name} 🌍`
+);
+
+}
+
+window.showContinent =
+showContinent;
+
+
+// ===============================
+// PROFILE AVATAR
+// ===============================
+
+function previewAvatar(event){
+
+const file =
+event?.target?.files?.[0];
+
+if(!file)
+return;
+
+if(
+!file.type.startsWith(
+"image/"
+)
+){
+
+showToast(
+"Please choose an image."
+);
+
+return;
+
+}
+
+const reader =
+new FileReader();
+
+reader.onload =
+()=>{
+
+const preview =
+document.getElementById(
+"avatarPreview"
+);
+
+if(preview){
+
+preview.src =
+reader.result;
+
+}
+
+};
+
+reader.readAsDataURL(
+file
+);
+
+}
+
+window.previewAvatar =
+previewAvatar;
+
+
+// ===============================
+// UPLOAD AVATAR
+// ===============================
+
+async function uploadAvatar(){
+
+if(!currentUser){
+
+showToast(
+"Please log in first."
+);
+
+return;
+
+}
+
+const input =
+document.getElementById(
+"avatarInput"
+);
+
+const file =
+input?.files?.[0];
+
+if(!file){
+
+showToast(
+"Choose an image first."
+);
+
+return;
+
+}
+
+const formData =
+new FormData();
+
+formData.append(
+"avatar",
+file
+);
+
+formData.append(
+"username",
+currentUser.username
+);
+
+try{
+
+const response =
+await fetch(
+`${API_URL}/api/avatar`,
+{
+
+method:"POST",
+
+body:formData
+
+}
+);
+
+const data =
+await readAIResponse(
+response
+);
+
+if(!response.ok){
+
+throw new Error(
+data.error ||
+"Avatar upload failed."
+);
+
+}
+
+if(data.profileImage){
+
+currentUser.profileImage =
+data.profileImage;
+
+saveUser();
+
+}
+
+updateProfile();
+
+showToast(
+"Avatar updated! 🎉"
+);
+
+}
+catch(error){
+
+console.error(
+"AVATAR ERROR:",
+error
+);
+
+showToast(
+error.message ||
+"Could not upload avatar."
+);
+
+}
+
+}
+
+window.uploadAvatar =
+uploadAvatar;
+
+
+// ===============================
+// PROFILE DISPLAY
+// ===============================
+
+function updateProfile(){
 
 if(!currentUser)
 return;
 
 prepareUser();
 
-updateHome();
-
-updateProfile();
-
-renderBadges();
-
-renderShop();
-
-}
-
-window.refreshData =
-refreshData;
-
-
-// ===============================
-// GLOBAL ERROR LOGGING
-// ===============================
-
-window.addEventListener(
-"error",
-event=>{
-
-console.error(
-"Teachly JavaScript Error:",
-event.error || event.message
+const username =
+document.getElementById(
+"profileUsername"
 );
 
-}
+const email =
+document.getElementById(
+"profileEmail"
 );
 
-
-// ===============================
-// FINAL LOAD MESSAGE
-// ===============================
-
-console.log(
-"Teachly Final JS Loaded 🚀"
+const role =
+document.getElementById(
+"profileRole"
 );
 
-/* =====================================================
-   TEACHLY — PART 2/3
-   LESSONS • QUIZ • AI • MYSTERY • BADGES • SHOP
-   PROFILE • PEOPLE • CHAT • LEARNSPHERE
-===================================================== */
+const coins =
+document.getElementById(
+"profileCoins"
+);
 
+const sessions =
+document.getElementById(
+"profileSessions"
+);
 
-/* =====================================================
-   LESSON SYSTEM
-===================================================== */
+const completed =
+document.getElementById(
+"profileCompleted"
+);
 
-let currentCategory = "All";
+const avatar =
+document.getElementById(
+"avatarPreview"
+);
 
+if(username)
+username.textContent =
+currentUser.username || "";
 
-function renderLessons(category = "All") {
+if(email)
+email.textContent =
+currentUser.email || "";
 
-    const grid =
-        document.getElementById("lessonGrid");
+if(role)
+role.textContent =
+currentUser.role || "learner";
 
-    if (!grid) return;
+if(coins)
+coins.textContent =
+currentUser.coins;
 
+if(sessions)
+sessions.textContent =
+currentUser.sessions || 0;
 
-    const filtered =
-        category === "All"
-            ? lessons
-            : lessons.filter(
-                lesson =>
-                    lesson.category === category
-            );
+if(completed)
+completed.textContent =
+currentUser.completedLessons.length;
 
+if(
+avatar &&
+currentUser.profileImage
+){
 
-    grid.innerHTML = "";
-
-
-    filtered.forEach(lesson => {
-
-        const completed =
-            currentUser &&
-            currentUser.completedLessons &&
-            currentUser.completedLessons.includes(
-                lesson.id
-            );
-
-
-        const card =
-            document.createElement("div");
-
-        card.className = "lessonCard";
-
-
-        card.innerHTML = `
-
-            <div class="lessonIcon">
-                ${lesson.icon}
-            </div>
-
-            <h3>
-                ${escapeHTML(lesson.title)}
-            </h3>
-
-            <p>
-                ${escapeHTML(lesson.description)}
-            </p>
-
-            <button
-                onclick="openLesson(${lesson.id})"
-            >
-                ${completed ? "Review →" : "Learn →"}
-            </button>
-
-        `;
-
-
-        grid.appendChild(card);
-
-    });
+avatar.src =
+currentUser.profileImage;
 
 }
 
-
-window.renderLessons = renderLessons;
-
-
-
-function filterLessons(category) {
-
-    currentCategory =
-        category || "All";
-
-    renderLessons(currentCategory);
-
 }
-
-
-window.filterLessons = filterLessons;
-
-
-
-/* =====================================================
-   OPEN LESSON
-===================================================== */
-
-function openLesson(id) {
-
-    const lesson =
-        lessons.find(
-            item => item.id === Number(id)
-        );
-
-
-    if (!lesson) {
-
-        showToast(
-            "Lesson not found."
-        );
-
-        return;
-    }
-
-
-    currentLesson =
-        lesson;
-
-
-    const header =
-        document.getElementById(
-            "selectedLessonHeader"
-        );
-
-
-    const title =
-        document.getElementById(
-            "selectedLessonTitle"
-        );
-
-
-    const category =
-        document.getElementById(
-            "selectedLessonCategory"
-        );
-
-
-    const description =
-        document.getElementById(
-            "selectedLessonDescription"
-        );
-
-
-    const content =
-        document.getElementById(
-            "selectedLessonContent"
-        );
-
-
-    if (header) {
-
-        header.textContent =
-            lesson.title;
-
-    }
-
-
-    if (title) {
-
-        title.textContent =
-            `${lesson.icon} ${lesson.title}`;
-
-    }
-
-
-    if (category) {
-
-        category.textContent =
-            lesson.category;
-
-    }
-
-
-    if (description) {
-
-        description.textContent =
-            lesson.description;
-
-    }
-
-
-    if (content) {
-
-        content.innerHTML =
-            lesson.content;
-
-    }
-
-
-    updateSaveButton();
-
-
-    openPage(
-        "selectedLessonPage"
-    );
-
-}
-
-
-window.openLesson =
-    openLesson;
-
-
-
-/* =====================================================
-   COMPLETE LESSON
-===================================================== */
-
-function completeLesson() {
-
-    if (
-        !currentUser ||
-        !currentLesson
-    ) {
-
-        showToast(
-            "Please choose a lesson first."
-        );
-
-        return;
-    }
-
-
-    prepareUser();
-
-
-    const alreadyCompleted =
-        currentUser.completedLessons.includes(
-            currentLesson.id
-        );
-
-
-    if (alreadyCompleted) {
-
-        showToast(
-            "Lesson already completed."
-        );
-
-        return;
-    }
-
-
-    currentUser.completedLessons.push(
-        currentLesson.id
-    );
-
-
-    currentUser.coins =
-        Number(currentUser.coins || 0) +
-        20;
-
-
-    saveUser();
-
-
-    updateHome();
-
-    updateProfile();
-
-    renderLessons();
-
-    renderBadges();
-
-
-    showToast(
-        "Lesson completed! +20 💰"
-    );
-
-}
-
-
-window.completeLesson =
-completeLesson;
-
-
-
-/* =====================================================
-   SAVED LESSONS
-===================================================== */
-
-function toggleSavedLesson() {
-
-    if (
-        !currentUser ||
-        !currentLesson
-    ) {
-
-        return;
-    }
-
-
-    prepareUser();
-
-
-    const index =
-        currentUser.savedLessons.indexOf(
-            currentLesson.id
-        );
-
-
-    if (index === -1) {
-
-        currentUser.savedLessons.push(
-            currentLesson.id
-        );
-
-        showToast(
-            "Lesson saved ⭐"
-        );
-
-    }
-    else {
-
-        currentUser.savedLessons.splice(
-            index,
-            1
-        );
-
-        showToast(
-            "Lesson removed from saved lessons."
-        );
-
-    }
-
-
-    saveUser();
-
-    updateSaveButton();
-
-    renderSavedLessons();
-
-}
-
-
-window.toggleSavedLesson =
-toggleSavedLesson;
-
-
-
-function updateSaveButton() {
-
-    const button =
-        document.getElementById(
-            "saveLessonButton"
-        );
-
-
-    if (!button) return;
-
-
-    const saved =
-        currentUser &&
-        currentLesson &&
-        Array.isArray(
-            currentUser.savedLessons
-        ) &&
-        currentUser.savedLessons.includes(
-            currentLesson.id
-        );
-
-
-    button.textContent =
-        saved
-            ? "★ Saved"
-            : "☆ Save Lesson";
-
-}
-
-
-window.updateSaveButton =
-updateSaveButton;
-
-
-
-function renderSavedLessons() {
-
-    const box =
-        document.getElementById(
-            "savedLessonList"
-        );
-
-
-    if (!box) return;
-
-
-    prepareUser();
-
-
-    const saved =
-        currentUser
-            ? currentUser.savedLessons
-            : [];
-
-
-    box.innerHTML = "";
-
-
-    if (!saved.length) {
-
-        box.innerHTML = `
-
-            <div class="emptyState">
-
-                <h3>
-                    📚 No saved lessons
-                </h3>
-
-                <p>
-                    Save lessons here so
-                    you can return to them later.
-                </p>
-
-            </div>
-
-        `;
-
-        return;
-    }
-
-
-    saved.forEach(id => {
-
-        const lesson =
-            lessons.find(
-                item => item.id === id
-            );
-
-
-        if (!lesson) return;
-
-
-        box.innerHTML += `
-
-            <div class="lessonCard">
-
-                <div class="lessonIcon">
-                    ${lesson.icon}
-                </div>
-
-                <h3>
-                    ${escapeHTML(lesson.title)}
-                </h3>
-
-                <p>
-                    ${escapeHTML(lesson.description)}
-                </p>
-
-                <button
-                    onclick="openLesson(${lesson.id})"
-                >
-                    Open →
-                </button>
-
-            </div>
-
-        `;
-
-    });
-
-}
-
-
-window.renderSavedLessons =
-renderSavedLessons;
-
-
-
-/* =====================================================
-   QUIZ SYSTEM
-===================================================== */
-
-function startQuiz() {
-
-    if (!currentLesson) {
-
-        showToast(
-            "Choose a lesson first!"
-        );
-
-        openPage("aiPage");
-
-        return;
-    }
-
-
-    startQuizForLesson(
-        currentLesson
-    );
-
-}
-
-
-window.startQuiz =
-startQuiz;
-
-
-
-function startQuizForLesson(lesson) {
-
-    if (!lesson) {
-
-        showToast(
-            "Lesson unavailable."
-        );
-
-        return;
-    }
-
-
-    currentLesson =
-        lesson;
-
-
-    currentQuiz =
-        lesson.quiz;
-
-
-    const name =
-        document.getElementById(
-            "quizLessonName"
-        );
-
-
-    const question =
-        document.getElementById(
-            "quizQuestion"
-        );
-
-
-    const options =
-        document.getElementById(
-            "quizOptions"
-        );
-
-
-    const result =
-        document.getElementById(
-            "quizResult"
-        );
-
-
-    if (name) {
-
-        name.textContent =
-            `${lesson.icon} ${lesson.title}`;
-
-    }
-
-
-    if (question) {
-
-        question.textContent =
-            lesson.quiz.question;
-
-    }
-
-
-    if (options) {
-
-        options.innerHTML = "";
-
-
-        lesson.quiz.options.forEach(
-            option => {
-
-                const button =
-                    document.createElement(
-                        "button"
-                    );
-
-
-                button.textContent =
-                    option;
-
-
-                button.onclick =
-                    () =>
-                        answerQuiz(option);
-
-
-                options.appendChild(
-                    button
-                );
-
-            }
-        );
-
-    }
-
-
-    if (result) {
-
-        result.textContent = "";
-
-    }
-
-
-    openPage(
-        "quizPage"
-    );
-
-}
-
-
-window.startQuizForLesson =
-startQuizForLesson;
-
-
-
-function answerQuiz(answer) {
-
-    if (
-        !currentQuiz ||
-        !currentLesson
-    ) {
-
-        return;
-    }
-
-
-    const result =
-        document.getElementById(
-            "quizResult"
-        );
-
-
-    if (!result) return;
-
-
-    if (
-        String(answer).trim().toLowerCase() ===
-        String(currentQuiz.answer)
-            .trim()
-            .toLowerCase()
-    ) {
-
-        result.innerHTML = `
-
-            <div class="quizSuccess">
-
-                🎉 <strong>Correct!</strong>
-
-                <p>
-                    Great job. You understood
-                    the lesson.
-                </p>
-
-            </div>
-
-        `;
-
-
-        prepareUser();
-
-
-        if (
-            !currentUser.quizCompleted.includes(
-                currentLesson.id
-            )
-        ) {
-
-            currentUser.quizCompleted.push(
-                currentLesson.id
-            );
-
-
-            currentUser.coins =
-                Number(currentUser.coins || 0) +
-                10;
-
-
-            saveUser();
-
-
-            updateHome();
-
-            updateProfile();
-
-            renderBadges();
-
-
-            showToast(
-                "Quiz completed! +10 💰"
-            );
-
-        }
-
-    }
-    else {
-
-        result.innerHTML = `
-
-            <div class="quizWrong">
-
-                ❌ <strong>Not quite.</strong>
-
-                <p>
-                    Try again and think about
-                    what you learned.
-                </p>
-
-            </div>
-
-        `;
-
-    }
-
-}
-
-
-window.answerQuiz =
-answerQuiz;
-
-
-
-function finishQuiz() {
-
-    if (!currentQuiz) {
-
-        showToast(
-            "Start a quiz first."
-        );
-
-        return;
-    }
-
-
-    openPage(
-        "selectedLessonPage"
-    );
-
-}
-
-
-window.finishQuiz =
-finishQuiz;
-
-
-
-/* =====================================================
-   AI RESPONSE HELPER
-===================================================== */
-
-async function readAIResponse(
-    response
-) {
-
-    const contentType =
-        response.headers.get(
-            "content-type"
-        ) || "";
-
-
-    if (!response.ok) {
-
-        if (
-            contentType.includes(
-                "application/json"
-            )
-        ) {
-
-            const data =
-                await response.json();
-
-
-            throw new Error(
-                data.error ||
-                `Server error ${response.status}`
-            );
-
-        }
-
-
-        const text =
-            await response.text();
-
-
-        throw new Error(
-            `Server returned HTML instead of JSON (${response.status}). ${text.slice(0, 200)}`
-        );
-
-    }
-
-
-    if (
-        !contentType.includes(
-            "application/json"
-        )
-    ) {
-
-        const text =
-            await response.text();
-
-
-        throw new Error(
-            `Expected JSON but received HTML. ${text.slice(0, 200)}`
-        );
-
-    }
-
-
-    return response.json();
-
-}
-
-
-window.readAIResponse =
-readAIResponse;
-
-
-
-/* =====================================================
-   AI TEACHER
-===================================================== */
-
-async function askAI(message) {
-
-    if (!message) {
-
-        return "Please ask me something.";
-
-    }
-
-
-    try {
-
-        const lessonContext =
-            currentLesson
-                ? `
-Current lesson:
-${currentLesson.title}
-
-Description:
-${currentLesson.description}
-
-Content:
-${stripHTML(
-    currentLesson.content
-)}
-`
-                : "";
-
-
-        const response =
-            await fetch(
-                `${API_URL}/api/ai`,
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify({
-                            message:
-                                `${message}
-
-${lessonContext}
-
-You are Teachly AI Teacher.
-Explain things clearly and simply.
-Help the student understand rather than
-just giving unexplained answers.`,
-
-                            username:
-                                currentUser?.username ||
-                                "Student",
-
-                            lesson:
-                                currentLesson?.title ||
-                                null
-                        })
-                }
-            );
-
-
-        const data =
-            await readAIResponse(
-                response
-            );
-
-
-        return (
-            data.answer ||
-            "AI could not answer."
-        );
-
-    }
-    catch (error) {
-
-        console.error(
-            "AI ERROR:",
-            error
-        );
-
-
-        return (
-            "Sorry, I couldn't reach the AI right now. " +
-            error.message
-        );
-
-    }
-
-}
-
-
-window.askAI =
-askAI;
-
-
-
-function renderAIMessage(
-    text,
-    type = "ai"
-) {
-
-    const chat =
-        document.getElementById(
-            "aiTeacherMessages"
-        );
-
-
-    if (!chat) return;
-
-
-    const bubble =
-        document.createElement(
-            "div"
-        );
-
-
-    bubble.className =
-        type === "user"
-            ? "aiBubble userBubble"
-            : "aiBubble";
-
-
-    if (type === "user") {
-
-        bubble.textContent =
-            text;
-
-    }
-    else {
-
-        bubble.innerHTML =
-            formatAIText(text);
-
-    }
-
-
-    chat.appendChild(
-        bubble
-    );
-
-
-    chat.scrollTop =
-        chat.scrollHeight;
-
-}
-
-
-window.renderAIMessage =
-renderAIMessage;
-
-
-
-function formatAIText(text) {
-
-    return escapeHTML(
-        text || ""
-    )
-        .replace(
-            /\*\*(.*?)\*\*/g,
-            "<strong>$1</strong>"
-        )
-        .replace(
-            /\n\n/g,
-            "<br><br>"
-        )
-        .replace(
-            /\n/g,
-            "<br>"
-        );
-
-}
-
-
-window.formatAIText =
-formatAIText;
-
-
-
-function prepareAITeacherForLesson() {
-
-    if (!currentLesson) return;
-
-
-    const label =
-        document.getElementById(
-            "aiTeacherLessonLabel"
-        );
-
-
-    if (label) {
-
-        label.textContent =
-            `Lesson: ${currentLesson.title}`;
-
-    }
-
-
-    const chat =
-        document.getElementById(
-            "aiTeacherMessages"
-        );
-
-
-    if (!chat) return;
-
-
-    chat.innerHTML = `
-
-        <div class="aiBubble">
-
-            <strong>
-                👋 I'm ready to help.
-            </strong>
-
-            <p>
-                We're studying
-                <strong>
-                    ${escapeHTML(
-                        currentLesson.title
-                    )}
-                </strong>.
-            </p>
-
-            <p>
-                Ask me a question about
-                this lesson.
-            </p>
-
-        </div>
-
-    `;
-
-}
-
-
-window.prepareAITeacherForLesson =
-prepareAITeacherForLesson;
-
-
-
-function openAITeacher() {
-
-    openPage(
-        "aiPage"
-    );
-
-
-    if (currentLesson) {
-
-        prepareAITeacherForLesson();
-
-    }
-
-}
-
-
-window.openAITeacher =
-openAITeacher;
-
-
-
-async function teacherAIHelp() {
-
-    const input =
-        document.getElementById(
-            "aiQuestion"
-        );
-
-
-    if (!input) return;
-
-
-    const question =
-        input.value.trim();
-
-
-    if (!question) {
-
-        showToast(
-            "Type a question first."
-        );
-
-        return;
-    }
-
-
-    renderAIMessage(
-        question,
-        "user"
-    );
-
-
-    input.value = "";
-
-
-    const thinking =
-        document.createElement(
-            "div"
-        );
-
-
-    thinking.className =
-        "aiBubble";
-
-
-    thinking.textContent =
-        "🤖 Thinking...";
-
-
-    const chat =
-        document.getElementById(
-            "aiTeacherMessages"
-        );
-
-
-    if (chat) {
-
-        chat.appendChild(
-            thinking
-        );
-
-        chat.scrollTop =
-            chat.scrollHeight;
-
-    }
-
-
-    const answer =
-        await askAI(
-            question
-        );
-
-
-    if (
-        thinking &&
-        thinking.parentNode
-    ) {
-
-        thinking.remove();
-
-    }
-
-
-    renderAIMessage(
-        answer,
-        "ai"
-    );
-
-}
-
-
-window.teacherAIHelp =
-teacherAIHelp;
-
-
-
-function askAIQuick(
-    question
-) {
-
-    const input =
-        document.getElementById(
-            "aiQuestion"
-        );
-
-
-    if (!input) return;
-
-
-    input.value =
-        question;
-
-
-    teacherAIHelp();
-
-}
-
-
-window.askAIQuick =
-askAIQuick;
-
-
-
-/* =====================================================
-   MYSTERY TOPIC
-===================================================== */
-
-const mysteryTopics = [
-
-    {
-        title:
-            "Black Holes",
-
-        text:
-            "Black holes are regions of space where gravity is extremely strong."
-    },
-
-    {
-        title:
-            "Deep Ocean",
-
-        text:
-            "The deep ocean is a huge environment with unusual animals, pressure and very little sunlight."
-    },
-
-    {
-        title:
-            "Antarctica",
-
-        text:
-            "Antarctica is Earth's southernmost continent and contains most of the planet's ice."
-    },
-
-    {
-        title:
-            "Quantum Physics",
-
-        text:
-            "Quantum physics describes nature at very small scales such as atoms and particles."
-    },
-
-    {
-        title:
-            "Volcanoes",
-
-        text:
-            "Volcanoes form when magma and gases reach Earth's surface."
-    },
-
-    {
-        title:
-            "Human Brain",
-
-        text:
-            "The brain coordinates many functions including movement, senses, memory and thinking."
-    },
-
-    {
-        title:
-            "Robotics",
-
-        text:
-            "Robotics combines engineering and computing to design machines that can perform tasks."
-    },
-
-    {
-        title:
-            "Ocean Currents",
-
-        text:
-            "Large movements of seawater help distribute heat around Earth's oceans."
-    }
-
-];
-
-
-function mysteryTopic() {
-
-    const topic =
-        mysteryTopics[
-            Math.floor(
-                Math.random() *
-                mysteryTopics.length
-            )
-        ];
-
-
-    const title =
-        document.getElementById(
-            "mysteryTitle"
-        );
-
-
-    const description =
-        document.getElementById(
-            "mysteryDescription"
-        );
-
-
-    const oldTitle =
-        document.getElementById(
-            "mysteryTopicTitle"
-        );
-
-
-    const oldDescription =
-        document.getElementById(
-            "mysteryTopicText"
-        );
-
-
-    if (title) {
-
-        title.textContent =
-            topic.title;
-
-    }
-
-
-    if (description) {
-
-        description.textContent =
-            topic.text;
-
-    }
-
-
-    if (oldTitle) {
-
-        oldTitle.textContent =
-            topic.title;
-
-    }
-
-
-    if (oldDescription) {
-
-        oldDescription.textContent =
-            topic.text;
-
-    }
-
-
-    openPage(
-        "mysteryPage"
-    );
-
-}
-
-
-window.mysteryTopic =
-mysteryTopic;
-
-
-
-/* =====================================================
-   BADGES
-===================================================== */
-
-function renderBadges() {
-
-    const boxes = [
-
-        document.getElementById(
-            "allBadges"
-        ),
-
-        document.getElementById(
-            "badgesHome"
-        )
-
-    ].filter(Boolean);
-
-
-    if (!boxes.length) return;
-
-
-    prepareUser();
-
-
-    const completed =
-        currentUser?.completedLessons?.length ||
-        0;
-
-
-    const quizzes =
-        currentUser?.quizCompleted?.length ||
-        0;
-
-
-    const sessions =
-        currentUser?.sessions ||
-        0;
-
-
-    const badges = [
-
-        [
-            "🌱",
-            "First Lesson",
-            completed >= 1
-        ],
-
-        [
-            "📚",
-            "Book Collector",
-            completed >= 5
-        ],
-
-        [
-            "🧠",
-            "Knowledge Master",
-            completed >= 10
-        ],
-
-        [
-            "🏆",
-            "Quiz Beginner",
-            quizzes >= 1
-        ],
-
-        [
-            "⭐",
-            "Quiz Expert",
-            quizzes >= 5
-        ],
-
-        [
-            "🤝",
-            "Connector",
-            sessions >= 1
-        ],
-
-        [
-            "👑",
-            "Teachly Legend",
-            completed >= 25
-        ]
-
-    ];
-
-
-    boxes.forEach(
-        box => {
-
-            box.innerHTML = "";
-
-
-            badges.forEach(
-                badge => {
-
-                    box.innerHTML += `
-
-                        <div
-                            class="badge ${
-                                badge[2]
-                                    ? ""
-                                    : "locked"
-                            }"
-                        >
-
-                            <h2>
-                                ${badge[0]}
-                            </h2>
-
-                            <h3>
-                                ${escapeHTML(
-                                    badge[1]
-                                )}
-                            </h3>
-
-                            <p>
-                                ${
-                                    badge[2]
-                                        ? "Unlocked ✓"
-                                        : "Locked"
-                                }
-                            </p>
-
-                        </div>
-
-                    `;
-
-                }
-            );
-
-        }
-    );
-
-}
-
-
-window.renderBadges =
-renderBadges;
-
-
-
-/* =====================================================
-   SHOP
-===================================================== */
-
-const shopProducts = [
-
-    [
-        "🟣",
-        "Purple Glow",
-        50
-    ],
-
-    [
-        "⭐",
-        "Star Effect",
-        100
-    ],
-
-    [
-        "🚀",
-        "Rocket Effect",
-        150
-    ],
-
-    [
-        "🔥",
-        "Fire Aura",
-        250
-    ],
-
-    [
-        "👑",
-        "Royal Crown",
-        500
-    ],
-
-    [
-        "💎",
-        "Diamond Aura",
-        1000
-    ],
-
-    [
-        "🌌",
-        "Galaxy Effect",
-        2000
-    ],
-
-    [
-        "⚡",
-        "Lightning Aura",
-        3000
-    ],
-
-    [
-        "🏆",
-        "Champion Effect",
-        5000
-    ],
-
-    [
-        "🌈",
-        "Rainbow Aura",
-        7500
-    ]
-
-];
-
-
-function renderShop() {
-
-    const boxes = [
-
-        document.getElementById(
-            "shopList"
-        ),
-
-        document.getElementById(
-            "shopHome"
-        )
-
-    ].filter(Boolean);
-
-
-    if (!boxes.length) return;
-
-
-    prepareUser();
-
-
-    boxes.forEach(
-        box => {
-
-            box.innerHTML = "";
-
-
-            shopProducts.forEach(
-                item => {
-
-                    const owned =
-                        currentUser &&
-                        currentUser.purchasedItems &&
-                        currentUser.purchasedItems.includes(
-                            item[1]
-                        );
-
-
-                    const equipped =
-                        currentUser &&
-                        currentUser.equippedItem ===
-                        item[1];
-
-
-                    box.innerHTML += `
-
-                        <div class="shopItem">
-
-                            <h2>
-                                ${item[0]}
-                            </h2>
-
-                            <h3>
-                                ${escapeHTML(
-                                    item[1]
-                                )}
-                            </h3>
-
-                            <p>
-                                💰 ${item[2]}
-                            </p>
-
-                            <button
-                                onclick="buyItem(
-                                    '${escapeHTML(
-                                        item[1]
-                                    )}',
-                                    ${item[2]}
-                                )"
-                            >
-
-                                ${
-                                    equipped
-                                        ? "Equipped ✓"
-                                        : owned
-                                            ? "Equip"
-                                            : "Buy"
-                                }
-
-                            </button>
-
-                        </div>
-
-                    `;
-
-                }
-            );
-
-        }
-    );
-
-}
-
-
-window.renderShop =
-renderShop;
-
-
-
-function buyItem(
-    name,
-    price
-) {
-
-    if (!currentUser) {
-
-        showToast(
-            "Please login first."
-        );
-
-        return;
-    }
-
-
-    prepareUser();
-
-
-    const owned =
-        currentUser.purchasedItems.includes(
-            name
-        );
-
-
-    if (owned) {
-
-        currentUser.equippedItem =
-            name;
-
-
-        saveUser();
-
-        renderShop();
-
-        showToast(
-            `${name} equipped!`
-        );
-
-        return;
-    }
-
-
-    if (
-        currentUser.coins <
-        Number(price)
-    ) {
-
-        showToast(
-            "Not enough 💰 coins."
-        );
-
-        return;
-    }
-
-
-    currentUser.coins -=
-        Number(price);
-
-
-    currentUser.purchasedItems.push(
-        name
-    );
-
-
-    currentUser.equippedItem =
-        name;
-
-
-    saveUser();
-
-
-    updateHome();
-
-    updateProfile();
-
-    renderShop();
-
-
-    showToast(
-        `${name} purchased!`
-    );
-
-}
-
-
-window.buyItem =
-buyItem;
-
-
-/* =====================================================
-   PROFILE / AVATAR
-===================================================== */
-
-function previewAvatar(event) {
-
-    const file =
-        event?.target?.files?.[0];
-
-
-    if (!file) return;
-
-
-    if (
-        !file.type.startsWith(
-            "image/"
-        )
-    ) {
-
-        showToast(
-            "Please select an image."
-        );
-
-        return;
-    }
-
-
-    const reader =
-        new FileReader();
-
-
-    reader.onload =
-        function (e) {
-
-            const preview =
-                document.getElementById(
-                    "avatarPreview"
-                );
-
-
-            if (preview) {
-
-                preview.src =
-                    e.target.result;
-
-                preview.style.display =
-                    "block";
-
-            }
-
-        };
-
-
-    reader.readAsDataURL(
-        file
-    );
-
-}
-
-
-window.previewAvatar =
-previewAvatar;
-
-
-
-function uploadAvatar() {
-
-    if (!currentUser) {
-
-        showToast(
-            "Please login first."
-        );
-
-        return;
-    }
-
-
-    const preview =
-        document.getElementById(
-            "avatarPreview"
-        );
-
-
-    if (
-        !preview ||
-        !preview.src ||
-        preview.src ===
-            window.location.href
-    ) {
-
-        showToast(
-            "Choose an avatar first."
-        );
-
-        return;
-    }
-
-
-    currentUser.profileImage =
-        preview.src;
-
-
-    saveUser();
-
-    updateProfile();
-
-
-    showToast(
-        "Avatar updated!"
-    );
-
-}
-
-
-window.uploadAvatar =
-uploadAvatar;
-
-
-
-function updateProfile() {
-
-    if (!currentUser) return;
-
-
-    prepareUser();
-
-
-    const name =
-        document.getElementById(
-            "profileName"
-        );
-
-
-    const lessonsCount =
-        document.getElementById(
-            "profileLessons"
-        );
-
-
-    const sessions =
-        document.getElementById(
-            "profileSessions"
-        );
-
-
-    const coins =
-        document.getElementById(
-            "profileCoins"
-        );
-
-
-    if (name) {
-
-        name.textContent =
-            currentUser.username;
-
-    }
-
-
-    if (lessonsCount) {
-
-        lessonsCount.textContent =
-            currentUser.completedLessons.length;
-
-    }
-
-
-    if (sessions) {
-
-        sessions.textContent =
-            currentUser.sessions;
-
-    }
-
-
-    if (coins) {
-
-        coins.textContent =
-            currentUser.coins;
-
-    }
-
-
-    const avatar =
-        document.getElementById(
-            "profileAvatar"
-        );
-
-
-    if (avatar) {
-
-        if (
-            currentUser.profileImage
-        ) {
-
-            avatar.innerHTML = `
-
-                <img
-                    src="${currentUser.profileImage}"
-                    class="profileImage"
-                    alt="Profile avatar"
-                >
-
-            `;
-
-        }
-        else {
-
-            avatar.textContent =
-                "👤";
-
-        }
-
-    }
-
-}
-
 
 window.updateProfile =
 updateProfile;
 
 
+// ===============================
+// REFRESH USER DATA
+// ===============================
 
-/* =====================================================
-   REAL REGISTERED PEOPLE
-===================================================== */
+async function refreshData(){
 
-async function loadPeople() {
+if(!currentUser)
+return;
 
-    const list =
-        document.getElementById(
-            "peopleList"
-        );
+try{
 
+const response =
+await fetch(
+`${API_URL}/api/people`
+);
 
-    if (!list) return;
+if(
+response.ok
+){
 
+const data =
+await response.json();
 
-    list.innerHTML = `
+if(
+Array.isArray(data.people)
+){
 
-        <div class="loadingState">
-
-            🔎 Looking for real
-            registered Teachly users...
-
-        </div>
-
-    `;
-
-
-    try {
-
-        const response =
-            await fetch(
-                `${API_URL}/api/people`
-            );
-
-
-        const data =
-            await readAIResponse(
-                response
-            );
-
-
-        const users =
-            Array.isArray(
-                data.people
-            )
-                ? data.people
-                : Array.isArray(data)
-                    ? data
-                    : [];
-
-
-        const currentUsername =
-            String(
-                currentUser?.username || ""
-            )
-                .trim()
-                .toLowerCase();
-
-
-        const oppositeRole =
-            currentRole === "teacher"
-                ? "learner"
-                : "teacher";
-
-
-        const matches =
-            users.filter(
-                person => {
-
-                    const username =
-                        String(
-                            person.username || ""
-                        )
-                            .trim()
-                            .toLowerCase();
-
-
-                    if (
-                        !username ||
-                        username ===
-                            currentUsername
-                    ) {
-
-                        return false;
-
-                    }
-
-
-                    if (
-                        person.role &&
-                        person.role !==
-                            oppositeRole
-                    ) {
-
-                        return false;
-
-                    }
-
-
-                    return true;
-
-                }
-            );
-
-
-        list.innerHTML = "";
-
-
-        if (!matches.length) {
-
-            list.innerHTML = `
-
-                <div class="emptyState">
-
-                    <h3>
-                        😕 No match found
-                    </h3>
-
-                    <p>
-                        There isn't a suitable
-                        registered ${oppositeRole}
-                        available right now.
-                    </p>
-
-                </div>
-
-            `;
-
-            return;
-        }
-
-
-        matches.forEach(
-            person => {
-
-                const card =
-                    document.createElement(
-                        "div"
-                    );
-
-
-                card.className =
-                    "personCard";
-
-
-                const avatar =
-                    person.profileImage
-                        ? `
-                            <img
-                                src="${person.profileImage}"
-                                class="personAvatar"
-                                alt="Avatar"
-                            >
-                          `
-                        : "👤";
-
-
-                card.innerHTML = `
-
-                    <div class="personAvatarWrap">
-                        ${avatar}
-                    </div>
-
-                    <h3>
-                        ${escapeHTML(
-                            person.username
-                        )}
-                    </h3>
-
-                    <p>
-                        ${
-                            person.role ===
-                            "teacher"
-                                ? "🧑‍🏫 Teacher"
-                                : "🎓 Learner"
-                        }
-                    </p>
-
-                    <button>
-                        Connect
-                    </button>
-
-                `;
-
-
-                const button =
-                    card.querySelector(
-                        "button"
-                    );
-
-
-                if (button) {
-
-                    button.onclick =
-                        () =>
-                            connectToPerson(
-                                person
-                            );
-
-                }
-
-
-                list.appendChild(
-                    card
-                );
-
-            }
-        );
-
-    }
-    catch (error) {
-
-        console.error(
-            "PEOPLE ERROR:",
-            error
-        );
-
-
-        list.innerHTML = `
-
-            <div class="emptyState">
-
-                <h3>
-                    ⚠️ Unable to find users
-                </h3>
-
-                <p>
-                    Please try again later.
-                </p>
-
-            </div>
-
-        `;
-
-    }
+window.people =
+data.people;
 
 }
 
+}
 
-window.loadPeople =
-loadPeople;
+}
+catch(error){
 
-
-
-function connectToPerson(
-    person
-) {
-
-    if (!person) return;
-
-
-    currentChatUser =
-        person;
-
-
-    if (currentUser) {
-
-        prepareUser();
-
-
-        currentUser.sessions =
-            Number(
-                currentUser.sessions || 0
-            ) + 1;
-
-
-        saveUser();
-
-        updateHome();
-
-        updateProfile();
-
-        renderBadges();
-
-    }
-
-
-    openPage(
-        "chatPage"
-    );
-
-
-    const title =
-        document.getElementById(
-            "chatTitle"
-        );
-
-
-    if (title) {
-
-        title.textContent =
-            person.username;
-
-    }
-
-
-    const messages =
-        document.getElementById(
-            "chatMessages"
-        );
-
-
-    if (messages) {
-
-        messages.innerHTML = `
-
-            <div class="message">
-
-                👋 You are connected with
-                <strong>
-                    ${escapeHTML(
-                        person.username
-                    )}
-                </strong>.
-
-            </div>
-
-        `;
-
-    }
-
-
-    connectSocket();
+console.warn(
+"Refresh failed:",
+error
+);
 
 }
 
-
-window.connectToPerson =
-connectToPerson;
-
-
-
-/* =====================================================
-   SOCKET CHAT
-===================================================== */
-
-function connectSocket() {
-
-    if (socket) return;
-
-
-    if (
-        typeof io ===
-        "undefined"
-    ) {
-
-        console.warn(
-            "Socket.IO is not loaded."
-        );
-
-        return;
-    }
-
-
-    try {
-
-        socket =
-            io(API_URL);
-
-
-        socket.on(
-            "connect",
-            () => {
-
-                console.log(
-                    "Teachly socket connected."
-                );
-
-            }
-        );
-
-
-        socket.on(
-            "private-message",
-            data => {
-
-                if (!data) return;
-
-
-                addChatMessage(
-                    data.message ||
-                    "",
-                    false
-                );
-
-            }
-        );
-
-
-        socket.on(
-            "disconnect",
-            () => {
-
-                console.log(
-                    "Teachly socket disconnected."
-                );
-
-            }
-        );
-
-    }
-    catch (error) {
-
-        console.error(
-            "Socket error:",
-            error
-        );
-
-    }
+updateHome();
 
 }
-
-
-window.connectSocket =
-connectSocket;
-
-
-
-function addChatMessage(
-    text,
-    mine = false
-) {
-
-    const box =
-        document.getElementById(
-            "chatMessages"
-        );
-
-
-    if (!box) return;
-
-
-    const message =
-        document.createElement(
-            "div"
-        );
-
-
-    message.className =
-        `message ${
-            mine ? "me" : ""
-        }`;
-
-
-    message.textContent =
-        text || "";
-
-
-    box.appendChild(
-        message
-    );
-
-
-    box.scrollTop =
-        box.scrollHeight;
-
-}
-
-
-window.addChatMessage =
-addChatMessage;
-
-
-
-function sendMessage() {
-
-    const input =
-        document.getElementById(
-            "messageInput"
-        );
-
-
-    if (!input) return;
-
-
-    const message =
-        input.value.trim();
-
-
-    if (!message) return;
-
-
-    addChatMessage(
-        message,
-        true
-    );
-
-
-    if (socket) {
-
-        socket.emit(
-            "private-message",
-            {
-                message
-            }
-        );
-
-    }
-
-
-    input.value = "";
-
-}
-
-
-window.sendMessage =
-sendMessage;
-
-
-
-function addEmoji(
-    emoji
-) {
-
-    const input =
-        document.getElementById(
-            "messageInput"
-        );
-
-
-    if (!input) return;
-
-
-    input.value +=
-        emoji;
-
-
-    input.focus();
-
-}
-
-
-window.addEmoji =
-addEmoji;
-
-
-
-/* =====================================================
-   LEARNSPHERE MAP
-===================================================== */
-
-function initializeMap() {
-
-    if (
-        typeof L ===
-        "undefined"
-    ) {
-
-        console.warn(
-            "Leaflet is not loaded."
-        );
-
-        return;
-    }
-
-
-    const container =
-        document.getElementById(
-            "worldMap"
-        );
-
-
-    if (!container) return;
-
-
-    if (map) {
-
-        map.invalidateSize();
-
-        return;
-
-    }
-
-
-    map =
-        L.map(
-            "worldMap"
-        ).setView(
-            [20, 0],
-            2
-        );
-
-
-    L.tileLayer(
-        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-        {
-            maxZoom: 18,
-
-            attribution:
-                "© OpenStreetMap"
-        }
-    ).addTo(map);
-
-
-    const continents = [
-
-        {
-            name:
-                "Asia",
-
-            lat:
-                34,
-
-            lng:
-                100
-        },
-
-        {
-            name:
-                "Africa",
-
-            lat:
-                0,
-
-            lng:
-                20
-        },
-
-        {
-            name:
-                "Europe",
-
-            lat:
-                50,
-
-            lng:
-                10
-        },
-
-        {
-            name:
-                "North America",
-
-            lat:
-                40,
-
-            lng:
-                -100
-        },
-
-        {
-            name:
-                "South America",
-
-            lat:
-                -15,
-
-            lng:
-                -60
-        },
-
-        {
-            name:
-                "Australia/Oceania",
-
-            lat:
-                -25,
-
-            lng:
-                135
-        },
-
-        {
-            name:
-                "Antarctica",
-
-            lat:
-                -80,
-
-            lng:
-                0
-        }
-
-    ];
-
-
-    continents.forEach(
-        continent => {
-
-            L.marker(
-                [
-                    continent.lat,
-                    continent.lng
-                ]
-            )
-                .addTo(map)
-                .bindPopup(`
-
-                    <h3>
-                        ${continent.name}
-                    </h3>
-
-                    <button
-                        onclick="showContinent(
-                            '${continent.name}'
-                        )"
-                    >
-                        Explore
-                    </button>
-
-                `);
-
-        }
-    );
-
-}
-
-
-window.initializeMap =
-initializeMap;
-
-
-
-function showContinent(
-    name
-) {
-
-    const info =
-        document.getElementById(
-            "countryInfo"
-        );
-
-
-    if (!info) return;
-
-
-    const continentInfo = {
-
-        "Asia":
-            "Largest continent. Home to diverse cultures, mountains and ancient civilizations.",
-
-        "Africa":
-            "Known for wildlife, deserts and rich history.",
-
-        "Europe":
-            "Known for art, science and historical landmarks.",
-
-        "North America":
-            "Contains many climates, cultures and ecosystems.",
-
-        "South America":
-            "Home to the Amazon rainforest and Andes mountains.",
-
-        "Australia/Oceania":
-            "Famous for unique animals and island nations.",
-
-        "Antarctica":
-            "The coldest continent covered mostly by ice."
-
-    };
-
-
-    info.innerHTML = `
-
-        <h2>
-            🌍 ${escapeHTML(name)}
-        </h2>
-
-        <p>
-            ${escapeHTML(
-                continentInfo[name] ||
-                "Explore this continent to learn more."
-            )}
-        </p>
-
-    `;
-
-}
-
-
-window.showContinent =
-showContinent;
-
-
-
-/* =====================================================
-   UTILITY HELPERS
-===================================================== */
-
-function escapeHTML(
-    value
-) {
-
-    const div =
-        document.createElement(
-            "div"
-        );
-
-
-    div.textContent =
-        String(
-            value ?? ""
-        );
-
-
-    return div.innerHTML;
-
-}
-
-
-window.escapeHTML =
-escapeHTML;
-
-
-
-function stripHTML(
-    html
-) {
-
-    const div =
-        document.createElement(
-            "div"
-        );
-
-
-    div.innerHTML =
-        html || "";
-
-
-    return div.textContent ||
-        div.innerText ||
-        "";
-
-}
-
-
-window.stripHTML =
-stripHTML;
-
-
-
-function showToast(
-    message
-) {
-
-    let toast =
-        document.getElementById(
-            "teachlyToast"
-        );
-
-
-    if (!toast) {
-
-        toast =
-            document.createElement(
-                "div"
-            );
-
-
-        toast.id =
-            "teachlyToast";
-
-
-        toast.style.position =
-            "fixed";
-
-        toast.style.bottom =
-            "24px";
-
-        toast.style.left =
-            "50%";
-
-        toast.style.transform =
-            "translateX(-50%)";
-
-        toast.style.zIndex =
-            "99999";
-
-        toast.style.padding =
-            "12px 18px";
-
-        toast.style.borderRadius =
-            "12px";
-
-        toast.style.background =
-            "rgba(0,0,0,.85)";
-
-        toast.style.color =
-            "#fff";
-
-        toast.style.fontSize =
-            "14px";
-
-        toast.style.maxWidth =
-            "90%";
-
-        toast.style.textAlign =
-            "center";
-
-
-        document.body.appendChild(
-            toast
-        );
-
-    }
-
-
-    toast.textContent =
-        message;
-
-
-    toast.style.display =
-        "block";
-
-
-    clearTimeout(
-        window.teachlyToastTimer
-    );
-
-
-    window.teachlyToastTimer =
-        setTimeout(
-            () => {
-
-                toast.style.display =
-                    "none";
-
-            },
-            2500
-        );
-
-}
-
-
-window.showToast =
-showToast;
-
-
-
-/* =====================================================
-   REFRESH ALL DATA
-===================================================== */
-
-function refreshData() {
-
-    if (!currentUser) return;
-
-
-    prepareUser();
-
-    saveUser();
-
-
-    updateHome();
-
-    updateProfile();
-
-    renderLessons();
-
-    renderSavedLessons();
-
-    renderBadges();
-
-    renderShop();
-
-}
-
 
 window.refreshData =
 refreshData;
 
 
+// ===============================
+// MATCHING SCREEN
+// ===============================
 
-/* =====================================================
-   ROLE MATCHING START
-===================================================== */
+function startMatching(){
 
-function startMatching(
-    role
-) {
+openPage(
+"searchPage"
+);
 
-    currentRole =
-        role;
+const title =
+document.getElementById(
+"searchTitle"
+);
 
+const text =
+document.getElementById(
+"searchText"
+);
 
-    if (currentUser) {
+if(title)
+title.textContent =
+"Finding a learning partner...";
 
-        currentUser.role =
-            role;
+if(text)
+text.textContent =
+"Searching registered Teachly users";
 
-        saveUser();
+setTimeout(
+()=>{
 
-    }
+if(currentRole === "learner"){
 
+loadPeople();
 
-    openPage(
-        "searchPage"
-    );
+openPage(
+"peoplePage"
+);
 
+}
+else{
 
-    const title =
-        document.getElementById(
-            "searchTitle"
-        );
+loadPeople();
 
-
-    const text =
-        document.getElementById(
-            "searchText"
-        );
-
-
-    if (role === "learner") {
-
-        if (title) {
-
-            title.textContent =
-                "Finding a teacher...";
-
-        }
-
-
-        if (text) {
-
-            text.textContent =
-                "Looking for a real registered teacher volunteer.";
-
-        }
-
-    }
-    else {
-
-        if (title) {
-
-            title.textContent =
-                "Finding a learner...";
-
-        }
-
-
-        if (text) {
-
-            text.textContent =
-                "Looking for a real registered learner volunteer.";
-
-        }
-
-    }
-
-
-    setTimeout(
-        () => {
-
-            loadPeople();
-
-            openPage(
-                "peoplePage"
-            );
-
-        },
-        1200
-    );
+openPage(
+"peoplePage"
+);
 
 }
 
+},
+1200
+);
+
+}
 
 window.startMatching =
 startMatching;
-/* =====================================================
-   TEACHLY — PART 3/3
-   STARTUP • THEME • KEYBOARD • SESSION • EXPORTS
-===================================================== */
 
 
-/* =====================================================
-   THEME SYSTEM
-===================================================== */
+// ===============================
+// SAFE HTML HELPERS
+// ===============================
 
-function loadTheme() {
+function escapeHTML(value){
 
-    const savedTheme =
-        localStorage.getItem(
-            "teachlyTheme"
-        );
-
-
-    const theme =
-        savedTheme ||
-        currentUser?.theme ||
-        "light";
-
-
-    document.documentElement.setAttribute(
-        "data-theme",
-        theme
-    );
-
-
-    document.body.classList.toggle(
-        "darkMode",
-        theme === "dark"
-    );
+return String(
+value ?? ""
+)
+.replace(
+/&/g,
+"&amp;"
+)
+.replace(
+/</g,
+"&lt;"
+)
+.replace(
+/>/g,
+"&gt;"
+)
+.replace(
+/"/g,
+"&quot;"
+)
+.replace(
+/'/g,
+"&#039;"
+);
 
 }
 
+window.escapeHTML =
+escapeHTML;
+
+
+function stripHTML(value){
+
+const temporary =
+document.createElement(
+"div"
+);
+
+temporary.innerHTML =
+String(value ?? "");
+
+return temporary.textContent ||
+temporary.innerText ||
+"";
+
+}
+
+window.stripHTML =
+stripHTML;
+
+
+// ===============================
+// TOAST NOTIFICATIONS
+// ===============================
+
+function showToast(message){
+
+let toast =
+document.getElementById(
+"teachlyToast"
+);
+
+if(!toast){
+
+toast =
+document.createElement(
+"div"
+);
+
+toast.id =
+"teachlyToast";
+
+toast.className =
+"teachly-toast";
+
+document.body.appendChild(
+toast
+);
+
+}
+
+toast.textContent =
+message;
+
+toast.classList.add(
+"show"
+);
+
+clearTimeout(
+window.teachlyToastTimer
+);
+
+window.teachlyToastTimer =
+setTimeout(
+()=>{
+
+toast.classList.remove(
+"show"
+);
+
+},
+2500
+);
+
+}
+
+window.showToast =
+showToast;
+
+
+// ===============================
+// THEME SYSTEM
+// ===============================
+
+function loadTheme(){
+
+const savedTheme =
+localStorage.getItem(
+"teachlyTheme"
+);
+
+const theme =
+savedTheme ||
+currentUser?.theme ||
+"light";
+
+document.documentElement
+.setAttribute(
+"data-theme",
+theme
+);
+
+if(currentUser){
+
+currentUser.theme =
+theme;
+
+}
+
+}
 
 window.loadTheme =
 loadTheme;
 
 
+function toggleTheme(){
 
-function toggleTheme() {
+const current =
+document.documentElement
+.getAttribute(
+"data-theme"
+) ||
+"light";
 
-    const current =
-        document.documentElement.getAttribute(
-            "data-theme"
-        ) || "light";
+const next =
+current === "dark"
+?
+"light"
+:
+"dark";
 
+document.documentElement
+.setAttribute(
+"data-theme",
+next
+);
 
-    const next =
-        current === "dark"
-            ? "light"
-            : "dark";
+localStorage.setItem(
+"teachlyTheme",
+next
+);
 
+if(currentUser){
 
-    document.documentElement.setAttribute(
-        "data-theme",
-        next
-    );
+currentUser.theme =
+next;
 
-
-    document.body.classList.toggle(
-        "darkMode",
-        next === "dark"
-    );
-
-
-    localStorage.setItem(
-        "teachlyTheme",
-        next
-    );
-
-
-    if (currentUser) {
-
-        currentUser.theme =
-            next;
-
-        saveUser();
-
-    }
-
-
-    showToast(
-        next === "dark"
-            ? "Dark mode enabled 🌙"
-            : "Light mode enabled ☀️"
-    );
+saveUser();
 
 }
 
+showToast(
+next === "dark"
+?
+"Dark mode enabled 🌙"
+:
+"Light mode enabled ☀️"
+);
+
+}
 
 window.toggleTheme =
 toggleTheme;
 
 
+// ===============================
+// NAVIGATION HELPERS
+// ===============================
 
-/* =====================================================
-   USER PREPARATION
-===================================================== */
+function goHome(){
 
-function prepareUser() {
+if(currentUser){
 
-    if (!currentUser) return;
+updateHome();
 
+openPage(
+"homePage"
+);
 
-    if (
-        !Array.isArray(
-            currentUser.completedLessons
-        )
-    ) {
+}
+else{
 
-        currentUser.completedLessons =
-            [];
-
-    }
-
-
-    if (
-        !Array.isArray(
-            currentUser.savedLessons
-        )
-    ) {
-
-        currentUser.savedLessons =
-            [];
-
-    }
-
-
-    if (
-        !Array.isArray(
-            currentUser.quizCompleted
-        )
-    ) {
-
-        currentUser.quizCompleted =
-            [];
-
-    }
-
-
-    if (
-        !Array.isArray(
-            currentUser.purchasedItems
-        )
-    ) {
-
-        currentUser.purchasedItems =
-            [];
-
-    }
-
-
-    if (
-        typeof currentUser.coins !==
-        "number"
-    ) {
-
-        currentUser.coins =
-            Number(
-                currentUser.coins || 0
-            );
-
-    }
-
-
-    if (
-        typeof currentUser.sessions !==
-        "number"
-    ) {
-
-        currentUser.sessions =
-            Number(
-                currentUser.sessions || 0
-            );
-
-    }
-
-
-    if (
-        !currentUser.role
-    ) {
-
-        currentUser.role =
-            "learner";
-
-    }
-
-
-    if (
-        !currentUser.theme
-    ) {
-
-        currentUser.theme =
-            "light";
-
-    }
-
-
-    saveUser();
+openPage(
+"loginPage"
+);
 
 }
 
-
-window.prepareUser =
-prepareUser;
-
-
-
-/* =====================================================
-   SAVE / LOAD USER
-===================================================== */
-
-function saveUser() {
-
-    if (!currentUser) return;
-
-
-    try {
-
-        localStorage.setItem(
-            "teachlyUser",
-            JSON.stringify(
-                currentUser
-            )
-        );
-
-    }
-    catch (error) {
-
-        console.error(
-            "Unable to save user:",
-            error
-        );
-
-    }
-
 }
-
-
-window.saveUser =
-saveUser;
-
-
-
-function loadUser() {
-
-    try {
-
-        const saved =
-            localStorage.getItem(
-                "teachlyUser"
-            );
-
-
-        if (!saved) {
-
-            currentUser =
-                null;
-
-            return;
-
-        }
-
-
-        currentUser =
-            JSON.parse(
-                saved
-            );
-
-
-        if (
-            !currentUser ||
-            typeof currentUser !==
-                "object"
-        ) {
-
-            currentUser =
-                null;
-
-            localStorage.removeItem(
-                "teachlyUser"
-            );
-
-        }
-
-    }
-    catch (error) {
-
-        console.error(
-            "User loading error:",
-            error
-        );
-
-
-        currentUser =
-            null;
-
-
-        localStorage.removeItem(
-            "teachlyUser"
-        );
-
-    }
-
-}
-
-
-window.loadUser =
-loadUser;
-
-
-
-/* =====================================================
-   PAGE NAVIGATION
-===================================================== */
-
-function openPage(
-    pageId
-) {
-
-    const pages =
-        document.querySelectorAll(
-            ".page"
-        );
-
-
-    pages.forEach(
-        page => {
-
-            page.classList.remove(
-                "active"
-            );
-
-        }
-    );
-
-
-    const target =
-        document.getElementById(
-            pageId
-        );
-
-
-    if (!target) {
-
-        console.warn(
-            "Page not found:",
-            pageId
-        );
-
-        return;
-
-    }
-
-
-    target.classList.add(
-        "active"
-    );
-
-
-    window.scrollTo(
-        {
-            top: 0,
-            behavior: "smooth"
-        }
-    );
-
-
-    if (
-        pageId ===
-        "homePage"
-    ) {
-
-        updateHome();
-
-    }
-
-
-    if (
-        pageId ===
-        "lessonsPage"
-    ) {
-
-        renderLessons(
-            currentCategory
-        );
-
-    }
-
-
-    if (
-        pageId ===
-        "savedPage"
-    ) {
-
-        renderSavedLessons();
-
-    }
-
-
-    if (
-        pageId ===
-        "badgesPage"
-    ) {
-
-        renderBadges();
-
-    }
-
-
-    if (
-        pageId ===
-        "shopPage"
-    ) {
-
-        renderShop();
-
-    }
-
-
-    if (
-        pageId ===
-        "profilePage"
-    ) {
-
-        updateProfile();
-
-    }
-
-
-    if (
-        pageId ===
-        "peoplePage"
-    ) {
-
-        loadPeople();
-
-    }
-
-
-    if (
-        pageId ===
-        "mapPage"
-    ) {
-
-        setTimeout(
-            initializeMap,
-            100
-        );
-
-    }
-
-}
-
-
-window.openPage =
-openPage;
-
-
-
-function goHome() {
-
-    if (!currentUser) {
-
-        openPage(
-            "introPage"
-        );
-
-        return;
-
-    }
-
-
-    prepareUser();
-
-    updateHome();
-
-    openPage(
-        "homePage"
-    );
-
-}
-
 
 window.goHome =
 goHome;
 
 
+function openLogin(){
 
-/* =====================================================
-   HOME UPDATE
-===================================================== */
-
-function updateHome() {
-
-    if (!currentUser) return;
-
-
-    prepareUser();
-
-
-    const username =
-        document.getElementById(
-            "homeUsername"
-        );
-
-
-    const welcome =
-        document.getElementById(
-            "welcomeText"
-        );
-
-
-    const coins =
-        document.getElementById(
-            "coinCount"
-        );
-
-
-    const lessons =
-        document.getElementById(
-            "completedCount"
-        );
-
-
-    const sessions =
-        document.getElementById(
-            "sessionCount"
-        );
-
-
-    if (username) {
-
-        username.textContent =
-            currentUser.username;
-
-    }
-
-
-    if (welcome) {
-
-        welcome.textContent =
-            `Welcome, ${currentUser.username}!`;
-
-    }
-
-
-    if (coins) {
-
-        coins.textContent =
-            `💰 ${currentUser.coins}`;
-
-    }
-
-
-    if (lessons) {
-
-        lessons.textContent =
-            currentUser.completedLessons.length;
-
-    }
-
-
-    if (sessions) {
-
-        sessions.textContent =
-            currentUser.sessions;
-
-    }
-
-
-    const role =
-        document.getElementById(
-            "userRole"
-        );
-
-
-    if (role) {
-
-        role.textContent =
-            currentUser.role ===
-                "teacher"
-                ? "🧑‍🏫 Teacher"
-                : "🎓 Learner";
-
-    }
-
-
-    renderBadges();
+openPage(
+"loginPage"
+);
 
 }
-
-
-window.updateHome =
-updateHome;
-
-
-
-/* =====================================================
-   LOGIN / LOGOUT HELPERS
-===================================================== */
-
-function logoutUser() {
-
-    currentUser =
-        null;
-
-
-    currentUserId =
-        null;
-
-
-    currentRole =
-        "";
-
-
-    currentLesson =
-        null;
-
-
-    currentQuiz =
-        null;
-
-
-    currentChatUser =
-        null;
-
-
-    if (socket) {
-
-        try {
-
-            socket.disconnect();
-
-        }
-        catch {
-
-            // Ignore socket cleanup errors.
-
-        }
-
-
-        socket =
-            null;
-
-    }
-
-
-    localStorage.removeItem(
-        "teachlyUser"
-    );
-
-
-    openPage(
-        "introPage"
-    );
-
-
-    showToast(
-        "Logged out successfully."
-    );
-
-}
-
-
-window.logoutUser =
-logoutUser;
-
-
-
-function logout() {
-
-    logoutUser();
-
-}
-
-
-window.logout =
-logout;
-
-
-
-/* =====================================================
-   LOGIN PAGE NAVIGATION
-===================================================== */
-
-function openLogin() {
-
-    openPage(
-        "loginPage"
-    );
-
-}
-
 
 window.openLogin =
 openLogin;
 
 
+function openRegister(){
 
-function openRegister() {
-
-    openPage(
-        "registerPage"
-    );
+openPage(
+"registerPage"
+);
 
 }
-
 
 window.openRegister =
 openRegister;
 
 
+function openPeople(){
 
-function openPeople() {
+currentRole =
+currentUser?.role ||
+"learner";
 
-    if (!currentUser) {
-
-        showToast(
-            "Please login first."
-        );
-
-        openPage(
-            "loginPage"
-        );
-
-        return;
-
-    }
-
-
-    openPage(
-        "peoplePage"
-    );
-
-
-    loadPeople();
+openPage(
+"peoplePage"
+);
 
 }
-
 
 window.openPeople =
 openPeople;
 
 
+function openLessons(){
 
-/* =====================================================
-   ROLE SELECTION
-===================================================== */
-
-async function chooseRole(
-    role
-) {
-
-    if (
-        role !==
-            "teacher" &&
-        role !==
-            "learner"
-    ) {
-
-        role =
-            "learner";
-
-    }
-
-
-    currentRole =
-        role;
-
-
-    if (currentUser) {
-
-        currentUser.role =
-            role;
-
-        saveUser();
-
-    }
-
-
-    openPage(
-        "searchPage"
-    );
-
-
-    const title =
-        document.getElementById(
-            "searchTitle"
-        );
-
-
-    const text =
-        document.getElementById(
-            "searchText"
-        );
-
-
-    if (role === "learner") {
-
-        if (title) {
-
-            title.textContent =
-                "Finding a teacher...";
-
-        }
-
-
-        if (text) {
-
-            text.textContent =
-                "Looking for a real registered teacher volunteer.";
-
-        }
-
-    }
-    else {
-
-        if (title) {
-
-            title.textContent =
-                "Finding a learner...";
-
-        }
-
-
-        if (text) {
-
-            text.textContent =
-                "Looking for a real registered learner volunteer.";
-
-        }
-
-    }
-
-
-    setTimeout(
-        async () => {
-
-            try {
-
-                const response =
-                    await fetch(
-                        `${API_URL}/api/people`
-                    );
-
-
-                const data =
-                    await readAIResponse(
-                        response
-                    );
-
-
-                const users =
-                    Array.isArray(
-                        data.people
-                    )
-                        ? data.people
-                        : [];
-
-
-                const currentUsername =
-                    String(
-                        currentUser?.username ||
-                        ""
-                    )
-                        .trim()
-                        .toLowerCase();
-
-
-                const requiredRole =
-                    role === "learner"
-                        ? "teacher"
-                        : "learner";
-
-
-                const matches =
-                    users.filter(
-                        user => {
-
-                            const username =
-                                String(
-                                    user.username ||
-                                    ""
-                                )
-                                    .trim()
-                                    .toLowerCase();
-
-
-                            return (
-                                username &&
-                                username !==
-                                    currentUsername &&
-                                user.role ===
-                                    requiredRole
-                            );
-
-                        }
-                    );
-
-
-                if (!matches.length) {
-
-                    showToast(
-                        `No registered ${requiredRole} volunteer is available.`
-                    );
-
-
-                    if (
-                        role ===
-                        "learner"
-                    ) {
-
-                        setTimeout(
-                            () => {
-
-                                const useAI =
-                                    confirm(
-                                        "No registered teacher volunteer is available.\n\nWould you like AI Teacher to teach you instead?"
-                                    );
-
-
-                                if (useAI) {
-
-                                    openAITeacher();
-
-                                }
-                                else {
-
-                                    goHome();
-
-                                }
-
-                            },
-                            500
-                        );
-
-                    }
-                    else {
-
-                        setTimeout(
-                            goHome,
-                            1200
-                        );
-
-                    }
-
-
-                    return;
-
-                }
-
-
-                const person =
-                    matches[0];
-
-
-                connectToPerson(
-                    person
-                );
-
-            }
-            catch (error) {
-
-                console.error(
-                    "ROLE MATCHING ERROR:",
-                    error
-                );
-
-
-                showToast(
-                    "Could not check registered users right now."
-                );
-
-
-                setTimeout(
-                    goHome,
-                    1500
-                );
-
-            }
-
-        },
-        1200
-    );
-
-}
-
-
-window.chooseRole =
-chooseRole;
-
-
-
-/* =====================================================
-   KEYBOARD SHORTCUTS
-===================================================== */
-
-document.addEventListener(
-    "keydown",
-    event => {
-
-        if (
-            event.key ===
-            "Escape"
-        ) {
-
-            const active =
-                document.querySelector(
-                    ".page.active"
-                );
-
-
-            if (
-                active &&
-                active.id !==
-                    "homePage" &&
-                active.id !==
-                    "introPage"
-            ) {
-
-                if (currentUser) {
-
-                    goHome();
-
-                }
-
-            }
-
-        }
-
-
-        if (
-            event.key ===
-                "Enter" &&
-            document.activeElement
-                ?.id ===
-                "aiQuestion"
-        ) {
-
-            event.preventDefault();
-
-            teacherAIHelp();
-
-        }
-
-
-        if (
-            event.key ===
-                "Enter" &&
-            document.activeElement
-                ?.id ===
-                "messageInput"
-        ) {
-
-            event.preventDefault();
-
-            sendMessage();
-
-        }
-
-    }
+openPage(
+"aiPage"
 );
 
+}
+
+window.openLessons =
+openLessons;
 
 
-/* =====================================================
-   CHAT CLEANUP
-===================================================== */
+function openSavedLessons(){
 
-function closeChat() {
-
-    if (socket) {
-
-        try {
-
-            socket.disconnect();
-
-        }
-        catch {
-
-            // Ignore cleanup errors.
-
-        }
-
-
-        socket =
-            null;
-
-    }
-
-
-    currentChatUser =
-        null;
-
-
-    goHome();
+openPage(
+"savedLessonsPage"
+);
 
 }
 
-
-window.closeChat =
-closeChat;
-
+window.openSavedLessons =
+openSavedLessons;
 
 
-/* =====================================================
-   SAFE SESSION RECOVERY
-===================================================== */
+function openBadges(){
 
-function clearBrokenSession() {
-
-    try {
-
-        const saved =
-            localStorage.getItem(
-                "teachlyUser"
-            );
-
-
-        if (!saved) return;
-
-
-        const data =
-            JSON.parse(
-                saved
-            );
-
-
-        if (
-            !data ||
-            typeof data !==
-                "object"
-        ) {
-
-            localStorage.removeItem(
-                "teachlyUser"
-            );
-
-            currentUser =
-                null;
-
-        }
-
-    }
-    catch {
-
-        localStorage.removeItem(
-            "teachlyUser"
-        );
-
-
-        currentUser =
-            null;
-
-    }
+openPage(
+"badgesPage"
+);
 
 }
 
-
-clearBrokenSession();
-
-
-
-/* =====================================================
-   START APPLICATION
-===================================================== */
-
-function startApplication() {
-
-    try {
-
-        loadTheme();
-
-        loadUser();
+window.openBadges =
+openBadges;
 
 
-        if (currentUser) {
+function openShop(){
 
-            prepareUser();
-
-            updateHome();
-
-            updateProfile();
-
-
-            openPage(
-                "homePage"
-            );
-
-        }
-        else {
-
-            openPage(
-                "introPage"
-            );
-
-        }
-
-    }
-    catch (error) {
-
-        console.error(
-            "Teachly startup error:",
-            error
-        );
-
-
-        currentUser =
-            null;
-
-
-        openPage(
-            "introPage"
-        );
-
-    }
+openPage(
+"shopPage"
+);
 
 }
 
+window.openShop =
+openShop;
+
+
+function openProfile(){
+
+openPage(
+"profilePage"
+);
+
+}
+
+window.openProfile =
+openProfile;
+
+
+function openMap(){
+
+openPage(
+"mapPage"
+);
+
+}
+
+window.openMap =
+openMap;
+
+
+// ===============================
+// BROKEN SESSION RECOVERY
+// ===============================
+
+function clearBrokenSession(){
+
+try{
+
+localStorage.removeItem(
+"teachlyUser"
+);
+
+}
+catch(error){
+
+console.error(
+"SESSION CLEAR ERROR:",
+error
+);
+
+}
+
+currentUser =
+null;
+
+if(socket){
+
+try{
+socket.disconnect();
+}
+catch(error){
+console.error(error);
+}
+
+socket = null;
+
+}
+
+}
+
+window.clearBrokenSession =
+clearBrokenSession;
+
+
+// ===============================
+// APPLICATION START
+// ===============================
+
+function startApplication(){
+
+loadTheme();
+loadUser();
+
+if(currentUser){
+
+prepareUser();
+updateHome();
+openPage(
+"homePage"
+);
+
+}
+else{
+
+openPage(
+"loginPage"
+);
+
+}
+
+}
 
 window.startApplication =
 startApplication;
 
 
+// ===============================
+// CONTINUE FROM INTRO
+// ===============================
 
-/* =====================================================
-   DOM READY
-===================================================== */
+window.continueToName =
+function(){
+
+const introPage =
+document.getElementById(
+"introPage"
+);
+
+const loginPage =
+document.getElementById(
+"loginPage"
+);
+
+if(introPage)
+introPage.classList.remove(
+"active"
+);
+
+if(loginPage)
+loginPage.classList.add(
+"active"
+);
+
+};
+
+
+// ===============================
+// KEYBOARD CONTROLS
+// ===============================
 
 document.addEventListener(
-    "DOMContentLoaded",
-    () => {
+"keydown",
+event=>{
 
-        clearBrokenSession();
+if(
+event.key === "Escape"
+){
 
-        loadTheme();
+const chatPage =
+document.getElementById(
+"chatPage"
+);
 
-        loadUser();
+if(
+chatPage &&
+chatPage.classList.contains(
+"active"
+)
+){
 
+closeChat();
 
-        if (currentUser) {
+}
 
-            prepareUser();
+}
 
-            updateHome();
+if(
+event.key === "Enter" &&
+document.activeElement?.id ===
+"chatInput"
+){
 
-            updateProfile();
+event.preventDefault();
 
-            renderBadges();
+sendMessage();
 
-            renderShop();
+}
 
+if(
+event.key === "Enter" &&
+document.activeElement?.id ===
+"aiInput"
+){
 
-            openPage(
-                "homePage"
-            );
+event.preventDefault();
 
-        }
-        else {
+teacherAIHelp();
 
-            openPage(
-                "introPage"
-            );
+}
 
-        }
-
-    }
+}
 );
 
 
+// ===============================
+// APPLICATION INITIALIZATION
+// ===============================
 
-/* =====================================================
-   CONTINUE BUTTON FIX
-===================================================== */
+document.addEventListener(
+"DOMContentLoaded",
+()=>{
 
-window.continueToName =
-function () {
+try{
 
-    console.log(
-        "Continue clicked"
-    );
+startApplication();
 
+}
+catch(error){
 
-    const intro =
-        document.getElementById(
-            "introPage"
-        );
+console.error(
+"TEACHLY STARTUP ERROR:",
+error
+);
 
+clearBrokenSession();
 
-    const login =
-        document.getElementById(
-            "loginPage"
-        );
+openPage(
+"loginPage"
+);
 
+}
 
-    if (intro) {
-
-        intro.classList.remove(
-            "active"
-        );
-
-    }
+});
 
 
-    if (login) {
-
-        login.classList.add(
-            "active"
-        );
-
-    }
-
-};
-
-
-
-/* =====================================================
-   GLOBAL SAFE FUNCTIONS
-===================================================== */
-
-window.openLessons =
-function () {
-
-    openPage(
-        "lessonsPage"
-    );
-
-    renderLessons(
-        currentCategory
-    );
-
-};
-
-
-
-window.openSavedLessons =
-function () {
-
-    openPage(
-        "savedPage"
-    );
-
-    renderSavedLessons();
-
-};
-
-
-
-window.openBadges =
-function () {
-
-    openPage(
-        "badgesPage"
-    );
-
-    renderBadges();
-
-};
-
-
-
-window.openShop =
-function () {
-
-    openPage(
-        "shopPage"
-    );
-
-    renderShop();
-
-};
-
-
-
-window.openProfile =
-function () {
-
-    openPage(
-        "profilePage"
-    );
-
-    updateProfile();
-
-};
-
-
-
-window.openMap =
-function () {
-
-    openPage(
-        "mapPage"
-    );
-
-    setTimeout(
-        initializeMap,
-        100
-    );
-
-};
-
-
+// ===============================
+// GLOBAL FUNCTION EXPORTS
+// ===============================
 
 window.openChat =
-function (person) {
+openChat;
 
-    if (person) {
+window.closeChat =
+closeChat;
 
-        currentChatUser =
-            person;
+window.startMatching =
+startMatching;
 
-    }
+window.openAITeacher =
+openAITeacher;
 
+window.mysteryTopic =
+mysteryTopic;
 
-    openPage(
-        "chatPage"
-    );
+window.openLessons =
+openLessons;
 
+window.openSavedLessons =
+openSavedLessons;
 
-    if (
-        currentChatUser &&
-        currentChatUser.username
-    ) {
+window.openBadges =
+openBadges;
 
-        const title =
-            document.getElementById(
-                "chatTitle"
-            );
+window.openShop =
+openShop;
 
+window.openProfile =
+openProfile;
 
-        if (title) {
+window.openMap =
+openMap;
 
-            title.textContent =
-                currentChatUser.username;
+window.openPeople =
+openPeople;
 
-        }
-
-    }
-
-
-    connectSocket();
-
-};
+window.goHome =
+goHome;
 
 
-
-/* =====================================================
-   AI TEACHER FALLBACK
-===================================================== */
-
-window.prepareAITeacherForLesson =
-prepareAITeacherForLesson;
-
-
-window.startQuiz =
-startQuiz;
-
-
-window.finishQuiz =
-finishQuiz;
-
-
-/* =====================================================
-   FINAL INITIALIZATION
-===================================================== */
+// ===============================
+// TEACHLY READY
+// ===============================
 
 console.log(
-    "Teachly Final JS Loaded 🚀"
+"Teachly Final JS Loaded 🚀"
 );
