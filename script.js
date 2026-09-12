@@ -176,45 +176,226 @@ function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;","
 function connectWithAI(){
   go("aiTeacherPage");
 }
-async function openConnect(role){
-  const aiBtn = document.getElementById("learnerAIButton");
-if (aiBtn) {
-  aiBtn.style.display = role === "learner" ? "block" : "none";
-}
+async function openConnect(role) {
   go("peoplePage");
-  const aiBtn=document.getElementById("learnerAIButton"); if(aiBtn) aiBtn.style.display=role==="learner"?"block":"none";
-  document.getElementById("peopleTitle").textContent=role==="learner"?"Find a Teacher":"Find a Learner";
-  document.getElementById("peopleIntro").textContent=role==="learner"?"Searching now for real teachers who are looking for learners...":"Searching now for real learners who are looking for teachers...";
-  document.getElementById("peopleGrid").innerHTML="<div class='person panel' style='grid-column:1/-1'><div class='icon'>🔎</div><h3>Searching now...</h3><p>Finding real Teachly users who match your request.</p></div>";
-  document.getElementById("connectAction").innerHTML=role==="learner"
-    ? `<div class="connectNotice" style="margin-bottom:16px"><h3>🤖 Connect with AI Teacher</h3><p>Prefer an AI Teacher? You can connect directly without waiting for a real teacher.</p><button class="primary" onclick="connectWithAI()">Connect with AI Teacher</button></div>`
-    : "";
-  try{
-    const r=await fetch("https://teachly-nmxh.onrender.com/api/people",{cache:"no-store"});
-    if(!r.ok)throw new Error("People request failed");
-    const d=await r.json();
-    const people=Array.isArray(d)?d:(Array.isArray(d.people)?d.people:Array.isArray(d.users)?d.users:[]);
-    const wantedRole=role==="learner"?"teacher":"learner";
-    const matches=people.filter(p=>{
-      const uname=String(p.username??p.name??p.user?.username??"").trim();
-      if(!uname||uname.toLowerCase()===String(currentUser?.username||"").toLowerCase())return false;
-      const pr=String(p.role??p.userRole??p.user?.role??p.type??"").toLowerCase().trim();
-      const lookingRaw=p.lookingFor??p.looking_for??p.seeking??p.wants??p.availabilityFor??p.availableFor??p.preference??p.preferences??"";
-      const looking=Array.isArray(lookingRaw)?lookingRaw.join(" ").toLowerCase():String(lookingRaw).toLowerCase();
-      const available=p.available!==false&&p.isAvailable!==false&&p.status!=="offline"&&p.online!==false;
-      const roleMatches=pr===wantedRole||pr.includes(wantedRole);
-      const seekingMatches=!looking||looking.includes(role)||looking.includes(wantedRole)||looking.includes(role==="learner"?"learn":"teach");
-      return available&&roleMatches&&seekingMatches;
+
+  const peopleGrid = document.getElementById("peopleGrid");
+  const connectAction = document.getElementById("connectAction");
+  const aiBtn = document.getElementById("learnerAIButton");
+
+  // AI button is ONLY for Learners
+  if (aiBtn) {
+    aiBtn.style.display = role === "learner" ? "block" : "none";
+  }
+
+  peopleGrid.innerHTML = `
+    <div class="panel">
+      <h2>🔎 Finding people...</h2>
+      <p>Looking for online ${role === "learner" ? "teachers" : "learners"}.</p>
+    </div>
+  `;
+
+  connectAction.innerHTML = "";
+
+  try {
+    const response = await fetch(
+      "https://teachly-nmxh.onrender.com/api/people",
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) {
+      throw new Error("Could not load people");
+    }
+
+    const data = await response.json();
+
+    // Support different API response formats
+    const people =
+      Array.isArray(data)
+        ? data
+        : Array.isArray(data.people)
+        ? data.people
+        : Array.isArray(data.users)
+        ? data.users
+        : [];
+
+    const wantedRole = role === "learner" ? "teacher" : "learner";
+
+    const matches = people.filter(person => {
+      // Don't show yourself
+      const currentId =
+        currentUser?.id ||
+        currentUser?._id ||
+        currentUser?.username;
+
+      const personId =
+        person.id ||
+        person._id ||
+        person.username;
+
+      if (currentId && personId && String(currentId) === String(personId)) {
+        return false;
+      }
+
+      // Get person's role
+      const personRole = String(
+        person.role ||
+        person.userRole ||
+        person.user?.role ||
+        person.type ||
+        ""
+      ).toLowerCase();
+
+      // Must be the role we are looking for
+      if (!personRole.includes(wantedRole)) {
+        return false;
+      }
+
+      // Check online status
+      const isOnline =
+        person.online !== false &&
+        person.isOnline !== false &&
+        person.available !== false &&
+        person.isAvailable !== false &&
+        String(person.status || "").toLowerCase() !== "offline";
+
+      if (!isOnline) {
+        return false;
+      }
+
+      // Check what they are looking for
+      const lookingFor = String(
+        person.lookingFor ||
+        person.looking_for ||
+        person.seeking ||
+        person.wants ||
+        person.availabilityFor ||
+        person.availableFor ||
+        person.preference ||
+        person.preferences ||
+        ""
+      ).toLowerCase();
+
+      // If API provides looking-for information,
+      // make sure it matches the current user's role.
+      if (lookingFor) {
+        const wantsCurrentRole =
+          lookingFor.includes(role) ||
+          lookingFor.includes(role === "learner" ? "learn" : "teach");
+
+        if (!wantsCurrentRole) {
+          return false;
+        }
+      }
+
+      return true;
     });
-    if(matches.length){
-      document.getElementById("peopleIntro").textContent=role==="learner"?"Teachers who are looking for learners are available to connect.":"Learners who are looking for teachers are available to connect.";
-      document.getElementById("peopleGrid").innerHTML=matches.map(p=>{
-        const name=String(p.username??p.name??p.user?.username??"Teachly user");
-        const looking=String(p.lookingFor??p.looking_for??p.seeking??p.wants??p.availabilityFor??p.availableFor??"Available to connect");
-        return `<div class="person"><div class="icon">${role==="learner"?"🧑‍🏫":"🎓"}</div><h3>${escapeHtml(name)}</h3><p>${escapeHtml(looking)}</p><button class="primary" onclick="startSession(${JSON.stringify(name)})">Connect</button></div>`;
-      }).join("");
-    }else showAIFallback(role);
-  }catch(e){showAIFallback(role);}
+
+    // No matching people
+    if (matches.length === 0) {
+      peopleGrid.innerHTML = `
+        <div class="panel">
+          <h2>😕 Nobody is available right now</h2>
+          <p>
+            We couldn't find an online
+            ${wantedRole}
+            looking for a ${role}.
+          </p>
+        </div>
+      `;
+
+      // AI fallback ONLY for Learner
+      if (role === "learner") {
+        connectAction.innerHTML = `
+          <div class="connectNotice">
+            <h3>🤖 Try AI Teacher</h3>
+            <p>
+              No online teacher is available right now.
+              You can connect with Teachly AI instead.
+            </p>
+
+            <button
+              class="primary"
+              type="button"
+              onclick="connectWithAI()"
+            >
+              🤖 Connect with AI Teacher
+            </button>
+          </div>
+        `;
+      }
+
+      return;
+    }
+
+    // Display real matching users
+    peopleGrid.innerHTML = matches.map(person => {
+      const id = person.id || person._id || person.username;
+      const name =
+        person.username ||
+        person.name ||
+        person.displayName ||
+        "Teachly User";
+
+      const personRole =
+        person.role ||
+        person.userRole ||
+        person.user?.role ||
+        "User";
+
+      return `
+        <div class="panel person-card">
+          <div class="person-avatar">👤</div>
+
+          <h2>${escapeHTML(String(name))}</h2>
+
+          <p>
+            🟢 Online ·
+            ${escapeHTML(String(personRole))}
+          </p>
+
+          <button
+            class="primary"
+            type="button"
+            onclick="connectToUser('${escapeHTML(String(id))}')"
+          >
+            🤝 Connect
+          </button>
+        </div>
+      `;
+    }).join("");
+
+  } catch (error) {
+    console.error("People search error:", error);
+
+    peopleGrid.innerHTML = `
+      <div class="panel">
+        <h2>⚠️ Couldn't find people</h2>
+        <p>Please try again in a moment.</p>
+      </div>
+    `;
+
+    // AI fallback only for Learner
+    if (role === "learner") {
+      connectAction.innerHTML = `
+        <button
+          class="primary"
+          type="button"
+          onclick="connectWithAI()"
+        >
+          🤖 Connect with AI Teacher
+        </button>
+      `;
+    }
+  }
+}
+function escapeHTML(value) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 function showAIFallback(role){
   document.getElementById("peopleGrid").innerHTML="";
