@@ -177,6 +177,10 @@ function connectWithAI(){
   go("aiTeacherPage");
 }
 async function openConnect(role){
+  const aiBtn = document.getElementById("learnerAIButton");
+if (aiBtn) {
+  aiBtn.style.display = role === "learner" ? "block" : "none";
+}
   go("peoplePage");
   const aiBtn=document.getElementById("learnerAIButton"); if(aiBtn) aiBtn.style.display=role==="learner"?"block":"none";
   document.getElementById("peopleTitle").textContent=role==="learner"?"Find a Teacher":"Find a Learner";
