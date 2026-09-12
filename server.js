@@ -1,1533 +1,824 @@
-require("dotenv").config();
-
 const express = require("express");
-const http = require("http");
 const cors = require("cors");
+const http = require("http");
+const path = require("path");
+const fs = require("fs");
+const crypto = require("crypto");
 const { Server } = require("socket.io");
 
-const bcrypt = require("bcryptjs");
-const crypto = require("crypto");
-const fs = require("fs");
-const path = require("path");
+const app = express();
+const server = http.createServer(app);
 
-const nodemailer = require("nodemailer");
-const OpenAI = require("openai");
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 
+const PORT = process.env.PORT || 3000;
 
-/* =========================================================
-   APP
-========================================================= */
+const DATA_DIR = path.join(__dirname, "data");
+const USERS_FILE = path.join(DATA_DIR, "users.json");
 
-const app =
-  express();
-
-const server =
-  http.createServer(app);
-
-
-const io =
-  new Server(
-    server,
-    {
-      cors: {
-        origin: "*",
-        methods: [
-          "GET",
-          "POST"
-        ]
-      }
-    }
-  );
-
-
-app.use(
-  cors()
-);
-
-app.use(
-  express.json({
-    limit: "5mb"
-  })
-);
-
-
-/* =========================================================
-   DATA
-========================================================= */
-
-const dataDirectory =
-  path.join(
-    __dirname,
-    "data"
-  );
-
-const usersFile =
-  path.join(
-    dataDirectory,
-    "users.json"
-  );
-
-
-if (
-  !fs.existsSync(
-    dataDirectory
-  )
-) {
-
-  fs.mkdirSync(
-    dataDirectory,
-    {
-      recursive: true
-    }
-  );
-
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-
-if (
-  !fs.existsSync(
-    usersFile
-  )
-) {
-
-  fs.writeFileSync(
-    usersFile,
-    "[]"
-  );
-
+if (!fs.existsSync(USERS_FILE)) {
+  fs.writeFileSync(USERS_FILE, "[]");
 }
 
+app.use(cors());
+app.use(express.json({ limit: "10mb" }));
 
 function readUsers() {
+  try {
+    return JSON.parse(fs.readFileSync(USERS_FILE, "utf8"));
+  } catch {
+    return [];
+  }
+}
+
+function saveUsers(users) {
+  fs.writeFileSync(
+    USERS_FILE,
+    JSON.stringify(users, null, 2)
+  );
+}
+
+function makeId() {
+  return crypto.randomBytes(16).toString("hex");
+}
+
+function makeToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function getUserFromToken(token) {
+  if (!token) return null;
+
+  const users = readUsers();
+
+  return users.find(
+    user => user.token === token
+  ) || null;
+}
+
+
+/* =====================================================
+   BASIC TEST
+===================================================== */
+
+app.get("/api/health", (req, res) => {
+  res.json({
+    ok: true,
+    message: "Teachly server is running."
+  });
+});
+
+
+/* =====================================================
+   REGISTER
+===================================================== */
+
+app.post("/api/auth/register", (req, res) => {
 
   try {
 
-    const text =
-      fs.readFileSync(
-        usersFile,
-        "utf8"
+    const {
+      username,
+      email,
+      password,
+      role
+    } = req.body;
+
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        ok: false,
+        message: "Please fill in all fields."
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        ok: false,
+        message: "Password must be at least 6 characters."
+      });
+    }
+
+    const users = readUsers();
+
+    const cleanEmail =
+      String(email).trim().toLowerCase();
+
+    const cleanUsername =
+      String(username).trim();
+
+    const existingEmail =
+      users.find(
+        user =>
+          String(user.email).toLowerCase() === cleanEmail
       );
 
-    const users =
-      JSON.parse(
-        text
+    if (existingEmail) {
+      return res.status(409).json({
+        ok: false,
+        message: "That email is already registered."
+      });
+    }
+
+    const existingUsername =
+      users.find(
+        user =>
+          String(user.username).toLowerCase() ===
+          cleanUsername.toLowerCase()
       );
 
-    return Array.isArray(users)
-      ? users
-      : [];
+    if (existingUsername) {
+      return res.status(409).json({
+        ok: false,
+        message: "That username is already taken."
+      });
+    }
+
+    const user = {
+      id: makeId(),
+
+      username: cleanUsername,
+
+      email: cleanEmail,
+
+      password,
+
+      role:
+        role === "teacher"
+          ? "teacher"
+          : "learner",
+
+      verified: true,
+
+      profileImage: "",
+
+      tickets: 100,
+
+      sessions: 0,
+
+      createdAt: new Date().toISOString(),
+
+      token: null,
+
+      inventory: [],
+
+      equipped: null
+    };
+
+    users.push(user);
+
+    saveUsers(users);
+
+    res.json({
+      ok: true,
+      message: "Account created successfully."
+    });
 
   } catch (error) {
 
-    console.error(
-      "Could not read users:",
-      error
-    );
+    console.error("REGISTER ERROR:", error);
 
-    return [];
-
-  }
-
-}
-
-
-function writeUsers(users) {
-
-  fs.writeFileSync(
-    usersFile,
-    JSON.stringify(
-      users,
-      null,
-      2
-    )
-  );
-
-}
-
-
-/* =========================================================
-   SESSIONS
-========================================================= */
-
-const sessions =
-  new Map();
-
-
-function createToken() {
-
-  return crypto
-    .randomBytes(32)
-    .toString("hex");
-
-}
-
-
-function publicUser(user) {
-
-  return {
-    id: user.id,
-    username: user.username,
-    email: user.email,
-    profileImage:
-      user.profileImage || "",
-    role:
-      user.role || "learner",
-    tickets:
-      user.tickets || 0,
-    sessions:
-      user.sessions || 0,
-    streak:
-      user.streak || 0,
-    earnedBadges:
-      user.earnedBadges || [],
-    ownedEffects:
-      user.ownedEffects || [],
-    equippedEffect:
-      user.equippedEffect || ""
-  };
-
-}
-
-
-function authenticated(
-  req,
-  res,
-  next
-) {
-
-  const header =
-    req.headers.authorization || "";
-
-  const token =
-    header.startsWith("Bearer ")
-      ? header.slice(7)
-      : "";
-
-
-  const userId =
-    sessions.get(
-      token
-    );
-
-
-  if (!userId) {
-
-    return res
-      .status(401)
-      .json({
-        error:
-          "Authentication required."
-      });
-
-  }
-
-
-  const users =
-    readUsers();
-
-  const user =
-    users.find(
-      item =>
-        item.id ===
-        userId
-    );
-
-
-  if (!user) {
-
-    return res
-      .status(401)
-      .json({
-        error:
-          "User session is invalid."
-      });
-
-  }
-
-
-  req.user =
-    user;
-
-  req.token =
-    token;
-
-  next();
-
-}
-
-
-/* =========================================================
-   EMAIL
-========================================================= */
-
-let transporter = null;
-
-
-if (
-  process.env.EMAIL_HOST &&
-  process.env.EMAIL_USER &&
-  process.env.EMAIL_PASS
-) {
-
-  transporter =
-    nodemailer.createTransport({
-      host:
-        process.env.EMAIL_HOST,
-
-      port:
-        Number(
-          process.env.EMAIL_PORT ||
-          587
-        ),
-
-      secure:
-        process.env.EMAIL_SECURE ===
-        "true",
-
-      auth: {
-        user:
-          process.env.EMAIL_USER,
-
-        pass:
-          process.env.EMAIL_PASS
-      }
-
+    res.status(500).json({
+      ok: false,
+      message: "Could not create account."
     });
 
-}
-
-
-/* =========================================================
-   REGISTER
-========================================================= */
-
-app.post(
-  "/api/auth/register",
-  async (
-    req,
-    res
-  ) => {
-
-    try {
-
-      const {
-        username,
-        email,
-        password,
-        role
-      } = req.body;
-
-
-      if (
-        !username ||
-        !email ||
-        !password
-      ) {
-
-        return res
-          .status(400)
-          .json({
-            error:
-              "Username, email and password are required."
-          });
-
-      }
-
-
-      if (
-        password.length <
-        6
-      ) {
-
-        return res
-          .status(400)
-          .json({
-            error:
-              "Password must contain at least 6 characters."
-          });
-
-      }
-
-
-      const users =
-        readUsers();
-
-
-      const normalizedEmail =
-        email
-          .trim()
-          .toLowerCase();
-
-
-      if (
-        users.some(
-          user =>
-            user.email ===
-            normalizedEmail
-        )
-      ) {
-
-        return res
-          .status(409)
-          .json({
-            error:
-              "An account with that email already exists."
-          });
-
-      }
-
-
-      if (
-        users.some(
-          user =>
-            user.username
-              .toLowerCase() ===
-            username
-              .trim()
-              .toLowerCase()
-        )
-      ) {
-
-        return res
-          .status(409)
-          .json({
-            error:
-              "That username is already taken."
-          });
-
-      }
-
-
-      const verificationCode =
-        String(
-          Math.floor(
-            100000 +
-            Math.random() *
-            900000
-          )
-        );
-
-
-      const passwordHash =
-        await bcrypt.hash(
-          password,
-          10
-        );
-
-
-      const user = {
-
-        id:
-          crypto
-            .randomUUID(),
-
-        username:
-          username.trim(),
-
-        email:
-          normalizedEmail,
-
-        passwordHash,
-
-        role:
-          role === "teacher"
-            ? "teacher"
-            : "learner",
-
-      verified:
-  true,
-
-        profileImage:
-          "",
-
-        tickets:
-         100000,
-
-        sessions:
-          0,
-
-        streak:
-          0,
-
-        earnedBadges:
-          [],
-
-        ownedEffects:
-          [],
-
-        equippedEffect:
-          ""
-
-      };
-
-
-      users.push(
-        user
-      );
-
-      writeUsers(
-        users
-      );
-
-
-
-   const response = {
-        message:
-  "Account created successfully.",
-      userId:
-          user.id
-      };
-
-
-      /*
-       * Development convenience:
-       * if email is not configured, return the code.
-       * Remove DEV mode before public production use.
-       */
-
-   
-
-
-      return res.json(
-        response
-      );
-
-    } catch (error) {
-
-      console.error(
-        "REGISTER ERROR:",
-        error
-      );
-
-      return res
-        .status(500)
-        .json({
-          error:
-            "Registration failed."
-        });
-
-    }
-
   }
-);
+
+});
 
 
-/* =========================================================
-   VERIFY EMAIL
-========================================================= */
+/* =====================================================
+   LOGIN
+===================================================== */
 
-app.post(
-  "/api/auth/verify-email",
-  (
-    req,
-    res
-  ) => {
+app.post("/api/auth/login", (req, res) => {
+
+  try {
 
     const {
       email,
-      code
-    } =
-      req.body;
+      password
+    } = req.body;
 
-
-    if (
-      !email ||
-      !code
-    ) {
-
-      return res
-        .status(400)
-        .json({
-          error:
-            "Email and verification code are required."
-        });
-
+    if (!email || !password) {
+      return res.status(400).json({
+        ok: false,
+        message: "Email and password are required."
+      });
     }
 
-
-    const users =
-      readUsers();
-
+    const users = readUsers();
 
     const user =
       users.find(
         item =>
-          item.email ===
-          email
-            .trim()
-            .toLowerCase()
+          String(item.email).toLowerCase() ===
+          String(email).trim().toLowerCase()
       );
-
 
     if (!user) {
-
-      return res
-        .status(404)
-        .json({
-          error:
-            "Account not found."
-        });
-
+      return res.status(401).json({
+        ok: false,
+        message: "Account not found."
+      });
     }
 
-
-    if (
-      String(
-        user.verificationCode
-      ) !==
-      String(code)
-    ) {
-
-      return res
-        .status(400)
-        .json({
-          error:
-            "Incorrect verification code."
-        });
-
+    if (user.password !== password) {
+      return res.status(401).json({
+        ok: false,
+        message: "Incorrect password."
+      });
     }
 
+    const token = makeToken();
 
-    user.verified =
-      true;
+    user.token = token;
 
-    delete user.verificationCode;
+    saveUsers(users);
+
+    res.json({
+      ok: true,
+
+      token,
+
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        profileImage: user.profileImage || "",
+        tickets: user.tickets || 0,
+        sessions: user.sessions || 0,
+        inventory: user.inventory || [],
+        equipped: user.equipped || null
+      }
+    });
+
+  } catch (error) {
+
+    console.error("LOGIN ERROR:", error);
+
+    res.status(500).json({
+      ok: false,
+      message: "Login failed."
+    });
+
+  }
+
+});
 
 
-    writeUsers(
-      users
+/* =====================================================
+   LOGOUT
+===================================================== */
+
+app.post("/api/auth/logout", (req, res) => {
+
+  const token =
+    req.headers.authorization?.replace(
+      "Bearer ",
+      ""
     );
 
+  const users = readUsers();
+
+  const user =
+    users.find(item => item.token === token);
+
+  if (user) {
+    user.token = null;
+    saveUsers(users);
+  }
+
+  res.json({
+    ok: true
+  });
+
+});
+
+
+/* =====================================================
+   PEOPLE
+===================================================== */
+
+app.get("/api/people", (req, res) => {
+
+  const users = readUsers();
+
+  const people = users
+    .filter(user => user.verified !== false)
+    .map(user => ({
+      id: user.id,
+      username: user.username,
+      profileImage: user.profileImage || "",
+      role: user.role || "learner"
+    }));
+
+  res.json({
+    ok: true,
+    people
+  });
+
+});
+
+
+/* =====================================================
+   AVATAR
+===================================================== */
+
+app.post("/api/auth/avatar", (req, res) => {
+
+  try {
 
     const token =
-      createToken();
-
-
-    sessions.set(
-      token,
-      user.id
-    );
-
-
-    return res.json({
-      message:
-        "Email verified.",
-      token,
-      user:
-        publicUser(user)
-    });
-
-  }
-);
-
-/* =========================================================
-   RESEND VERIFICATION EMAIL
-========================================================= */
-
-app.post(
-  "/api/auth/resend-verification",
-  async (
-    req,
-    res
-  ) => {
-
-    try {
-
-      const {
-        email
-      } =
-        req.body;
-
-
-      if (!email) {
-
-        return res
-          .status(400)
-          .json({
-            error:
-              "Email is required."
-          });
-
-      }
-
-
-      const normalizedEmail =
-        email
-          .trim()
-          .toLowerCase();
-
-
-      const users =
-        readUsers();
-
-
-      const user =
-        users.find(
-          item =>
-            item.email ===
-            normalizedEmail
-        );
-
-
-      if (!user) {
-
-        return res
-          .status(404)
-          .json({
-            error:
-              "Account not found."
-          });
-
-      }
-
-
-      if (user.verified) {
-
-        return res
-          .status(400)
-          .json({
-            error:
-              "This email is already verified. You can log in."
-          });
-
-      }
-
-
-      if (!transporter) {
-
-        return res
-          .status(500)
-          .json({
-            error:
-              "Email service is not configured on the server."
-          });
-
-      }
-
-
-      const verificationCode =
-        String(
-          Math.floor(
-            100000 +
-            Math.random() *
-            900000
-          )
-        );
-
-
-      user.verificationCode =
-        verificationCode;
-
-
-      writeUsers(
-        users
+      req.headers.authorization?.replace(
+        "Bearer ",
+        ""
       );
 
+    const { image } = req.body;
 
-      await transporter.sendMail({
-
-        from:
-          process.env.EMAIL_FROM ||
-          process.env.EMAIL_USER,
-
-        to:
-          user.email,
-
-        subject:
-          "Teachly verification code",
-
-        text:
-          `Your new Teachly verification code is ${verificationCode}.`
-
+    if (!token || !image) {
+      return res.status(400).json({
+        ok: false,
+        message: "Avatar data is missing."
       });
-
-
-      return res.json({
-
-        message:
-          "A new verification code has been sent."
-
-      });
-
-
-    } catch (error) {
-
-      console.error(
-        "RESEND VERIFICATION ERROR:",
-        error
-      );
-
-
-      return res
-        .status(500)
-        .json({
-          error:
-            "Could not send verification code."
-        });
-
     }
 
-  }
-);
-
-/* =========================================================
-   LOGIN
-========================================================= */
-
-app.post(
-  "/api/auth/login",
-  async (
-    req,
-    res
-  ) => {
-
-    try {
-
-      const {
-        email,
-        password
-      } =
-        req.body;
-
-
-      if (
-        !email ||
-        !password
-      ) {
-
-        return res
-          .status(400)
-          .json({
-            error:
-              "Email and password are required."
-          });
-
-      }
-
-
-      const users =
-        readUsers();
-
-
-      const user =
-        users.find(
-          item =>
-            item.email ===
-            email
-              .trim()
-              .toLowerCase()
-        );
-
-
-      if (!user) {
-
-        return res
-          .status(401)
-          .json({
-            error:
-              "Invalid email or password."
-          });
-
-      }
-
-
-      const valid =
-        await bcrypt.compare(
-          password,
-          user.passwordHash
-        );
-
-
-      if (!valid) {
-
-        return res
-          .status(401)
-          .json({
-            error:
-              "Invalid email or password."
-          });
-
-      }
-
-
-      if (!user.verified) {
-
-        return res
-          .status(403)
-          .json({
-            error:
-              "Please verify your email first."
-          });
-
-      }
-
-
-      const token =
-        createToken();
-
-
-      sessions.set(
-        token,
-        user.id
-      );
-
-
-      return res.json({
-
-        message:
-          "Login successful.",
-
-        token,
-
-        user:
-          publicUser(user)
-
-      });
-
-
-    } catch (error) {
-
-      console.error(
-        "LOGIN ERROR:",
-        error
-      );
-
-      return res
-        .status(500)
-        .json({
-          error:
-            "Login failed."
-        });
-
-    }
-
-  }
-);
-
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-
-app.post(
-  "/api/auth/logout",
-  authenticated,
-  (
-    req,
-    res
-  ) => {
-
-    sessions.delete(
-      req.token
-    );
-
-    res.json({
-      message:
-        "Logged out."
-    });
-
-  }
-);
-
-
-/* =========================================================
-   REAL PEOPLE
-========================================================= */
-
-app.get(
-  "/api/people",
-  (
-    req,
-    res
-  ) => {
-
-    const users =
-      readUsers();
-
-
-    const people =
-      users
-        .filter(
-          user =>
-            user.verified ===
-            true
-        )
-        .map(
-          publicUser
-        );
-
-
-    res.json({
-      people
-    });
-
-  }
-);
-
-
-/* =========================================================
-   AVATAR
-========================================================= */
-
-app.post(
-  "/api/auth/avatar",
-  authenticated,
-  (
-    req,
-    res
-  ) => {
-
-    const {
-      profileImage
-    } =
-      req.body;
-
-
-    if (
-      typeof profileImage !==
-      "string"
-    ) {
-
-      return res
-        .status(400)
-        .json({
-          error:
-            "Invalid profile image."
-        });
-
-    }
-
-
-    const users =
-      readUsers();
-
+    const users = readUsers();
 
     const user =
-      users.find(
-        item =>
-          item.id ===
-          req.user.id
-      );
+      users.find(item => item.token === token);
 
+    if (!user) {
+      return res.status(401).json({
+        ok: false,
+        message: "Not logged in."
+      });
+    }
 
-    user.profileImage =
-      profileImage;
+    user.profileImage = image;
 
-
-    writeUsers(
-      users
-    );
-
+    saveUsers(users);
 
     res.json({
-      user:
-        publicUser(user)
+      ok: true,
+      profileImage: image
+    });
+
+  } catch (error) {
+
+    console.error("AVATAR ERROR:", error);
+
+    res.status(500).json({
+      ok: false,
+      message: "Could not save avatar."
     });
 
   }
-);
+
+});
 
 
-/* =========================================================
+/* =====================================================
    SHOP
-========================================================= */
+===================================================== */
 
-const shopProducts = {
+app.post("/api/shop/buy", (req, res) => {
 
-  ring: {
-    price: 30
-  },
+  try {
 
-  spark: {
-    price: 45
-  },
-
-  crown: {
-    price: 70
-  }
-
-};
-
-
-app.post(
-  "/api/shop/buy",
-  authenticated,
-  (
-    req,
-    res
-  ) => {
+    const token =
+      req.headers.authorization?.replace(
+        "Bearer ",
+        ""
+      );
 
     const {
-      productId
-    } =
-      req.body;
+      item,
+      price
+    } = req.body;
 
-
-    const product =
-      shopProducts[
-        productId
-      ];
-
-
-    if (!product) {
-
-      return res
-        .status(404)
-        .json({
-          error:
-            "Product not found."
-        });
-
-    }
-
-
-    const users =
-      readUsers();
-
+    const users = readUsers();
 
     const user =
       users.find(
-        item =>
-          item.id ===
-          req.user.id
+        entry => entry.token === token
       );
 
-
-    if (
-      !Array.isArray(
-        user.ownedEffects
-      )
-    ) {
-
-      user.ownedEffects =
-        [];
-
-    }
-
-
-    if (
-      user.ownedEffects.includes(
-        productId
-      )
-    ) {
-
-      user.equippedEffect =
-        productId;
-
-      writeUsers(
-        users
-      );
-
-      return res.json({
-        user:
-          publicUser(user)
+    if (!user) {
+      return res.status(401).json({
+        ok: false,
+        message: "Please log in."
       });
-
     }
 
+    const cost = Number(price);
 
-    const tickets =
-      user.tickets ||
-      0;
-
-
-    if (
-      tickets <
-      product.price
-    ) {
-
-      return res
-        .status(400)
-        .json({
-          error:
-            "Not enough coins."
-        });
-
+    if (!item || !Number.isFinite(cost)) {
+      return res.status(400).json({
+        ok: false,
+        message: "Invalid shop item."
+      });
     }
 
+    const coins = user.tickets || 0;
 
-    user.tickets =
-      tickets -
-      product.price;
+    if (coins < cost) {
+      return res.status(400).json({
+        ok: false,
+        message: "Not enough TeachCoins."
+      });
+    }
 
+    user.tickets = coins - cost;
 
-    user.ownedEffects.push(
-      productId
-    );
+    user.inventory =
+      Array.isArray(user.inventory)
+        ? user.inventory
+        : [];
 
-    user.equippedEffect =
-      productId;
+    if (!user.inventory.includes(item)) {
+      user.inventory.push(item);
+    }
 
-
-    writeUsers(
-      users
-    );
-
+    saveUsers(users);
 
     res.json({
-      user:
-        publicUser(user)
+      ok: true,
+      tickets: user.tickets,
+      inventory: user.inventory,
+      message: "Item purchased!"
+    });
+
+  } catch (error) {
+
+    console.error("SHOP BUY ERROR:", error);
+
+    res.status(500).json({
+      ok: false,
+      message: "Could not purchase item."
     });
 
   }
-);
+
+});
 
 
-/* =========================================================
-   EQUIP
-========================================================= */
+/* =====================================================
+   EQUIP SHOP ITEM
+===================================================== */
 
-app.post(
-  "/api/shop/equip",
-  authenticated,
-  (
-    req,
-    res
-  ) => {
+app.post("/api/shop/equip", (req, res) => {
 
-    const {
-      productId
-    } =
-      req.body;
+  try {
 
+    const token =
+      req.headers.authorization?.replace(
+        "Bearer ",
+        ""
+      );
 
-    const users =
-      readUsers();
+    const { item } = req.body;
 
+    const users = readUsers();
 
     const user =
       users.find(
-        item =>
-          item.id ===
-          req.user.id
+        entry => entry.token === token
       );
 
-
-    if (
-      !user.ownedEffects ||
-      !user.ownedEffects.includes(
-        productId
-      )
-    ) {
-
-      return res
-        .status(400)
-        .json({
-          error:
-            "You do not own this effect."
-        });
-
+    if (!user) {
+      return res.status(401).json({
+        ok: false,
+        message: "Please log in."
+      });
     }
 
+    user.inventory =
+      Array.isArray(user.inventory)
+        ? user.inventory
+        : [];
 
-    user.equippedEffect =
-      productId;
+    if (
+      item &&
+      !user.inventory.includes(item)
+    ) {
+      return res.status(400).json({
+        ok: false,
+        message: "You do not own this item."
+      });
+    }
 
+    user.equipped = item || null;
 
-    writeUsers(
-      users
-    );
-
+    saveUsers(users);
 
     res.json({
-      user:
-        publicUser(user)
+      ok: true,
+      equipped: user.equipped
+    });
+
+  } catch (error) {
+
+    console.error("EQUIP ERROR:", error);
+
+    res.status(500).json({
+      ok: false,
+      message: "Could not equip item."
     });
 
   }
-);
+
+});
 
 
-/* =========================================================
-   AI
-========================================================= */
+/* =====================================================
+   AI TEACHER
+===================================================== */
 
-const openai =
-  process.env.OPENAI_API_KEY
-    ? new OpenAI({
-        apiKey:
-          process.env.OPENAI_API_KEY
-      })
-    : null;
+app.post("/api/ai", async (req, res) => {
 
+  try {
 
-app.post(
-  "/api/ai",
-  async (
-    req,
-    res
-  ) => {
+    const {
+      message,
+      lesson
+    } = req.body;
 
-    try {
+    if (!message || !String(message).trim()) {
+      return res.status(400).json({
+        ok: false,
+        message: "Please ask a question."
+      });
+    }
 
-      if (!openai) {
+    const apiKey =
+      process.env.OPENAI_API_KEY;
 
-        return res
-          .status(500)
-          .json({
-            error:
-              "OPENAI_API_KEY is not configured on the server."
-          });
+    if (!apiKey) {
+      return res.status(500).json({
+        ok: false,
+        message:
+          "AI is not configured yet. Add OPENAI_API_KEY to your Render environment variables."
+      });
+    }
 
-      }
-
-
-      const {
-        message,
-        lesson
-      } =
-        req.body;
-
-
-      if (
-        !message ||
-        typeof message !==
-        "string"
-      ) {
-
-        return res
-          .status(400)
-          .json({
-            error:
-              "A question is required."
-          });
-
-      }
-
-
-      let lessonContext =
-        "";
-
-
-      if (
-        lesson &&
-        typeof lesson ===
-        "object"
-      ) {
-
-        lessonContext = `
-
+    const lessonContext =
+      lesson
+        ? `
 Current lesson:
 Title: ${lesson.title || ""}
 Category: ${lesson.category || ""}
 Description: ${lesson.description || ""}
-Content: ${lesson.content || ""}
+Content:
+${lesson.content || ""}
+`
+        : "";
 
-`;
+    const systemPrompt = `
+You are Teachly AI Teacher.
 
-      }
-
-
-      const response =
-        await openai.responses.create({
-
-          model:
-            process.env.OPENAI_MODEL ||
-            "gpt-5.6-luna",
-
-          instructions:
-            `You are Teachly AI Teacher.
-
-Your job is to help students learn.
+Your job is to answer the student's questions clearly,
+accurately and helpfully.
 
 Rules:
-- Explain clearly.
-- Use age-appropriate educational language.
-- Break difficult ideas into smaller steps.
+
+- Answer the actual question.
+- Do not randomly change the subject.
+- Explain difficult ideas in simple language.
 - Give examples when useful.
-- Do not simply give an answer when teaching a concept; explain why.
-- If the student is confused, try another explanation.
-- Stay focused on education.
-${lessonContext}`,
+- If the student asks for a definition, define it first.
+- If the student asks how something works, explain the steps.
+- If the student asks a math question, show the reasoning clearly.
+- If the student asks about the current lesson, use the lesson context.
+- If you are unsure about something, say so rather than inventing facts.
+- Keep answers appropriate for students.
+- Do not claim you performed actions you cannot perform.
 
-          input:
-            message
+${lessonContext}
+`;
 
-        });
+    const response =
+      await fetch(
+        "https://api.openai.com/v1/responses",
+        {
+          method: "POST",
 
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization":
+              `Bearer ${apiKey}`
+          },
 
-      const answer =
-        response.output_text ||
-        "";
+          body: JSON.stringify({
+            model:
+              process.env.OPENAI_MODEL ||
+              "gpt-5-mini",
 
+            instructions:
+              systemPrompt,
 
-      if (!answer) {
+            input:
+              String(message).trim(),
 
-        return res
-          .status(500)
-          .json({
-            error:
-              "The AI returned an empty response."
-          });
+            max_output_tokens: 1000
+          })
+        }
+      );
 
-      }
+    const data =
+      await response.json();
 
-
-      return res.json({
-        answer
-      });
-
-
-    } catch (error) {
+    if (!response.ok) {
 
       console.error(
         "OPENAI ERROR:",
-        error
+        data
       );
 
-
-      return res
-        .status(500)
-        .json({
-          error:
-            error.message ||
-            "AI request failed."
-        });
+      return res.status(500).json({
+        ok: false,
+        message:
+          data?.error?.message ||
+          "The AI service returned an error."
+      });
 
     }
 
+    let answer =
+      data.output_text || "";
+
+    if (!answer && Array.isArray(data.output)) {
+
+      answer =
+        data.output
+          .flatMap(item =>
+            Array.isArray(item.content)
+              ? item.content
+              : []
+          )
+          .map(content =>
+            content.text || ""
+          )
+          .filter(Boolean)
+          .join("\n");
+
+    }
+
+    if (!answer) {
+      answer =
+        "I couldn't generate an answer right now.";
+    }
+
+    res.json({
+      ok: true,
+      answer
+    });
+
+  } catch (error) {
+
+    console.error(
+      "AI SERVER ERROR:",
+      error
+    );
+
+    res.status(500).json({
+      ok: false,
+      message:
+        "Teachly AI could not be reached."
+    });
+
   }
-);
+
+});
 
 
-/* =========================================================
+/* =====================================================
    SOCKET.IO
-========================================================= */
+===================================================== */
 
-const socketUsers =
-  new Map();
+const onlineUsers = new Map();
+
+io.on("connection", socket => {
+
+  console.log(
+    "Socket connected:",
+    socket.id
+  );
 
 
-io.on(
-  "connection",
-  socket => {
+  socket.on("authenticate", token => {
 
-    console.log(
-      "Socket connected:",
+    const user =
+      getUserFromToken(token);
+
+    if (!user) {
+      socket.emit("auth-error", {
+        message: "Invalid session."
+      });
+
+      return;
+    }
+
+    socket.userId = user.id;
+
+    onlineUsers.set(
+      user.id,
       socket.id
     );
 
+    socket.emit("authenticated", {
+      id: user.id,
+      username: user.username
+    });
 
-    socket.on(
-      "authSession",
-      token => {
-
-        const userId =
-          sessions.get(
-            token
-          );
+  });
 
 
-        if (!userId) {
+  socket.on(
+    "private-message",
+    data => {
 
-          socket.emit(
-            "authError",
-            {
-              error:
-                "Invalid session."
-            }
-          );
-
-          return;
-        }
-
-
-        socketUsers.set(
-          socket.id,
-          userId
-        );
-
-
-        socket.emit(
-          "authSuccess"
-        );
-
+      if (!socket.userId) {
+        return;
       }
-    );
 
+      const {
+        to,
+        message
+      } = data || {};
 
-    socket.on(
-      "sessionMessage",
-      data => {
+      if (!to || !message) {
+        return;
+      }
 
-        const userId =
-          socketUsers.get(
-            socket.id
-          );
+      const targetSocket =
+        onlineUsers.get(to);
 
+      if (targetSocket) {
 
-        if (!userId) {
-          return;
-        }
-
-
-        socket.broadcast.emit(
-          "sessionMessage",
+        io.to(targetSocket).emit(
+          "private-message",
           {
-            ...data,
-            senderId:
-              userId
+            from: socket.userId,
+            message: String(message)
           }
         );
 
       }
+
+    }
+  );
+
+
+  socket.on("disconnect", () => {
+
+    if (socket.userId) {
+
+      onlineUsers.delete(
+        socket.userId
+      );
+
+    }
+
+    console.log(
+      "Socket disconnected:",
+      socket.id
     );
 
+  });
 
-    socket.on(
-      "leaveSession",
-      () => {
-
-        socket.emit(
-          "sessionLeft"
-        );
-
-      }
-    );
+});
 
 
-    socket.on(
-      "disconnect",
-      () => {
-
-        socketUsers.delete(
-          socket.id
-        );
-
-        console.log(
-          "Socket disconnected:",
-          socket.id
-        );
-
-      }
-    );
-
-  }
-);
-
-
-/* =========================================================
-   STATIC FILES
-   ========================================================= */
+/* =====================================================
+   STATIC FRONTEND
+   IMPORTANT:
+   This MUST stay AFTER API ROUTES.
+===================================================== */
 
 app.use(
-  express.static(
-    __dirname
-  )
+  express.static(__dirname)
 );
 
 
-/* =========================================================
+/* =====================================================
    START SERVER
-========================================================= */
-
-const PORT =
-  process.env.PORT ||
-  3000;
-
+===================================================== */
 
 server.listen(
   PORT,
+  "0.0.0.0",
   () => {
 
     console.log(
