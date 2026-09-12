@@ -648,6 +648,155 @@ app.post(
   }
 );
 
+/* =========================================================
+   RESEND VERIFICATION EMAIL
+========================================================= */
+
+app.post(
+  "/api/auth/resend-verification",
+  async (
+    req,
+    res
+  ) => {
+
+    try {
+
+      const {
+        email
+      } =
+        req.body;
+
+
+      if (!email) {
+
+        return res
+          .status(400)
+          .json({
+            error:
+              "Email is required."
+          });
+
+      }
+
+
+      const normalizedEmail =
+        email
+          .trim()
+          .toLowerCase();
+
+
+      const users =
+        readUsers();
+
+
+      const user =
+        users.find(
+          item =>
+            item.email ===
+            normalizedEmail
+        );
+
+
+      if (!user) {
+
+        return res
+          .status(404)
+          .json({
+            error:
+              "Account not found."
+          });
+
+      }
+
+
+      if (user.verified) {
+
+        return res
+          .status(400)
+          .json({
+            error:
+              "This email is already verified. You can log in."
+          });
+
+      }
+
+
+      if (!transporter) {
+
+        return res
+          .status(500)
+          .json({
+            error:
+              "Email service is not configured on the server."
+          });
+
+      }
+
+
+      const verificationCode =
+        String(
+          Math.floor(
+            100000 +
+            Math.random() *
+            900000
+          )
+        );
+
+
+      user.verificationCode =
+        verificationCode;
+
+
+      writeUsers(
+        users
+      );
+
+
+      await transporter.sendMail({
+
+        from:
+          process.env.EMAIL_FROM ||
+          process.env.EMAIL_USER,
+
+        to:
+          user.email,
+
+        subject:
+          "Teachly verification code",
+
+        text:
+          `Your new Teachly verification code is ${verificationCode}.`
+
+      });
+
+
+      return res.json({
+
+        message:
+          "A new verification code has been sent."
+
+      });
+
+
+    } catch (error) {
+
+      console.error(
+        "RESEND VERIFICATION ERROR:",
+        error
+      );
+
+
+      return res
+        .status(500)
+        .json({
+          error:
+            "Could not send verification code."
+        });
+
+    }
+
+  }
+);
 
 /* =========================================================
    LOGIN
