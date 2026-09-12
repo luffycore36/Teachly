@@ -1,811 +1,463 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teachly — Teach. Learn. Earn.</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Teachly</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:#03050d;color:#f7f7ff}
+body{overflow-x:hidden}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.page{display:none;min-height:100vh}
+.page.active{display:block}
+.auth{min-height:100vh;display:none;align-items:center;justify-content:center;padding:30px;position:relative;overflow:hidden;background:
+radial-gradient(circle at 15% 20%,rgba(123,76,255,.35),transparent 32%),
+radial-gradient(circle at 85% 75%,rgba(255,63,161,.25),transparent 30%),
+linear-gradient(135deg,#060816,#0c1030 48%,#08091b)}
+.auth.active{display:flex}
+.bg-orb{position:absolute;border-radius:50%;filter:blur(2px);opacity:.45;pointer-events:none}
+.o1{width:420px;height:420px;background:#7047ff;left:-170px;top:-160px;filter:blur(90px)}
+.o2{width:380px;height:380px;background:#ff3fa5;right:-160px;bottom:-140px;filter:blur(100px)}
+.card{position:relative;width:min(540px,94vw);padding:42px;border:1px solid rgba(255,255,255,.12);border-radius:30px;background:rgba(12,15,38,.78);backdrop-filter:blur(22px);box-shadow:0 30px 100px rgba(0,0,0,.5)}
+.brand{font-weight:900;font-size:24px;letter-spacing:-.8px}.brand span{opacity:.75}
+.eyebrow{margin-top:9px;color:#a9a4ff;font-size:12px;font-weight:800;letter-spacing:2px}
+h1{font-size:46px;line-height:1.02;margin:28px 0 12px;letter-spacing:-2px}
+h2{margin:0 0 10px}p{color:#aeb5d6;line-height:1.6}
+.field{width:100%;padding:15px 17px;border-radius:15px;border:1px solid rgba(255,255,255,.12);background:#0b0f27;color:#fff;outline:none;margin-top:12px}
+.field:focus{border-color:#896bff;box-shadow:0 0 0 4px rgba(137,107,255,.12)}
+.primary{width:100%;border:0;border-radius:15px;padding:15px 18px;margin-top:14px;color:#fff;font-weight:800;background:linear-gradient(100deg,#7656ff,#b44dff 55%,#ff4c9c);box-shadow:0 12px 35px rgba(137,75,255,.3)}
+.secondary{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;border-radius:14px;padding:12px 16px}
+.message{min-height:24px;margin:12px 0 0;font-size:14px;color:#ff9fc9}.success{color:#75efbd}
+.flow-note{font-size:13px;color:#7e86a9;margin-top:18px}
+.app{min-height:100vh;background:
+radial-gradient(circle at 10% 0%,rgba(103,73,255,.16),transparent 25%),
+radial-gradient(circle at 100% 50%,rgba(255,58,157,.10),transparent 27%),
+#070a18}
+.topbar{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;border-bottom:1px solid rgba(255,255,255,.07);background:rgba(7,10,24,.78);backdrop-filter:blur(18px);position:sticky;top:0;z-index:50}
+.wallet{padding:10px 15px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:#10152f;font-weight:800}
+.nav{display:flex;gap:8px;flex-wrap:wrap;padding:18px 28px;max-width:1250px;margin:auto}
+.nav button{border:1px solid rgba(255,255,255,.08);background:#0e1230;color:#c8ccef;border-radius:12px;padding:10px 13px}
+.nav button:hover{background:#191750;color:#fff}
+.content{max-width:1200px;margin:auto;padding:25px 28px 70px}
+.hero{padding:38px;border:1px solid rgba(255,255,255,.09);border-radius:30px;background:linear-gradient(135deg,rgba(31,30,79,.82),rgba(12,15,38,.72));box-shadow:0 25px 70px rgba(0,0,0,.25)}
+.hero h1{font-size:56px;margin:0 0 10px}.hero p{max-width:680px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:22px}
+.feature{padding:23px;border:1px solid rgba(255,255,255,.08);border-radius:22px;background:rgba(16,20,48,.78);transition:.2s}
+.feature:hover{transform:translateY(-3px);border-color:rgba(147,111,255,.5)}
+.icon{font-size:32px}.feature h3{margin:13px 0 5px}.feature p{font-size:14px;margin:0}
+.panel{padding:25px;border-radius:25px;background:rgba(14,18,43,.82);border:1px solid rgba(255,255,255,.08);box-shadow:0 18px 55px rgba(0,0,0,.2)}
+.back{margin-bottom:18px}.coins{font-size:30px;font-weight:900}
+.lesson,.person,.badge,.shopitem{padding:20px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:#0c1030}
+.lesson button,.shopitem button{margin-top:12px}
+.chatbox{height:390px;overflow:auto;padding:18px;background:#080b20;border-radius:18px;margin-bottom:12px}
+.bubble{max-width:75%;padding:11px 14px;border-radius:15px;margin:8px 0;background:#171b42}.bubble.me{margin-left:auto;background:#6049bb}
+textarea{resize:vertical;min-height:80px}
+.mapIntro{text-align:center;margin-bottom:16px}.mapIntro h1{font-size:42px;margin:10px 0}
+.continents{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:15px 0 18px}
+.continents button{padding:10px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.1);background:#101535;color:#dfe2ff}
+.continents button.active{background:linear-gradient(100deg,#7257ff,#c34fff);color:#fff}
+.world{position:relative;min-height:500px;border-radius:28px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:
+radial-gradient(circle at 50% 45%,rgba(52,110,190,.22),transparent 50%),
+linear-gradient(#071d36,#082442)}
+.world svg{width:100%;height:500px;display:block}
+.land{fill:#3d7b62;stroke:#8bd3a9;stroke-width:2;cursor:pointer;transition:.2s}.land:hover,.land.selected{fill:#9d67ff;stroke:#e4caff}
+.gridline{stroke:rgba(130,195,235,.12);stroke-width:1}
+.mapinfo{margin-top:18px}
+.profileAvatar{width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid #906cff;background:#151a40;display:block;margin-bottom:14px}
+.small{font-size:13px;color:#8189ad}
+@media(max-width:700px){h1,.hero h1{font-size:38px}.card{padding:28px}.topbar{padding:0 16px}.nav,.content{padding-left:16px;padding-right:16px}}
+.roleSplit{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
+.roleChoice{min-height:150px;border:1px solid rgba(255,255,255,.1);border-radius:22px;background:linear-gradient(145deg,rgba(27,25,67,.9),rgba(11,15,39,.92));color:#fff;padding:22px;text-align:left;display:flex;flex-direction:column;justify-content:center;gap:7px;transition:.22s}
+.roleChoice:hover{transform:translateY(-4px);border-color:#936dff;box-shadow:0 18px 45px rgba(111,70,255,.2)}
+.roleChoice span{font-size:34px}.roleChoice strong{font-size:20px}.roleChoice small{color:#aeb5d6}
+.connectNotice{margin-top:20px;padding:18px;border-radius:18px;background:rgba(111,75,255,.12);border:1px solid rgba(145,110,255,.25)}
+.world iframe{width:100%;height:520px;border:0;display:block}.realWorld{background:#07172a;position:relative}
+.mapOverlayHint{position:absolute;left:14px;bottom:14px;padding:8px 11px;border-radius:10px;background:rgba(4,7,18,.85);font-size:12px;color:#dce2ff}
+@media(max-width:650px){.roleSplit{grid-template-columns:1fr}}
+
+.floatingBadges{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9999}.floatBadge{position:absolute;bottom:-80px;font-size:42px;filter:drop-shadow(0 0 18px rgba(150,110,255,.8));animation:floatBadge 5s ease-out forwards}@keyframes floatBadge{0%{transform:translateY(0) scale(.55) rotate(-8deg);opacity:0}12%{opacity:1}70%{opacity:.9}100%{transform:translateY(-105vh) scale(1.15) rotate(12deg);opacity:0}}
+.shopitem.owned{border-color:#6dffba;box-shadow:0 0 25px rgba(60,255,170,.12)}.ownedTag{color:#72ffc1;font-weight:800}.shopAction{margin-top:12px}.profileFrame-glow{box-shadow:0 0 0 4px #8f6dff,0 0 35px rgba(143,109,255,.8)}.profileFrame-gold{box-shadow:0 0 0 4px #ffd35a,0 0 30px rgba(255,211,90,.65)}.profileFrame-cyan{box-shadow:0 0 0 4px #55eaff,0 0 30px rgba(85,234,255,.65)}.nameplate{display:inline-block;padding:6px 12px;border-radius:999px;background:rgba(125,95,255,.16);border:1px solid rgba(160,130,255,.3);margin:4px 0}.theme-sunset{--theme-a:#ff6b9a}.theme-ocean{--theme-a:#4de5ff}.theme-emerald{--theme-a:#63ffb0}.theme-sunset .topbar,.theme-sunset .hero{border-color:rgba(255,107,154,.35)}.theme-ocean .topbar,.theme-ocean .hero{border-color:rgba(77,229,255,.35)}.theme-emerald .topbar,.theme-emerald .hero{border-color:rgba(99,255,176,.35)}
+.mysteryModal{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:20px;background:rgba(3,5,18,.78);backdrop-filter:blur(12px)}.mysteryCard{width:min(760px,94vw);max-height:90vh;overflow:auto;padding:30px;border:1px solid rgba(180,120,255,.35);border-radius:28px;background:linear-gradient(145deg,rgba(23,18,55,.97),rgba(8,12,35,.98));box-shadow:0 30px 90px rgba(0,0,0,.55)}.profileFrame-cosmic{box-shadow:0 0 0 4px rgba(160,120,255,.65),0 0 35px rgba(120,80,255,.8)}.profileFrame-ice{box-shadow:0 0 0 4px rgba(120,220,255,.65),0 0 35px rgba(80,210,255,.65)}.theme-midnight{filter:saturate(.9) brightness(.86)}
+</style>
 </head>
+<body><div id="floatingBadges" class="floatingBadges"></div>
 
-<body>
+<!-- WELCOME -->
+<section id="welcomePage" class="page auth active">
+<div class="bg-orb o1"></div><div class="bg-orb o2"></div>
+<div class="card">
+<div class="brand">🔥 Teachly</div>
+<h1>Welcome to Teachly.</h1>
+<p>Learn. Teach. Explore. Connect. Your learning universe starts here.</p>
+<button class="primary" onclick="go('usernamePage')">Continue →</button>
+<div class="flow-note">A fresh sign-in is required whenever you return to Teachly.</div>
+</div></section>
 
-<div class="background-badges">
-    <span>🏆</span>
-    <span>🎓</span>
-    <span>💡</span>
-    <span>⭐</span>
-    <span>📚</span>
-    <span>💎</span>
-    <span>👑</span>
-    <span>🥇</span>
+<!-- USERNAME -->
+<section id="usernamePage" class="page auth">
+<div class="bg-orb o1"></div><div class="bg-orb o2"></div>
+<div class="card">
+<div class="brand">🔥 Teachly</div><div class="eyebrow">STEP 1 · YOUR IDENTITY</div>
+<h1>Choose your username.</h1>
+<p>Pick a unique username. If it already exists, you'll be taken to sign in so your saved progress stays with you.</p>
+<input id="username" class="field" maxlength="20" placeholder="Username" autocomplete="username">
+<div id="usernameMsg" class="message"></div>
+<button class="primary" onclick="checkUsername()">Continue →</button>
+<button class="secondary" style="margin-top:10px" onclick="go('welcomePage')">← Back</button>
+</div></section>
+
+<!-- SIGN IN -->
+<section id="signInPage" class="page auth">
+<div class="bg-orb o1"></div><div class="bg-orb o2"></div>
+<div class="card"><div class="brand">🔥 Teachly</div><div class="eyebrow">SIGN IN</div>
+<h1>Welcome back.</h1><p>Enter your username and password to restore your saved Teachly account.</p>
+<input id="signInUsername" class="field" maxlength="20" placeholder="Username" autocomplete="username">
+<input id="signInPassword" class="field" type="password" placeholder="Password" autocomplete="current-password">
+<div id="signInMsg" class="message"></div>
+<button class="primary" onclick="signIn()">Sign in →</button>
+<button class="secondary" style="margin-top:10px" onclick="go('usernamePage')">← Create a new account</button></div></section>
+
+<!-- PASSWORD -->
+<section id="passwordPage" class="page auth">
+<div class="bg-orb o1"></div><div class="bg-orb o2"></div>
+<div class="card">
+<div class="brand">🔥 Teachly</div><div class="eyebrow">STEP 2 · SECURITY</div>
+<h1 id="passwordTitle">Enter your password.</h1>
+<p id="passwordHint">Use your password to enter Teachly.</p>
+<input id="password" class="field" type="password" placeholder="Password" autocomplete="current-password">
+<select id="role" class="field">
+<option value="learner">🎓 Learner</option><option value="teacher">🧑‍🏫 Teacher</option>
+</select>
+<div id="passwordMsg" class="message"></div>
+<button class="primary" onclick="finishAuth()">Enter Teachly →</button>
+<button class="secondary" style="margin-top:10px" onclick="go('usernamePage')">← Change username</button>
+</div></section>
+
+<!-- APP SHELL -->
+<section id="homePage" class="page app">
+<header class="topbar"><div class="brand">🔥 Teachly</div><div id="wallet" class="wallet">🎟️ 0</div></header>
+<div class="nav">
+<button onclick="go('homePage')">Home</button><button onclick="go('aiTeacherPage')">🤖 AI Teacher</button>
+<button onclick="go('lessonsPage')">📚 Lesson Library</button><button onclick="go('peoplePage')">🤝 Learner / Teacher</button>
+<button onclick="go('mapPage')">🌍 Map</button><button onclick="go('badgesPage')">🏅 Badges</button>
+<button onclick="go('shopPage')">🛍️ Shop</button><button onclick="go('profilePage')">👤 Profile</button>
 </div>
-
-<header>
-    <div class="logo">
-        <span>📚</span>
-        <h1>Teachly</h1>
-    </div>
-
-    <p>Everyone has something to teach. Everyone has something to learn.</p>
-</header>
-
-<main>
-
-    <!-- LOGIN -->
-    <section id="loginSection" class="card login-card">
-        <h2>Welcome to Teachly 👋</h2>
-
-        <p>
-            Create your local Teachly account and start discovering knowledge.
-        </p>
-
-        <input
-            type="text"
-            id="usernameInput"
-            placeholder="Enter your username"
-            maxlength="20"
-        >
-
-        <button onclick="login()">Enter Teachly 🚀</button>
-    </section>
-
-
-    <!-- APP -->
-    <section id="appSection" class="hidden">
-
-        <!-- PROFILE -->
-        <section class="profile-card card">
-
-            <div class="profile-avatar" id="profileAvatar">👤</div>
-
-            <div class="profile-info">
-                <h2 id="profileName">Username</h2>
-                <p id="roleText">Ready to teach and learn</p>
-            </div>
-
-            <div class="stats">
-
-                <div>
-                    <strong id="coinCount">0</strong>
-                    <span>Coins</span>
-                </div>
-
-                <div>
-                    <strong id="xpCount">0</strong>
-                    <span>XP</span>
-                </div>
-
-                <div>
-                    <strong id="sessionCount">0</strong>
-                    <span>Sessions</span>
-                </div>
-
-                <div>
-                    <strong id="streakCount">0</strong>
-                    <span>Streak 🔥</span>
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- NAVIGATION -->
-        <section class="card app-navigation">
-
-            <button onclick="showPage('homePage')">
-                🏠 Home
-            </button>
-
-            <button onclick="showPage('mapPage')">
-                🌎 World Map
-            </button>
-
-            <button onclick="showPage('quizPage')">
-                🧠 Quizzes
-            </button>
-
-            <button onclick="showPage('shopPage')">
-                🛍️ Shop
-            </button>
-
-            <button onclick="showPage('achievementPage')">
-                🏆 Achievements
-            </button>
-
-        </section>
-
-
-        <!-- HOME PAGE -->
-        <section id="homePage">
-
-            <section class="card">
-                <h2>Welcome back, <span id="homeUsername">Learner</span>! 👋</h2>
-
-                <p>
-                    Explore the world, discover new countries, learn skills,
-                    complete quizzes and earn XP.
-                </p>
-
-                <div class="home-actions">
-
-                    <button onclick="showPage('mapPage')">
-                        🌎 Explore World
-                    </button>
-
-                    <button onclick="showPage('quizPage')">
-                        🧠 Take a Quiz
-                    </button>
-
-                    <button onclick="openAIMode()">
-                        🤖 AI Study Buddy
-                    </button>
-
-                </div>
-            </section>
-
-
-            <!-- AI + ONLINE MODES -->
-            <section class="card">
-
-                <h2>Choose Your Mode</h2>
-                <p>How do you want to learn today?</p>
-
-                <div class="mode-grid">
-
-                    <button class="mode-card ai-mode" onclick="openAIMode()">
-                        <span class="mode-icon">🤖</span>
-                        <strong>AI Mode</strong>
-                        <small>Learn with your personal AI tutor</small>
-                    </button>
-
-                    <button class="mode-card online-mode" onclick="openOnlineMode()">
-                        <span class="mode-icon">🌐</span>
-                        <strong>Online Mode</strong>
-                        <small>Teach and learn with real people</small>
-                    </button>
-
-                </div>
-            </section>
-
-
-            <!-- AI -->
-            <section id="aiSection" class="card hidden">
-
-                <div class="section-header">
-                    <div>
-                        <h2>🤖 Teachly AI Tutor</h2>
-                        <p>Your personal learning assistant</p>
-                    </div>
-
-                    <button class="small-button" onclick="closeModes()">✕</button>
-                </div>
-
-                <div class="ai-controls">
-
-                    <label>
-                        Learning Level
-
-                        <select id="aiLevel">
-                            <option value="Beginner">Beginner</option>
-                            <option value="Intermediate">Intermediate</option>
-                            <option value="Advanced">Advanced</option>
-                        </select>
-                    </label>
-
-                    <button onclick="aiExplain()">Explain Simply</button>
-                    <button onclick="aiExample()">Give Example</button>
-                    <button onclick="aiQuiz()">Quiz Me</button>
-                    <button onclick="aiTeachBack()">Teach Back</button>
-
-                </div>
-
-                <div class="chat-box" id="aiChat">
-
-                    <div class="message ai-message">
-                        <div class="message-avatar">🤖</div>
-
-                        <div>
-                            <strong>Teachly AI</strong>
-
-                            <p>
-                                Hi! I'm your AI tutor. Ask me anything you're curious
-                                about and I'll help you understand it step by step. 💡
-                            </p>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="chat-input">
-
-                    <input
-                        type="text"
-                        id="aiInput"
-                        placeholder="Ask me anything..."
-                        onkeydown="if(event.key === 'Enter') sendAIMessage()"
-                    >
-
-                    <button onclick="sendAIMessage()">Send ➤</button>
-
-                </div>
-
-            </section>
-
-
-            <!-- ONLINE -->
-            <section id="onlineSection" class="card hidden">
-
-                <div class="section-header">
-
-                    <div>
-                        <h2>🌐 Online Mode</h2>
-                        <p>Exchange knowledge with real people</p>
-                    </div>
-
-                    <button class="small-button" onclick="closeModes()">✕</button>
-
-                </div>
-
-                <div class="role-selection">
-
-                    <h3>What do you want to do?</h3>
-
-                    <div class="role-buttons">
-
-                        <button
-                            id="teacherRoleButton"
-                            onclick="chooseRole('Teacher')"
-                        >
-                            👨‍🏫 I Want to Teach
-                        </button>
-
-                        <button
-                            id="learnerRoleButton"
-                            onclick="chooseRole('Learner')"
-                        >
-                            🎓 I Want to Learn
-                        </button>
-
-                    </div>
-
-                </div>
-
-                <div id="topicArea" class="hidden">
-
-                    <label for="topicInput">
-                        What topic?
-                    </label>
-
-                    <input
-                        type="text"
-                        id="topicInput"
-                        placeholder="Example: Python, Maths, Drawing..."
-                    >
-
-                    <button onclick="findPeople()">
-                        🔍 Find People
-                    </button>
-
-                </div>
-
-                <div id="onlineResult"></div>
-
-                <div id="onlineChatArea" class="hidden">
-
-                    <div class="match-info">
-                        <span>🟢</span>
-
-                        <div>
-                            <strong id="partnerName">Connected User</strong>
-                            <p id="partnerRole">Teacher</p>
-                        </div>
-                    </div>
-
-                    <div class="chat-box" id="onlineChat"></div>
-
-                    <div class="chat-input">
-
-                        <input
-                            type="text"
-                            id="onlineInput"
-                            placeholder="Type a message..."
-                            onkeydown="if(event.key === 'Enter') sendOnlineMessage()"
-                        >
-
-                        <button onclick="sendOnlineMessage()">
-                            Send ➤
-                        </button>
-
-                    </div>
-
-                    <div class="emoji-bar">
-                        <button onclick="sendEmoji('👍')">👍</button>
-                        <button onclick="sendEmoji('😊')">😊</button>
-                        <button onclick="sendEmoji('🎉')">🎉</button>
-                        <button onclick="sendEmoji('💡')">💡</button>
-                        <button onclick="sendEmoji('🔥')">🔥</button>
-                    </div>
-
-                    <button
-                        class="danger-button"
-                        onclick="leaveOnlineSession()"
-                    >
-                        Leave Session
-                    </button>
-
-                </div>
-
-            </section>
-
-
-            <!-- MYSTERY + STREAK + TRADE -->
-            <section class="feature-grid">
-
-                <div class="card feature-card">
-                    <span>🕵️</span>
-
-                    <h3>Mystery Topic</h3>
-
-                    <p>
-                        Get a random topic and challenge yourself to teach it.
-                    </p>
-
-                    <button onclick="mysteryTopic()">Get Topic</button>
-
-                    <div id="mysteryResult"></div>
-                </div>
-
-
-                <div class="card feature-card">
-                    <span>🔥</span>
-
-                    <h3>Knowledge Streak</h3>
-
-                    <p>
-                        Keep learning and teaching to build your streak.
-                    </p>
-
-                    <strong id="streakMessage">
-                        Start your streak today!
-                    </strong>
-                </div>
-
-
-                <div class="card feature-card">
-                    <span>🔄</span>
-
-                    <h3>Skill Trading</h3>
-
-                    <p>
-                        Teach someone what you know and learn what they know.
-                    </p>
-
-                    <button onclick="showSkillTrading()">
-                        Find a Skill Trade
-                    </button>
-
-                    <div id="tradeResult"></div>
-                </div>
-
-            </section>
-
-        </section>
-
-
-        <!-- WORLD MAP PAGE -->
-        <section id="mapPage" class="page-section hidden">
-
-            <section class="card map-header">
-
-                <div>
-                    <h2>🌎 World Explorer</h2>
-
-                    <p>
-                        Discover countries and famous places to earn XP.
-                        Countries and places are <strong>not for sale</strong>.
-                    </p>
-                </div>
-
-                <div class="xp-display">
-                    ⭐ <span id="mapXP">0</span> XP
-                </div>
-
-            </section>
-
-
-            <section class="card">
-
-                <h2>🗺️ Choose a Country</h2>
-
-                <p>
-                    Click a country to learn about it.
-                </p>
-
-                <div id="countryGrid" class="country-grid"></div>
-
-            </section>
-
-
-            <section id="countryPanel" class="card hidden">
-
-                <div class="country-hero">
-
-                    <div id="countryFlag" class="country-flag">
-                        🌎
-                    </div>
-
-                    <div>
-                        <h2 id="countryName">Country</h2>
-
-                        <p id="countryTagline">
-                            Discover something new.
-                        </p>
-                    </div>
-
-                </div>
-
-
-                <div class="country-facts">
-
-                    <div>
-                        <span>🏛️</span>
-                        <strong>Capital</strong>
-                        <p id="countryCapital">-</p>
-                    </div>
-
-                    <div>
-                        <span>🗣️</span>
-                        <strong>Language</strong>
-                        <p id="countryLanguage">-</p>
-                    </div>
-
-                    <div>
-                        <span>💰</span>
-                        <strong>Currency</strong>
-                        <p id="countryCurrency">-</p>
-                    </div>
-
-                    <div>
-                        <span>🌍</span>
-                        <strong>Continent</strong>
-                        <p id="countryContinent">-</p>
-                    </div>
-
-                </div>
-
-
-                <div class="famous-section">
-
-                    <h3>⭐ Famous For</h3>
-
-                    <div id="famousPlaces" class="place-grid"></div>
-
-                </div>
-
-            </section>
-
-
-            <!-- PLACE MODAL -->
-            <div id="placeModal" class="place-modal hidden">
-
-                <div class="place-modal-content">
-
-                    <button
-                        class="modal-close"
-                        onclick="closePlaceModal()"
-                    >
-                        ✕
-                    </button>
-
-                    <div id="placeVisual" class="place-visual">
-                        🏛️
-                    </div>
-
-                    <h2 id="placeTitle">Famous Place</h2>
-
-                    <p id="placeDescription">
-                        Description
-                    </p>
-
-                    <div class="place-reward">
-                        ⭐ <strong>+25 XP</strong> for discovering this place
-                    </div>
-
-                    <button
-                        id="discoverPlaceButton"
-                        onclick="discoverCurrentPlace()"
-                    >
-                        🔎 Discover Place
-                    </button>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- QUIZ PAGE -->
-        <section id="quizPage" class="page-section hidden">
-
-            <section class="card">
-
-                <div class="section-header">
-
-                    <div>
-                        <h2>🧠 Teachly Quizzes</h2>
-
-                        <p>
-                            Test what you have learned and earn XP.
-                        </p>
-                    </div>
-
-                    <div class="quiz-score">
-                        ⭐ <span id="quizXP">0</span> XP
-                    </div>
-
-                </div>
-
-                <div id="quizStart">
-
-                    <h3>🌎 World Knowledge Quiz</h3>
-
-                    <p>
-                        Answer questions about countries, geography and famous places.
-                    </p>
-
-                    <button onclick="startQuiz()">
-                        Start Quiz 🚀
-                    </button>
-
-                </div>
-
-
-                <div id="quizArea" class="hidden">
-
-                    <div class="quiz-progress">
-                        Question <span id="quizNumber">1</span> / 5
-                    </div>
-
-                    <h2 id="quizQuestion">
-                        Question
-                    </h2>
-
-                    <div id="quizOptions" class="quiz-options"></div>
-
-                    <div id="quizFeedback"></div>
-
-                    <button
-                        id="nextQuizButton"
-                        class="hidden"
-                        onclick="nextQuizQuestion()"
-                    >
-                        Next Question ➜
-                    </button>
-
-                </div>
-
-
-                <div id="quizFinished" class="hidden">
-
-                    <div class="quiz-finished">
-
-                        <span>🎉</span>
-
-                        <h2>Quiz Complete!</h2>
-
-                        <p id="quizFinalScore">
-                            Score
-                        </p>
-
-                        <button onclick="startQuiz()">
-                            Try Again 🔄
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-        </section>
-
-
-        <!-- SHOP -->
-        <section id="shopPage" class="page-section hidden">
-
-            <section class="card">
-
-                <div class="section-header">
-
-                    <div>
-                        <h2>🛍️ Teachly Shop</h2>
-
-                        <p>
-                            Spend your Teachly Coins on profile customization.
-                        </p>
-                    </div>
-
-                    <div class="shop-coins">
-                        💰 <span id="shopCoins">0</span>
-                    </div>
-
-                </div>
-
-                <div class="shop-notice">
-                    🔒 Countries and famous places cannot be purchased.
-                    You discover them by learning.
-                </div>
-
-                <div id="shopGrid" class="shop-grid"></div>
-
-            </section>
-
-        </section>
-
-
-        <!-- ACHIEVEMENTS -->
-        <section id="achievementPage" class="page-section hidden">
-
-            <section class="card">
-
-                <h2>🏆 Your Achievements</h2>
-
-                <p>
-                    Keep learning to unlock achievements.
-                </p>
-
-                <div id="achievementGrid" class="achievement-grid"></div>
-
-            </section>
-
-
-            <section class="card">
-
-                <h2>🌎 Your Discoveries</h2>
-
-                <div id="discoveryStats"></div>
-
-                <div id="discoveryList" class="discovery-list"></div>
-
-            </section>
-
-        </section>
-
-
-        <!-- OLD SESSION BADGES -->
-        <section class="card">
-
-            <div class="section-header">
-
-                <div>
-                    <h2>🏆 Session Badges</h2>
-
-                    <p>
-                        Complete teaching sessions to earn badges.
-                    </p>
-                </div>
-
-            </div>
-
-            <div class="badge-grid">
-
-                <div class="badge">
-                    <span>🥉</span>
-                    <strong>Starter</strong>
-                    <small>5 sessions</small>
-                </div>
-
-                <div class="badge">
-                    <span>🥉</span>
-                    <strong>Learner</strong>
-                    <small>15 sessions</small>
-                </div>
-
-                <div class="badge">
-                    <span>🥈</span>
-                    <strong>Explorer</strong>
-                    <small>50 sessions</small>
-                </div>
-
-                <div class="badge">
-                    <span>🥈</span>
-                    <strong>Knowledge Seeker</strong>
-                    <small>75 sessions</small>
-                </div>
-
-                <div class="badge">
-                    <span>🥇</span>
-                    <strong>Skill Builder</strong>
-                    <small>100 sessions</small>
-                </div>
-
-                <div class="badge">
-                    <span>🥇</span>
-                    <strong>Mentor</strong>
-                    <small>150 sessions</small>
-                </div>
-
-                <div class="badge">
-                    <span>🏆</span>
-                    <strong>Expert</strong>
-                    <small>250 sessions</small>
-                </div>
-
-                <div class="badge">
-                    <span>🏆</span>
-                    <strong>Master</strong>
-                    <small>500 sessions</small>
-                </div>
-
-                <div class="badge">
-                    <span>💎</span>
-                    <strong>Legend</strong>
-                    <small>750 sessions</small>
-                </div>
-
-                <div class="badge">
-                    <span>👑</span>
-                    <strong>Teachly Champion</strong>
-                    <small>1000 sessions</small>
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- COINS -->
-        <section class="card">
-
-            <h2>💰 Teachly Coins</h2>
-
-            <p>
-                Earn coins by participating in teaching and learning sessions.
-            </p>
-
-            <div class="coin-grid">
-
-                <div>
-                    <span>🎨</span>
-                    <strong>Profile Customization</strong>
-                    <small>Use coins for special profile options.</small>
-                </div>
-
-                <div>
-                    <span>✨</span>
-                    <strong>Profile Effects</strong>
-                    <small>Make your profile stand out.</small>
-                </div>
-
-                <div>
-                    <span>😀</span>
-                    <strong>Special Emojis</strong>
-                    <small>Unlock extra chat reactions.</small>
-                </div>
-
-                <div>
-                    <span>🏆</span>
-                    <strong>Badges</strong>
-                    <small>Badges are earned through sessions.</small>
-                </div>
-
-            </div>
-
-        </section>
-
-    </section>
-
-</main>
-
-
-<footer>
-    <p>Teachly — Teach. Learn. Earn. 🌎</p>
-</footer>
-
-<script src="/socket.io/socket.io.js"></script>
-<script src="script.js"></script>
-
+<div class="content">
+<div class="hero"><div class="eyebrow">TEACHLY</div><h1 id="welcomeText">Welcome!</h1><p>What would you like to do today?</p>
+<div class="roleSplit">
+<button class="roleChoice" onclick="openConnect('learner')"><span>🎓</span><strong>LEARNER</strong><small>Find someone to teach you</small></button>
+<button class="roleChoice" onclick="openConnect('teacher')"><span>🧑‍🏫</span><strong>TEACHER</strong><small>Help someone learn</small></button>
+</div></div>
+<div class="grid">
+<div class="feature" onclick="go('aiTeacherPage')"><div class="icon">🤖</div><h3>AI Teacher</h3><p>Ask questions about any subject or chat normally with your assistant.</p></div>
+<div class="feature" onclick="go('lessonsPage')"><div class="icon">📚</div><h3>Lesson Library</h3><p>Each lesson contains its own learning content and Mindcheck quiz.</p></div>
+<div class="feature" onclick="randomTopic()"><div class="icon">🎲</div><h3>Mystery Topic</h3><p>Discover a random topic and one of several questions.</p></div>
+<div class="feature" onclick="go('mapPage')"><div class="icon">🌍</div><h3>World Map</h3><p>Explore the real world and seven continents.</p></div>
+<div class="feature" onclick="go('badgesPage')"><div class="icon">🏅</div><h3>Badges</h3><p>Collect achievements as you learn.</p></div>
+<div class="feature" onclick="go('shopPage')"><div class="icon">🛍️</div><h3>Shop</h3><p>Use your 🎟️ tickets for profile cosmetics.</p></div>
+</div></div></section>
+
+<!-- AI -->
+<section id="aiTeacherPage" class="page app"><header class="topbar"><div class="brand">🤖 AI Teacher</div><div id="wallet2" class="wallet"></div></header>
+<div class="content"><button class="secondary back" onclick="go('homePage')">← Home</button><div class="panel"><div class="eyebrow">STUDY MODE</div><h1>Ask your AI Teacher.</h1><p>Try: “Explain photosynthesis simply” or “Give me five revision questions about planets.”</p><div id="aiChat" class="chatbox"><div class="bubble">Hello! I'm your Teachly AI Teacher. What are you studying?</div></div><textarea id="aiInput" class="field" placeholder="Ask a study question..."></textarea><button class="primary" onclick="askAI()">Ask AI</button></div></div></section>
+
+<!-- LESSONS -->
+<section id="lessonsPage" class="page app"><header class="topbar"><div class="brand">📚 Lesson Library</div><div id="wallet3" class="wallet"></div></header>
+<div class="content"><button class="secondary back" onclick="go('homePage')">← Home</button><div class="panel"><h1>Lesson Library</h1><p>Choose a topic, learn, then test yourself.</p><div id="lessonGrid" class="grid"></div></div></div></section>
+
+<!-- PEOPLE -->
+<section id="peoplePage" class="page app"><header class="topbar"><div class="brand">🤝 Learner / Teacher</div><div id="wallet4" class="wallet"></div></header>
+<div class="content"><button class="secondary back" onclick="go('homePage')">← Home</button><div class="panel"><h1 id="peopleTitle">Teachly Connect</h1><p id="peopleIntro">Discover members of the Teachly learning community.</p><div id="peopleGrid" class="grid"></div><div id="connectAction"></div><div id="learnerAIButton" style="display:none;margin-top:16px"><button class="primary" onclick="go('aiTeacherPage')">🤖 Connect with AI Teacher</button></div></div></div></section>
+
+<!-- MAP -->
+<section id="mapPage" class="page app"><header class="topbar"><div class="brand">🌍 LearnSphere</div><div id="wallet5" class="wallet"></div></header>
+<div class="content"><button class="secondary back" onclick="go('homePage')">← Home</button><div class="panel">
+<div class="mapIntro"><div class="eyebrow">WORLD EXPLORER</div><h1>Explore the seven continents.</h1><p>Choose a continent above the map. Its information appears below.</p></div>
+<div id="continentButtons" class="continents"></div>
+<div class="world realWorld">
+<iframe title="Real world map" src="https://www.openstreetmap.org/export/embed.html?bbox=-180%2C-60%2C180%2C85&layer=mapnik" loading="lazy"></iframe>
+<div class="mapOverlayHint">🌍 Real-world OpenStreetMap</div>
+</div><div id="continentInfo" class="mapinfo panel"></div>
+</div></div></section>
+
+<!-- BADGES -->
+<section id="badgesPage" class="page app"><header class="topbar"><div class="brand">🏅 Badges</div><div id="wallet6" class="wallet"></div></header>
+<div class="content"><button class="secondary back" onclick="go('homePage')">← Home</button><div class="panel"><h1>Your achievements.</h1><div id="badgeGrid" class="grid"></div></div></div></section>
+
+<!-- SHOP -->
+<section id="shopPage" class="page app"><header class="topbar"><div class="brand">🛍️ Teachly Shop</div><div id="wallet7" class="wallet"></div></header>
+<div class="content"><button class="secondary back" onclick="go('homePage')">← Home</button><div class="panel"><h1>Spend your 🎟️.</h1><p>Profile image uploads cost 50 🎟️. Other cosmetic items can also be purchased.</p><div id="shopGrid" class="grid"></div></div></div></section>
+
+<!-- PROFILE -->
+<section id="profilePage" class="page app"><header class="topbar"><div class="brand">👤 Profile</div><div id="wallet8" class="wallet"></div></header>
+<div class="content"><button class="secondary back" onclick="go('homePage')">← Home</button><div class="panel"><h1>Your profile.</h1><img id="avatar" class="profileAvatar" alt="Profile avatar"><h2 id="profileName"></h2><div id="profilePlate"></div><p id="profileRole"></p><p class="small">Profile image upload costs 50 🎟️.</p><input id="avatarInput" type="file" accept="image/*" class="field"><button class="primary" onclick="uploadAvatar()">Upload profile image — 50 🎟️</button><div id="profileMsg" class="message"></div></div></div></section>
+
+<script>
+const CONTINENTS={
+"North America":{emoji:"🌎",info:"North America includes Canada, the United States, Mexico, Central America and the Caribbean. It spans Arctic regions to tropical climates and contains the Rocky Mountains, Great Plains and many major freshwater lakes."},
+"South America":{emoji:"🌎",info:"South America is home to the Amazon Basin and Andes Mountains. It contains enormous biodiversity and landscapes ranging from tropical rainforest to high mountains and dry deserts."},
+"Europe":{emoji:"🏰",info:"Europe is a continent of diverse languages, cultures and landscapes. It includes the Alps, Mediterranean regions, northern forests and many historic cities."},
+"Africa":{emoji:"🦁",info:"Africa is the second-largest continent and has deserts, savannas, rainforests, mountains and long coastlines. The Sahara is the world's largest hot desert."},
+"Asia":{emoji:"🏯",info:"Asia is the largest continent by area and population. It contains the Himalayas, vast deserts, tropical forests, major rivers and an extraordinary range of cultures."},
+"Australia":{emoji:"🦘",info:"Australia is both a country and a continent. Its landscapes include the Outback, tropical northern areas, temperate forests and the Great Barrier Reef."},
+"Antarctica":{emoji:"🧊",info:"Antarctica surrounds the South Pole and is Earth's coldest continent. It is dominated by a huge ice sheet and is home to wildlife such as penguins and seals."}
+};
+const LESSONS=[
+["🌌","Space","Stars, gravity, orbits and galaxies.","Stars are enormous spheres of hot plasma that release energy through processes in their cores. A planet's path around a star is a curved orbit produced by the interaction of its motion and the star's gravity. Galaxies are large systems containing stars, gas, dust and dark matter. Our Solar System is part of the Milky Way.",[
+{question:"A planet is moving forward while a star's gravity continually pulls it inward. According to the lesson, why can the resulting path be curved instead of straight?",options:["The planet's motion and the star's gravity act together to produce an orbit","The planet stops moving whenever gravity acts","The galaxy forces every planet to move in a circle","The planet is fixed while only the star changes position"],correct:0},
+{question:"Which conclusion follows from the lesson's description of a galaxy?",options:["A galaxy can contain stars, gas, dust and dark matter","Every galaxy contains exactly one star and no other material","Galaxies are made only of planets that orbit one another","A galaxy is simply empty space between star systems"],correct:0},
+{question:"If a planet kept its forward motion but the star's gravitational influence disappeared, which lesson-based change would be expected?",options:["The curved orbital path would no longer be maintained by that gravity","The planet would immediately become a star","The planet would remain on exactly the same curved orbit","The planet would stop existing"],correct:0}]],
+["🧬","Biology","Cells, DNA and ecosystems.","Cells are the basic structural and functional units of living organisms. DNA stores hereditary information. An ecosystem is a system in which living organisms interact with one another and with their physical environment. This means an ecosystem includes both biological interactions and surrounding physical conditions.",[
+{question:"A scientist finds a structure that carries hereditary information inside a living organism. Which lesson concept most directly describes its role?",options:["DNA, because it stores hereditary information","An ecosystem, because it contains physical conditions","A cell, because every cell is hereditary information","A habitat, because habitats store DNA"],correct:0},
+{question:"Which situation best fits the lesson's definition of an ecosystem?",options:["Living organisms interacting with one another and with their physical surroundings","A single organism considered without its surroundings","A DNA molecule considered without any organism or environment","Only the non-living temperature and rainfall of an area"],correct:0},
+{question:"Why can a cell be described as fundamental to living organisms according to the lesson?",options:["It is a basic structural and functional unit of living organisms","It is the largest system containing every ecosystem","It stores every environmental condition directly","It is a type of physical environment rather than a living structure"],correct:0}]],
+["⚡","Physics","Forces, energy, current and motion.","A force is a push or pull that can change an object's motion. Energy is the capacity to cause change. Electric current is the flow of electric charge through a conductor. Motion describes how an object's position changes over time.",[
+{question:"A moving object changes its motion after a push. Which lesson concept explains the interaction responsible for that change?",options:["Force, because a force is a push or pull that can change motion","Energy, because energy is defined as the object's position","Current, because every change in motion is electric charge","Motion, because motion is the cause of every force"],correct:0},
+{question:"A wire carries moving electric charge. Which statement uses the lesson's definition most precisely?",options:["The wire has electric current because charge is flowing through a conductor","The wire has motion but therefore cannot have current","The wire has energy only if no charge is moving","The wire has a force because current means a push or pull"],correct:0},
+{question:"Which pair correctly distinguishes two concepts from the lesson?",options:["Motion describes changing position over time, while energy is the capacity to cause change","Motion is the flow of charge, while energy is a type of conductor","Energy is only a push or pull, while force describes position over time","Force is the capacity to cause change, while current is an object's position"],correct:0}]],
+["🌋","Earth Science","Tectonic plates, volcanoes, rocks and weather.","Earth's crust is made of moving tectonic plates. Volcanoes can form where magma reaches the surface. Rocks are commonly grouped as igneous, sedimentary and metamorphic. Weather describes short-term atmospheric conditions such as temperature, wind and rainfall.",[
+{question:"A geological region contains crustal plates moving relative to one another. Which lesson idea does this support?",options:["Earth's crust is made of moving tectonic plates","All rocks form only when magma reaches the surface","Weather is responsible for moving crustal plates","The crust is a single unmoving shell"],correct:0},
+{question:"A sample is being classified using the three broad rock groups named in the lesson. Which classification set is appropriate?",options:["Igneous, sedimentary and metamorphic","Metallic, gaseous and electrical","Solar, lunar and atmospheric","Hot, cold and rainy"],correct:0},
+{question:"A forecast describes today's temperature, wind and rainfall. Which lesson concept is being described?",options:["Weather, because it concerns short-term atmospheric conditions","A tectonic plate, because wind moves the crust","A rock group, because rainfall creates all rocks","A volcano, because every weather event begins with magma"],correct:0}]],
+["💻","Computing","Algorithms, code, networks and AI.","An algorithm is a step-by-step procedure for solving a problem or completing a task. Code expresses instructions in a programming language. Computer networks allow devices to communicate and share data. AI systems can analyze information and generate outputs based on their design and training.",[
+{question:"A program's instructions are organized into a clear sequence of steps for solving a task before implementation. Which lesson concept best describes that sequence?",options:["An algorithm, because it is a step-by-step procedure for solving a problem","A network, because networks are sequences of instructions","A monitor, because a screen determines solution steps","A password, because passwords are procedures for every task"],correct:0},
+{question:"Two computers exchange information and share data through connected infrastructure. Which lesson concept directly accounts for this ability?",options:["A computer network, because networks allow devices to communicate and share data","Code, because code itself is the physical connection","An algorithm, because every algorithm is automatically a network","A display, because displays transmit all computer data"],correct:0},
+{question:"Which statement most closely matches the lesson's description of AI systems?",options:["They can analyze information and generate outputs based on their design and training","They generate any output without depending on design or training","They are simply physical networks connecting computers","They are algorithms that never analyze information"],correct:0}]],
+["🏛️","History","Evidence, causes and historical change.","Historians use evidence such as documents, artifacts and buildings to understand the past. Civilizations can change through causes including technology, trade, conflict, migration and changes in government. Historical explanations should be based on evidence rather than guesses alone.",[
+{question:"A historian finds an old building and a written record that appear to describe the same period. What lesson-based approach is strongest?",options:["Use the building and document as evidence when constructing an explanation of the past","Ignore both because historical explanations should rely on guesses","Use only a future prediction because past evidence cannot be useful","Treat the building as proof of every event that ever happened"],correct:0},
+{question:"A civilization changes after new trading relationships develop. Which lesson idea provides a plausible explanation?",options:["Trade is one of the causes of historical change named in the lesson","Trade cannot affect civilizations because only weather causes change","The change happened because stars became planets","Historical change can occur only when a government disappears"],correct:0},
+{question:"Why does the lesson emphasize evidence rather than guesses alone?",options:["Evidence gives historians a basis for constructing explanations about the past","Guesses are more reliable than documents and artifacts","Evidence prevents historians from considering any possible cause","Historical explanations do not require support from anything observable"],correct:0}]]
+];
+const BADGES=[
+["🌱","First Steps","Start your Teachly journey.","first"],["📚","Curious Mind","Open your first lesson.","lesson"],["🧠","Mindcheck","Complete a successful quiz.","quiz"],["🌍","World Explorer","Explore the real world map.","world"],["🎟️","Ticket Collector","Earn tickets from learning.","tickets"],["🤝","Connector","Complete your first real-user session.","connect"],["🔭","Mystery Explorer","Discover random topics.","mystery"],["🧩","Quiz Master","Complete three successful Mindchecks.","quiz3"],["⭐","Bright Mind","Complete lessons in three subjects.","subjects3"],["🏆","Teachly Scholar","Complete five lessons.","lessons5"],["🚀","Momentum","Complete ten learning actions.","actions10"],["💡","Open Mind","Talk to the AI Teacher.","ai"]
+];
+
+let currentUser=null, pendingUsername="";
+function getAccounts(){return JSON.parse(localStorage.getItem("teachlyAccounts")||"{}")}
+function setAccounts(a){localStorage.setItem("teachlyAccounts",JSON.stringify(a))}
+function go(id){
+document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+const el=document.getElementById(id); if(el)el.classList.add("active");
+window.scrollTo(0,0); updateWallets();
+if(id==="lessonsPage")renderLessons();
+if(id==="peoplePage")renderPeople();
+if(id==="mapPage")renderMap();
+if(id==="badgesPage")renderBadges();
+if(id==="shopPage")renderShop();
+if(id==="profilePage")renderProfile();
+}
+function checkUsername(){
+const input=document.getElementById("username"),msg=document.getElementById("usernameMsg");
+const u=input.value.trim();
+if(u.length<3){msg.textContent="Username must be at least 3 characters.";msg.className="message";return}
+const accounts=getAccounts();
+if(accounts[u]){
+document.getElementById("signInUsername").value=u;document.getElementById("signInPassword").value="";document.getElementById("signInMsg").textContent="Username found. Sign in to continue with your saved progress.";document.getElementById("signInMsg").className="message success";go("signInPage");return}
+pendingUsername=u;msg.textContent="Username available ✓";msg.className="message success";setTimeout(()=>go("passwordPage"),350);
+}
+function signIn(){const u=document.getElementById("signInUsername").value.trim(),pass=document.getElementById("signInPassword").value,msg=document.getElementById("signInMsg"),accounts=getAccounts();if(!accounts[u]){msg.textContent="No account exists with that username.";msg.className="message";return}if(accounts[u].password!==pass){msg.textContent="Incorrect password. Access blocked.";msg.className="message";return}currentUser={...accounts[u]};document.getElementById("signInPassword").value="";document.getElementById("welcomeText").textContent="Welcome, "+currentUser.username+"!";go("homePage");}
+
+function finishAuth(){
+const pass=document.getElementById("password").value,role=document.getElementById("role").value,msg=document.getElementById("passwordMsg");
+if(pass.length<4){msg.textContent="Password must be at least 4 characters.";return}
+const accounts=getAccounts();
+if(accounts[pendingUsername]){
+if(accounts[pendingUsername].password!==pass){msg.textContent="Incorrect password for this username.";return}
+currentUser={...accounts[pendingUsername]};
+}else{
+currentUser={username:pendingUsername,password:pass,role,coins:0,avatar:"",lessons:0,badges:[],items:{},quizWins:0};
+accounts[pendingUsername]=currentUser;setAccounts(accounts);
+}
+document.getElementById("password").value="";
+go("homePage");document.getElementById("welcomeText").textContent="Welcome, "+currentUser.username+"!";
+}
+function updateWallets(){document.querySelectorAll("[id^=wallet]").forEach(e=>e.textContent="🎟️ "+(currentUser?.coins??0))}
+function shuffleQuiz(q){const order=q.options.map((_,i)=>i);for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}return {question:q.question,options:order.map(i=>q.options[i]),correct:order.indexOf(q.correct)};}
+function showLesson(x,q){
+  window.currentQuizLesson=x;
+  window.currentQuizQuestion=q;
+  window.currentQuizAnswered=false;
+  renderQuizQuestion();
+}
+function renderQuizQuestion(){
+  const x=window.currentQuizLesson,q=window.currentQuizQuestion;
+  if(!x||!q)return;
+  const options=[...q.options].map((text,i)=>({text,correct:i===q.correct})).sort(()=>Math.random()-0.5);
+  window.currentQuizOptions=options;
+  document.getElementById("lessonGrid").innerHTML=`<div class="panel" style="grid-column:1/-1"><div class="icon">${x[0]}</div><h2>${x[1]}</h2><p>${x[2]}</p><h3>📖 Lesson</h3><p>${x[3]}</p><h3>🧠 Mindcheck</h3><p>${q.question}</p><div id="quizOptions" class="grid">${options.map((a,i)=>`<button class="secondary" onclick="answerQuiz(${i})">${escapeHtml(a.text)}</button>`).join("")}</div><p id="quizFeedback" class="message"></p><p class="small">🎟️ Tickets are awarded only for a correct answer.</p></div>`;
+}
+function nextQuizQuestion(){
+  const x=window.currentQuizLesson;
+  if(!x)return;
+  const pool=x[4].filter(q=>q!==window.currentQuizQuestion);
+  window.currentQuizQuestion=(pool.length?pool:x[4])[Math.floor(Math.random()*(pool.length?pool:x[4]).length)];
+  window.currentQuizAnswered=false;
+  setTimeout(renderQuizQuestion,450);
+}
+function answerQuiz(choice){
+  if(window.currentQuizAnswered)return;
+  const options=window.currentQuizOptions||[],selected=options[choice];
+  if(!selected)return;
+  const feedback=document.getElementById("quizFeedback");
+  window.currentQuizAnswered=true;
+  if(!selected.correct){
+    feedback.textContent="❌ Wrong answer. Moving to the next question...";
+    feedback.className="message";
+    document.querySelectorAll("#quizOptions button").forEach(b=>b.disabled=true);
+    nextQuizQuestion();
+    return;
+  }
+  if(!currentUser)return;
+  const it=currentUser.items||{};
+  let reward=5+(it.quick?2:0)+(it.quizMaster?5:0);
+  currentUser.coins=(currentUser.coins||0)+reward;
+  currentUser.quizWins=(currentUser.quizWins||0)+1;
+  currentUser.lessons=(currentUser.lessons||0)+1;
+  awardBadge("lesson");awardBadge("quiz");awardBadge("tickets");
+  if(currentUser.lessons>=5)awardBadge("lessons5");
+  if(currentUser.quizWins>=3)awardBadge("quiz3");
+  if(currentUser.lessons>=3)awardBadge("subjects3");
+  if(currentUser.quizWins>=10)awardBadge("actions10");
+  saveUser();
+  feedback.textContent="✅ Correct! +"+reward+" 🎟️ — next question coming up...";
+  feedback.className="message success";
+  document.querySelectorAll("#quizOptions button").forEach(b=>b.disabled=true);
+  nextQuizQuestion();
+}
+function renderLessons(){document.getElementById("lessonGrid").innerHTML=LESSONS.map((x,i)=>`<div class="lesson"><div class="icon">${x[0]}</div><h3>${x[1]}</h3><p>${x[2]}</p><button class="primary" onclick="completeLesson(${i})">Open lesson</button></div>`).join("");}
+function completeLesson(i){const x=LESSONS[i];const q=shuffleQuiz(x[4][Math.floor(Math.random()*x[4].length)]);showLesson(x,q);}
+function renderMap(){
+document.getElementById("continentButtons").innerHTML=Object.keys(CONTINENTS).map((c,i)=>`<button onclick="selectContinent('${c}')" id="btn-${i}">${CONTINENTS[c].emoji} ${c}</button>`).join("");
+selectContinent("Asia");
+}
+function selectContinent(c){
+document.querySelectorAll(".land").forEach(e=>e.classList.remove("selected"));
+const id="land-"+c.toLowerCase().replaceAll(" ","");const land=document.getElementById(id);if(land)land.classList.add("selected");
+document.querySelectorAll(".continents button").forEach(b=>b.classList.remove("active"));
+[...document.querySelectorAll(".continents button")].find(b=>b.textContent.includes(c))?.classList.add("active");
+document.getElementById("continentInfo").innerHTML=`<div class="eyebrow">${CONTINENTS[c].emoji} CONTINENT INFO</div><h2>${c}</h2><p>${CONTINENTS[c].info}</p>`;
+if(currentUser){awardBadge("world");saveUser()}
+}
+function awardBadge(id){if(!currentUser)return;currentUser.badges=currentUser.badges||[];if(currentUser.badges.includes(id))return;currentUser.badges.push(id);const b=BADGES.find(x=>x[3]===id);if(b){const layer=document.getElementById("floatingBadges");for(let i=0;i<3;i++){const el=document.createElement("div");el.className="floatBadge";el.textContent=b[0];el.style.left=(10+Math.random()*80)+"%";el.style.animationDelay=(i*.22)+"s";layer.appendChild(el);setTimeout(()=>el.remove(),5600+i*250)}alert("🏅 Badge achieved: "+b[1]);}saveUser();}
+function badgeEarned(id){return !!(currentUser?.badges||[]).includes(id)}
+function renderBadges(){document.getElementById("badgeGrid").innerHTML=BADGES.map(b=>`<div class="badge"><div class="icon">${b[0]}</div><h3>${b[1]}</h3><p>${b[2]}</p><div class="small">${badgeEarned(b[3])?"✓ Earned":"○ Keep learning"}</div></div>`).join("");}
+const SHOP_ITEMS=[
+["✨","Glow Frame",100,"Adds a glowing frame to your profile.","frameGlow"],["👑","Royal Frame",180,"Adds a royal profile frame.","frameGold"],["🌊","Ocean Frame",140,"Adds an ocean profile frame.","frameCyan"],["🏷️","Scholar Nameplate",75,"Adds a Scholar nameplate to your profile.","scholar"],["⚡","Quick Learner",120,"Every successful Mindcheck gives +2 extra 🎟️.","quick"],["🧠","Quiz Master",220,"Every successful Mindcheck gives +5 extra 🎟️.","quizMaster"],["🎲","Mystery Boost",90,"Correct Mystery Topic answers give +3 extra 🎟️.","mysteryBoost"],["🔄","Mystery Reroll",65,"Lets you reroll the current Mystery Topic.","mysteryReroll"],["🤖","AI Spark",110,"Adds an AI-themed profile effect; it never creates currency.","aiSpark"],["🎨","Sunset Theme",80,"Changes the Teachly accent to a sunset theme.","themeSunset"],["🌊","Ocean Theme",80,"Changes the Teachly accent to an ocean theme.","themeOcean"],["🌿","Emerald Theme",80,"Changes the Teachly accent to an emerald theme.","themeEmerald"],["🌙","Midnight Theme",95,"Unlocks a darker midnight accent.","themeMidnight"],["🔥","Flame Nameplate",100,"Adds a fiery Teachly nameplate.","flamePlate"],["🪐","Cosmic Frame",200,"Adds a space-themed profile frame.","frameCosmic"],["🧊","Ice Frame",160,"Adds an icy profile frame.","frameIce"]
+];
+function renderShop(){const owned=currentUser?.items||{};document.getElementById("shopGrid").innerHTML=SHOP_ITEMS.map(x=>`<div class="shopitem ${owned[x[4]]?"owned":""}"><div class="icon">${x[0]}</div><h3>${x[1]}</h3><p>${x[3]}</p><strong>🎟️ ${x[2]}</strong><div class="shopAction">${owned[x[4]]?'<span class="ownedTag">✓ Owned</span>':'<button class="primary" onclick="buyItem(\''+x[4]+'\')">Buy</button>'}</div></div>`).join("");}
+function buyItem(id){const item=SHOP_ITEMS.find(x=>x[4]===id);if(!item||!currentUser)return;if(currentUser.items?.[id]){alert("You already own this item.");return}if((currentUser.coins||0)<item[2]){alert("You need "+item[2]+" 🎟️.");return}currentUser.coins-=item[2];currentUser.items=currentUser.items||{};currentUser.items[id]=true;saveUser();applyCosmetics();renderShop();alert("Purchased "+item[1]+"! ✨");}
+function applyCosmetics(){if(!currentUser)return;document.body.classList.remove("theme-sunset","theme-ocean","theme-emerald","theme-midnight");const it=currentUser.items||{};if(it.themeSunset)document.body.classList.add("theme-sunset");else if(it.themeOcean)document.body.classList.add("theme-ocean");else if(it.themeEmerald)document.body.classList.add("theme-emerald");else if(it.themeMidnight)document.body.classList.add("theme-midnight");const av=document.getElementById("avatar");if(av){av.classList.remove("profileFrame-glow","profileFrame-gold","profileFrame-cyan","profileFrame-cosmic","profileFrame-ice");if(it.frameGlow)av.classList.add("profileFrame-glow");if(it.frameGold)av.classList.add("profileFrame-gold");if(it.frameCyan)av.classList.add("profileFrame-cyan");if(it.frameCosmic)av.classList.add("profileFrame-cosmic");if(it.frameIce)av.classList.add("profileFrame-ice");}}
+function activateShopEffects(){return;}
+function renderProfile(){
+document.getElementById("profileName").textContent=currentUser.username;document.getElementById("profilePlate").innerHTML=currentUser.items?.scholar?"<span class=\"nameplate\">🏅 Scholar</span>":"";
+document.getElementById("profileRole").textContent=currentUser.role==="teacher"?"🧑‍🏫 Teacher":"🎓 Learner";
+document.getElementById("avatar").src=currentUser.avatar||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='110'%3E%3Crect width='110' height='110' rx='55' fill='%23151a40'/%3E%3Ctext x='55' y='68' text-anchor='middle' font-size='45' fill='white'%3E👤%3C/text%3E%3C/svg%3E";
+}
+function uploadAvatar(){
+const file=document.getElementById("avatarInput").files[0],msg=document.getElementById("profileMsg");
+if(!file){msg.textContent="Choose an image first.";return}
+if((currentUser.coins||0)<50){msg.textContent="You need 50 🎟️ to upload a profile image.";return}
+const reader=new FileReader();reader.onload=()=>{currentUser.coins-=50;currentUser.avatar=reader.result;saveUser();renderProfile();applyCosmetics();msg.textContent="Profile image uploaded for 50 🎟️.";msg.className="message success"};reader.readAsDataURL(file);
+}
+function saveUser(){if(!currentUser)return;const a=getAccounts();a[currentUser.username]=currentUser;setAccounts(a);updateWallets();applyCosmetics()}
+async function askAI(){
+const q=document.getElementById("aiInput").value.trim();if(!q)return;
+const chat=document.getElementById("aiChat");chat.innerHTML+=`<div class="bubble me">${escapeHtml(q)}</div>`;document.getElementById("aiInput").value="";
+let answer="I’m here. Talk to me about whatever you want — school, coding, games, ideas, stories, questions, or just something random.";
+try{const response=await fetch("https://teachly-nmxh.onrender.com/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:q,username:currentUser?.username||"Student",lesson:null})});const data=await response.json();if(data&&data.answer)answer=String(data.answer).replace(/\bOpenAI\b/gi,"Teachly AI");}catch(e){const lower=q.toLowerCase();if(/^(hi|hello|hey|yo)\b/i.test(q))answer="Hey! 👋 What’s going on?";else if(/joke|funny/i.test(q))answer="Why did the computer get cold? Because it left its Windows open. 😄";else if(/thank|thanks/i.test(q))answer="Anytime! 😎";else if(/math|equation|algebra/i.test(q))answer="Sure — send me the exact problem and I’ll work through it with you.";else if(/photosynthesis/i.test(q))answer="Photosynthesis is how plants use light energy to make stored chemical energy from water and carbon dioxide, releasing oxygen.";}
+chat.innerHTML+=`<div class="bubble">${escapeHtml(answer)}</div>`;chat.scrollTop=chat.scrollHeight;if(currentUser){awardBadge("ai");saveUser()}
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+async function openConnect(role){
+  go("peoplePage");
+  const aiBtn=document.getElementById("learnerAIButton"); if(aiBtn) aiBtn.style.display=role==="learner"?"block":"none";
+  document.getElementById("peopleTitle").textContent=role==="learner"?"Find a Teacher":"Find a Learner";
+  document.getElementById("peopleIntro").textContent=role==="learner"?"Searching now for real teachers who are looking for learners...":"Searching now for real learners who are looking for teachers...";
+  document.getElementById("peopleGrid").innerHTML="<div class='person panel' style='grid-column:1/-1'><div class='icon'>🔎</div><h3>Searching now...</h3><p>Finding real Teachly users who match your request.</p></div>";
+  document.getElementById("connectAction").innerHTML=role==="learner"
+    ? `<div class="connectNotice" style="margin-bottom:16px"><h3>🤖 Connect with AI Teacher</h3><p>Prefer an AI Teacher? You can connect directly without waiting for a real teacher.</p><button class="primary" onclick="go('aiTeacherPage')">Connect with AI Teacher</button></div>`
+    : "";
+  try{
+    const r=await fetch("https://teachly-nmxh.onrender.com/api/people",{cache:"no-store"});
+    if(!r.ok)throw new Error("People request failed");
+    const d=await r.json();
+    const people=Array.isArray(d)?d:(Array.isArray(d.people)?d.people:Array.isArray(d.users)?d.users:[]);
+    const wantedRole=role==="learner"?"teacher":"learner";
+    const matches=people.filter(p=>{
+      const uname=String(p.username??p.name??p.user?.username??"").trim();
+      if(!uname||uname.toLowerCase()===String(currentUser?.username||"").toLowerCase())return false;
+      const pr=String(p.role??p.userRole??p.user?.role??p.type??"").toLowerCase().trim();
+      const lookingRaw=p.lookingFor??p.looking_for??p.seeking??p.wants??p.availabilityFor??p.availableFor??p.preference??p.preferences??"";
+      const looking=Array.isArray(lookingRaw)?lookingRaw.join(" ").toLowerCase():String(lookingRaw).toLowerCase();
+      const available=p.available!==false&&p.isAvailable!==false&&p.status!=="offline"&&p.online!==false;
+      const roleMatches=pr===wantedRole||pr.includes(wantedRole);
+      const seekingMatches=!looking||looking.includes(role)||looking.includes(wantedRole)||looking.includes(role==="learner"?"learn":"teach");
+      return available&&roleMatches&&seekingMatches;
+    });
+    if(matches.length){
+      document.getElementById("peopleIntro").textContent=role==="learner"?"Teachers who are looking for learners are available to connect.":"Learners who are looking for teachers are available to connect.";
+      document.getElementById("peopleGrid").innerHTML=matches.map(p=>{
+        const name=String(p.username??p.name??p.user?.username??"Teachly user");
+        const looking=String(p.lookingFor??p.looking_for??p.seeking??p.wants??p.availabilityFor??p.availableFor??"Available to connect");
+        return `<div class="person"><div class="icon">${role==="learner"?"🧑‍🏫":"🎓"}</div><h3>${escapeHtml(name)}</h3><p>${escapeHtml(looking)}</p><button class="primary" onclick="startSession(${JSON.stringify(name)})">Connect</button></div>`;
+      }).join("");
+    }else showAIFallback(role);
+  }catch(e){showAIFallback(role);}
+}
+function showAIFallback(role){
+  document.getElementById("peopleGrid").innerHTML="";
+  document.getElementById("peopleIntro").textContent="No matching real user is available right now.";
+  if(role==="learner"){
+    document.getElementById("connectAction").innerHTML=`<div class="connectNotice"><h3>No real teacher found</h3><p>We searched for a real Teachly teacher first. You can connect with the AI Teacher instead.</p><button class="primary" onclick="go('aiTeacherPage')">Connect with AI Teacher</button><button class="secondary" style="margin-top:10px" onclick="go('homePage')">No, go back</button></div>`;
+  }else{
+    document.getElementById("connectAction").innerHTML=`<div class="connectNotice"><h3>No learner available</h3><p>No real learner looking for a teacher is available right now.</p><button class="secondary" onclick="go('homePage')">Go back</button></div>`;
+  }
+}
+function startSession(username){
+  document.getElementById("connectAction").innerHTML=`<div class="connectNotice"><h3>Connected with ${escapeHtml(username||"a Teachly user")}</h3><p>Your connection is ready. Complete the session when you are finished.</p><button class="primary" onclick="finishSession()">Complete session</button></div>`;
+}
+function finishSession(){
+  if(currentUser){awardBadge("connect");saveUser();}
+  alert("Session complete! Your progress was saved.");
+  go("homePage");
+}
+function randomTopic(){
+  const x=LESSONS[Math.floor(Math.random()*LESSONS.length)];
+  const q=x[4][Math.floor(Math.random()*x[4].length)];
+  window.currentMystery={lesson:x,quiz:q,answered:false};
+  document.getElementById("mysteryModal")?.remove();
+  const options=[...q.options].map((text,i)=>({text,correct:i===q.correct})).sort(()=>Math.random()-0.5);
+  window.currentMystery.options=options;
+  const modal=document.createElement("div");modal.id="mysteryModal";modal.className="mysteryModal";
+  modal.innerHTML=`<div class="mysteryCard"><div class="eyebrow">🎲 MYSTERY TOPIC</div><div class="icon">${x[0]}</div><h2>${x[1]}</h2><p>${x[3]}</p><h3>Mindcheck</h3><p>${q.question}</p><div id="mysteryOptions" class="grid">${options.map((o,i)=>`<button class="secondary" onclick="answerMystery(${i})">${escapeHtml(o.text)}</button>`).join("")}</div><p id="mysteryFeedback" class="message"></p><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px"><button class="secondary" onclick="document.getElementById('mysteryModal')?.remove()">Close</button>${currentUser?.items?.mysteryReroll?`<button class="secondary" onclick="randomTopic()">🔄 Reroll</button>`:""}</div></div>`;
+  document.body.appendChild(modal);
+  if(currentUser){awardBadge("mystery");saveUser();}
+}
+function answerMystery(choice){
+  const m=window.currentMystery;if(!m||m.answered)return;
+  const selected=m.options?.[choice],feedback=document.getElementById("mysteryFeedback");
+  if(!selected)return;
+  m.answered=true;
+  document.querySelectorAll("#mysteryOptions button").forEach(b=>b.disabled=true);
+  if(!selected.correct){
+    feedback.textContent="❌ Wrong answer. Moving to another mystery question...";
+    feedback.className="message";
+    setTimeout(randomTopic,650);
+    return;
+  }
+  if(currentUser){
+    const it=currentUser.items||{};
+    let reward=5+(it.quick?2:0)+(it.quizMaster?5:0)+(it.mysteryBoost?3:0);
+    currentUser.coins=(currentUser.coins||0)+reward;
+    currentUser.quizWins=(currentUser.quizWins||0)+1;
+    awardBadge("quiz");awardBadge("tickets");saveUser();
+    feedback.textContent="✅ Correct! +"+reward+" 🎟️ — next mystery coming up...";
+    feedback.className="message success";
+    setTimeout(randomTopic,650);
+  }
+}
+window.addEventListener("load",()=>{go("welcomePage");applyCosmetics()});
+</script>
 </body>
 </html>
