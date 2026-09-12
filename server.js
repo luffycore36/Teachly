@@ -434,10 +434,8 @@ app.post(
             ? "teacher"
             : "learner",
 
-        verified:
-          false,
-
-        verificationCode,
+      verified:
+  true,
 
         profileImage:
           "",
@@ -472,32 +470,11 @@ app.post(
       );
 
 
-      if (transporter) {
 
-        await transporter.sendMail({
-
-          from:
-            process.env.EMAIL_FROM ||
-            process.env.EMAIL_USER,
-
-          to:
-            user.email,
-
-          subject:
-            "Teachly verification code",
-
-          text:
-            `Your Teachly verification code is ${verificationCode}.`
-
-        });
-
-      }
-
-
-      const response = {
+   const response = {
         message:
-          "Verification code created. Check your email.",
-        userId:
+  "Account created successfully.",
+      userId:
           user.id
       };
 
@@ -508,12 +485,7 @@ app.post(
        * Remove DEV mode before public production use.
        */
 
-      if (!transporter) {
-
-        response.developmentCode =
-          verificationCode;
-
-      }
+   
 
 
       return res.json(
