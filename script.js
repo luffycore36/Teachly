@@ -108,7 +108,7 @@ function answerQuiz(choice){
   if(!selected.correct){
     feedback.textContent="❌ Wrong answer. Moving to the next question...";
     feedback.className="message";
-    document.querySelectorAll("#quizOptions button").forEach(b=>b.disabled=true);
+        document.querySelectorAll("#quizOptions button").forEach(b=>b.disabled=true);
     nextQuizQuestion();
     return;
   }
@@ -173,6 +173,9 @@ try{const response=await fetch("https://teachly-nmxh.onrender.com/api/ai",{metho
 chat.innerHTML+=`<div class="bubble">${escapeHtml(answer)}</div>`;chat.scrollTop=chat.scrollHeight;if(currentUser){awardBadge("ai");saveUser()}
 }
 function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function connectWithAI(){
+  go("aiTeacherPage");
+}
 async function openConnect(role){
   go("peoplePage");
   const aiBtn=document.getElementById("learnerAIButton"); if(aiBtn) aiBtn.style.display=role==="learner"?"block":"none";
@@ -180,7 +183,7 @@ async function openConnect(role){
   document.getElementById("peopleIntro").textContent=role==="learner"?"Searching now for real teachers who are looking for learners...":"Searching now for real learners who are looking for teachers...";
   document.getElementById("peopleGrid").innerHTML="<div class='person panel' style='grid-column:1/-1'><div class='icon'>🔎</div><h3>Searching now...</h3><p>Finding real Teachly users who match your request.</p></div>";
   document.getElementById("connectAction").innerHTML=role==="learner"
-    ? `<div class="connectNotice" style="margin-bottom:16px"><h3>🤖 Connect with AI Teacher</h3><p>Prefer an AI Teacher? You can connect directly without waiting for a real teacher.</p><button class="primary" onclick="go('aiTeacherPage')">Connect with AI Teacher</button></div>`
+    ? `<div class="connectNotice" style="margin-bottom:16px"><h3>🤖 Connect with AI Teacher</h3><p>Prefer an AI Teacher? You can connect directly without waiting for a real teacher.</p><button class="primary" onclick="connectWithAI()">Connect with AI Teacher</button></div>`
     : "";
   try{
     const r=await fetch("https://teachly-nmxh.onrender.com/api/people",{cache:"no-store"});
@@ -213,7 +216,7 @@ function showAIFallback(role){
   document.getElementById("peopleGrid").innerHTML="";
   document.getElementById("peopleIntro").textContent="No matching real user is available right now.";
   if(role==="learner"){
-    document.getElementById("connectAction").innerHTML=`<div class="connectNotice"><h3>No real teacher found</h3><p>We searched for a real Teachly teacher first. You can connect with the AI Teacher instead.</p><button class="primary" onclick="go('aiTeacherPage')">Connect with AI Teacher</button><button class="secondary" style="margin-top:10px" onclick="go('homePage')">No, go back</button></div>`;
+    document.getElementById("connectAction").innerHTML=`<div class="connectNotice"><h3>No real teacher found</h3><p>We searched for a real Teachly teacher first. You can connect with the AI Teacher instead.</p><button class="primary" onclick="connectWithAI()">Connect with AI Teacher</button><button class="secondary" style="margin-top:10px" onclick="go('homePage')">No, go back</button></div>`;
   }else{
     document.getElementById("connectAction").innerHTML=`<div class="connectNotice"><h3>No learner available</h3><p>No real learner looking for a teacher is available right now.</p><button class="secondary" onclick="go('homePage')">Go back</button></div>`;
   }
