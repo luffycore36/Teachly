@@ -447,8 +447,28 @@ role
 
 });
 
-const data =
+const contentType =
+response.headers.get(
+"content-type"
+) || "";
+
+let data;
+
+if(contentType.includes("application/json")){
+
+data =
 await response.json();
+
+}else{
+
+const text =
+await response.text();
+
+throw new Error(
+"Server returned an unexpected response."
+);
+
+}
 
 if(!response.ok)
 throw new Error(
@@ -456,18 +476,28 @@ data.error ||
 "Registration failed"
 );
 
-const verifyInput =
-document.getElementById(
-"verifyEmail"
+if(message)
+message.textContent =
+"Account created successfully!";
+
+showToast(
+"Account created successfully! 🎉"
 );
 
-if(verifyInput)
-verifyInput.value =
-email;
-
+// Go directly to login
 openPage(
-"verifyPage"
+"loginPage"
 );
+
+// Put the registered email into login
+const loginEmail =
+document.getElementById(
+"loginEmail"
+);
+
+if(loginEmail)
+loginEmail.value =
+email;
 
 }
 
