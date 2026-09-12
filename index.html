@@ -168,27 +168,7 @@ linear-gradient(#071d36,#082442)}
 
 <!-- PEOPLE -->
 <section id="peoplePage" class="page app"><header class="topbar"><div class="brand">🤝 Learner / Teacher</div><div id="wallet4" class="wallet"></div></header>
-<div class="content"><button class="secondary back" onclick="go('homePage')">← Home</button><div class="panel"><h1 id="peopleTitle">Teachly Connect</h1><p id="peopleIntro">Discover members of the Teachly learning community.</p><div id="peopleGrid" class="grid">
-  <!-- Online matching users will appear here -->
-</div>
-
-<div id="connectAction"></div>
-
-<div id="connectionStatus" class="connect-status"></div>
-
-<div id="learnerAIButton" class="learner-ai-button" style="display:none;">
-  <button
-    class="primary"
-    type="button"
-    onclick="connectWithAI()"
-  >
-    🤖 Connect with AI Teacher
-  </button>
-</div>
-  <button class="primary" type="button" onclick="connectWithAI()">
-    🤖 Connect with AI Teacher
-  </button>
-</div><div id="learnerAIButton" class="learner-ai-button"><button class="primary" type="button" onclick="connectWithAI()">🤖 Connect with AI Teacher</button></div></div></div></section>
+<div class="content"><button class="secondary back" onclick="go('homePage')">← Home</button><div class="panel"><h1 id="peopleTitle">Teachly Connect</h1><p id="peopleIntro">Discover members of the Teachly learning community.</p><div id="peopleGrid" class="grid"></div><div id="connectAction"></div><div id="learnerAIButton" class="learner-ai-button" style="display:none;"><button class="primary" type="button" onclick="connectWithAI()">🤖 Connect with AI Teacher</button></div></div></div></section>
 
 <!-- MAP -->
 <section id="mapPage" class="page app"><header class="topbar"><div class="brand">🌍 LearnSphere</div><div id="wallet5" class="wallet"></div></header>
@@ -398,9 +378,7 @@ async function openConnect(role){
   document.getElementById("peopleTitle").textContent=role==="learner"?"Find a Teacher":"Find a Learner";
   document.getElementById("peopleIntro").textContent=role==="learner"?"Searching now for real teachers who are looking for learners...":"Searching now for real learners who are looking for teachers...";
   document.getElementById("peopleGrid").innerHTML="<div class='person panel' style='grid-column:1/-1'><div class='icon'>🔎</div><h3>Searching now...</h3><p>Finding real Teachly users who match your request.</p></div>";
-  document.getElementById("connectAction").innerHTML=role==="learner"
-    ? `<div class="connectNotice" style="margin-bottom:16px"><h3>🤖 Connect with AI Teacher</h3><p>Prefer an AI Teacher? You can connect directly without waiting for a real teacher.</p><button class="primary" onclick="connectWithAI()">Connect with AI Teacher</button></div>`
-    : "";
+  document.getElementById("connectAction").innerHTML="";
   try{
     const r=await fetch("https://teachly-nmxh.onrender.com/api/people",{cache:"no-store"});
     if(!r.ok)throw new Error("People request failed");
@@ -432,7 +410,7 @@ function showAIFallback(role){
   document.getElementById("peopleGrid").innerHTML="";
   document.getElementById("peopleIntro").textContent="No matching real user is available right now.";
   if(role==="learner"){
-    document.getElementById("connectAction").innerHTML=`<div class="connectNotice"><h3>No real teacher found</h3><p>We searched for a real Teachly teacher first. You can connect with the AI Teacher instead.</p><button class="primary" onclick="connectWithAI()">Connect with AI Teacher</button><button class="secondary" style="margin-top:10px" onclick="go('homePage')">No, go back</button></div>`;
+    document.getElementById("connectAction").innerHTML=`<div class="connectNotice"><h3>No real teacher found</h3><p>We searched for a real Teachly teacher first. You can connect with the AI Teacher instead.</p><button class="secondary" style="margin-top:10px" onclick="go('homePage')">No, go back</button></div>`;
   }else{
     document.getElementById("connectAction").innerHTML=`<div class="connectNotice"><h3>No learner available</h3><p>No real learner looking for a teacher is available right now.</p><button class="secondary" onclick="go('homePage')">Go back</button></div>`;
   }
